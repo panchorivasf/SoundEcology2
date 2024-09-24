@@ -1,55 +1,111 @@
-adi_list <- function (audiolist,
-                      save_csv = FALSE,
-                      csv_name = "adi_results.csv",
-                      wlen = 512,
-                      wfun = "hanning",
-                      min_freq = 0,
-                      max_freq = 10000,
-                      nbands = 10,
-                      db_threshold = 5,
-                      normspec = FALSE,
-                      noisered = 2,
-                      rmoff = TRUE,
-                      props = TRUE,
-                      entropy = 1){
+#' Acoustic Diversity Index - list input
+#'
+#' @description
+#' Calculates the Acoustic Diversity Index for all the files in a list, with extended parameter options.
+#' It uses parallel processing with all but one of the available cores.
+#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
+#'
+#' @param audiolist a list of audio files to analyze.
+#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
+#' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param min.freq minimum frequency to compute the spectrogram
+#' @param max.freq maximum frequency to compute the spectrogram
+#' @param n.bands number of bands to split the spectrogram
+#' @param cutoff dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above)
+#' @param norm.spec logical. Whether to normalize the spectrogram (not recommended) or not (normalized spectrograms with different SNR are not comparable).
+#' @param noise.red numeric. noise reduction (subtract median from the amplitude values); 1=rows, 2=columns, 3=none.
+#' @param rm.offset logical. Whether to remove DC offset before computing ADI (recommended) or not.
+#' @param props logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.
+#' @param prop.den numeric. Indicates how the energy proportion is calculated.
+#'
+#' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
+#' @export
+#'
+#' @import doParallel
+#' @import foreach
+#' @import parallel
+#' @import tuneR
+#' @import tidyverse
+#' @import seewave
+#' @import lubridate
 
-  require(doParallel)
-  require(foreach)
-  require(parallel)
-  require(tuneR)
-  require(tidyverse)
-  require(seewave)
-  require(lubridate)
-  require(soundecology2)
+#'
+#' @details
+#' Options for prop.den:
+#' 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
+#' 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
+#' 3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
+#' It uses parallel processing with all but one of the available cores.
+#' Optimized to facilitate working with a list of audio files before importing them into R.
+#' The working directory should be set to the folder containing the files.
+#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
+#'
+#' @examples
+#' files <- list.files(pattern=".wav|.WAV")
+#' adi_list(files[1:5])
+
+adi_list <- function (audiolist,
+                      save.csv = FALSE,
+                      csv.name = "adi_results.csv",
+                      freq.res = 100,
+                      win.fun = "hanning",
+                      min.freq = 0,
+                      max.freq = 10000,
+                      n.bands = 10,
+                      cutoff = -60,
+                      norm.spec = FALSE,
+                      noise.red = 0,
+                      rm.offset = TRUE,
+                      props = FALSE,
+                      prop.den = 1,
+                      db.fs = TRUE){
+
+
+  quiet <- function(..., messages=FALSE, cat=FALSE){
+    if(!cat){
+      tmpf <- tempfile()
+      sink(tmpf)
+      on.exit({sink(); file.remove(tmpf)})
+    }
+    out <- if(messages) eval(...) else suppressMessages(eval(...))
+    out
+  }
+
+
 
   cat("Evaluating the job...\n\n")
+
 
 
   fileName <- tibble(file_name = audiolist)
   nFiles <- length(audiolist)
 
-  # Check if the first sound is stereo or mono
-  sound <- readWave(audiolist[1])
-  type <- ifelse(sound@stereo, "stereo", "mono")
-  rm(sound)
-
-  args_list <- list(wlen = wlen, wfun = wfun, min_freq = min_freq,
-                    max_freq = max_freq, nbands = nbands, db_threshold = db_threshold,
-                    normspec = normspec, noisered = noisered, rmoff = rmoff,
-                    props = props, entropy = entropy)
-
-
-
+  args_list <- list(freq.res = freq.res,
+                    win.fun = win.fun,
+                    min.freq = min.freq,
+                    max.freq = max.freq,
+                    n.bands = n.bands,
+                    cutoff = cutoff,
+                    norm.spec = norm.spec,
+                    noise.red = noise.red,
+                    rm.offset = rm.offset,
+                    props = props,
+                    prop.den = prop.den,
+                    db.fs = db.fs)
 
   # Evaluate the duration of the analysis
   # Measure processing time for a single file
   startTime <- Sys.time()
 
   sound1 <- readWave(audiolist[1])
-  adi1 <- adi(sound1, args_list$wlen, args_list$wfun, args_list$min_freq,
-              args_list$max_freq, args_list$nbands, args_list$db_threshold,
-              args_list$normspec, args_list$noisered, args_list$rmoff,
-              args_list$props, args_list$entropy)
+  type <- ifelse(sound1@stereo, "stereo", "mono")
+
+  adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$win.fun, args_list$min.freq,
+              args_list$max.freq, args_list$n.bands, args_list$cutoff,
+              args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
+              args_list$props, args_list$prop.den, args_list$db.fs))
 
   tibble(file_name = "filename") %>% bind_cols(adi1)
 
@@ -63,6 +119,12 @@ adi_list <- function (audiolist,
 
   # Declare the number of cores to be used (all but one of the available cores)
   cores <- detectCores() - 1 # Leave one core free
+  # Limit the number of cores to the number of files, if 'cores' was initially a higher number
+  if (cores > nFiles){
+    cores <- nFiles
+  }
+
+
   # Estimate total time accounting for parallel processing
   estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(cores)
   # Add overhead time
@@ -73,7 +135,7 @@ adi_list <- function (audiolist,
   cl <- makeCluster(cores[1])
   registerDoParallel(cl)
 
-  cat("Process start time:", format(Sys.time(), "%H:%M"), "\n")
+  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
   cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
   cat("Analyzing", nFiles, type, "files using", cores, "cores... \n")
 
@@ -85,13 +147,13 @@ adi_list <- function (audiolist,
                        # Import the sounds
                        sound <- readWave(file)
 
-                       # Calculate ADI4 index and keep its default output columns
-                       adi <- adi(sound, wlen = args_list$wlen, wfun = args_list$wfun,
-                                  min_freq = args_list$min_freq, max_freq = args_list$max_freq,
-                                  nbands = args_list$nbands, db_threshold = args_list$db_threshold,
-                                  normspec = args_list$normspec, noisered = args_list$noisered,
-                                  rmoff = args_list$rmoff, props = args_list$props,
-                                  entropy = args_list$entropy)
+                       # Calculate ADI and keep its default output columns
+                       adi <- adi(sound, freq.res = args_list$freq.res, win.fun = args_list$win.fun,
+                                  min.freq = args_list$min.freq, max.freq = args_list$max.freq,
+                                  n.bands = args_list$n.bands, cutoff = args_list$cutoff,
+                                  norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,
+                                  rm.offset = args_list$rm.offset, props = args_list$props,
+                                  prop.den = args_list$prop.den, args_list$db.fs)
 
                        # Combine the results for each file into a single row
                        tibble(file_name = file) %>%
@@ -107,11 +169,11 @@ adi_list <- function (audiolist,
 
   stopCluster(cl)
 
-  if(save_csv == TRUE){
-    write.csv(resultsWithMetadata, csv_name, row.names = FALSE)
+  if(save.csv == TRUE){
+    write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
 
-  cat(paste("Analysis complete!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
 
   return(resultsWithMetadata)
 

@@ -6,37 +6,40 @@
 \usage{
 aci_folder(
   folder,
-  save_csv = FALSE,
-  csv_name = "aci_results.csv",
-  wlen = 512,
-  wfun = "hanning",
-  min_freq = NA,
-  max_freq = NA,
+  save.csv = FALSE,
+  csv.name = "aci_results.csv",
+  win.len = 512,
+  win.fun = "hanning",
+  min.freq = NA,
+  max.freq = NA,
   j = NA,
-  noisered = 2,
-  rmoff = TRUE
+  noise.red = 2,
+  rm.offset = TRUE,
+  n.cores = -1
 )
 }
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
 
-\item{save_csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a csv in the working directory.}
 
-\item{csv_name}{character vector. When 'save_csv' is TRUE, optionally provide a file name.}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{wlen}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{win.len}{the window length to compute the spectrogram (i.e., FFT window size).}
 
-\item{wfun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
-\item{min_freq}{minimum frequency to use when calculating the value, in Hertz. Default = 0.}
+\item{min.freq}{minimum frequency to use when calculating the value, in Hertz. Default = 0.}
 
-\item{max_freq}{maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).}
+\item{max.freq}{maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).}
 
 \item{j}{the cluster size, in seconds. Default = NA (Duration of the audio file).}
 
-\item{noisered}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
+\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
 
-\item{rmoff}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
+\item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 }
 \value{
 A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and the parameters used for the calculation.
@@ -45,7 +48,6 @@ A tibble (data frame) with the ACI values for each channel (if stereo), metadata
 Acoustic Complexity Index - folder input
 }
 \details{
-It uses parallel processing with all but one of the available cores.
 Optimized to facilitate working with a folder of audio files before importing them into R.
 Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
 }

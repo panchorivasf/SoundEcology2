@@ -22,7 +22,7 @@
 #' @param hf.max The maximum frequency (in Hz) for the high-frequency band. Default is 18000.
 #' @param uf.min The minimum frequency (in Hz) for the ultra-high-frequency band. Default is 18000.
 #' @param uf.max The maximum frequency (in Hz) for the ultra-high-frequency band. Default is 24000.
-#' @param ncores The number of cores to use for parallel processing. Use `ncores = -1` to use all but one core. Default is NULL (single-core processing).
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #'
 #' @return A tibble containing the frequency cover analysis results for each file.
 #' @export
@@ -30,7 +30,7 @@
 #' @examples
 #' \dontrun{
 #' # Run frequency cover analysis on all WAV files in the folder "audio_files"
-#' fci_folder("audio_files", output.csv = "results.csv", channel = "left", ncores = 4)
+#' fci_folder("audio_files", output.csv = "results.csv", channel = "left", n.cores = 4)
 #' }
 
 fci_folder <- function(folder,
@@ -52,7 +52,7 @@ fci_folder <- function(folder,
                       hf.max = 18000,
                       uf.min = 18000,
                       uf.max = 24000,
-                      ncores = -1) {
+                      n.cores = -1) {
 
 
   cat("Evaluating the job...\n")
@@ -93,12 +93,12 @@ fci_folder <- function(folder,
   rm(fci1)
 
 
-  if(is.null(ncores)){
+  if(is.null(n.cores)){
     num_cores <- 1
-  }else if(ncores == -1){
+  }else if(n.cores == -1){
     num_cores <- parallel::detectCores() - 1  # Detect available cores
   }else{
-    num_cores <- ncores
+    num_cores <- n.cores
   }
 
   if(nFiles < num_cores){

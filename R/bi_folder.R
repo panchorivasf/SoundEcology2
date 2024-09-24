@@ -3,20 +3,21 @@
 #' Inspired by the "Bioacoustic Index" from the paper:Boelman NT, Asner GP, Hart PJ, Martin RE. 2007.
 #' Multi-trophic invasion resistance in Hawaii: bioacoustics, field surveys, and airborne
 #' remote sensing. Ecol Applications 17(8):2137-44. Based on Matlab code provided by NT Boelman.
-#' Boelman et al. 2007 used min_freq=2000, max_freq=8000, wlen=512.
+#' Boelman et al. 2007 used min.freq=2000, max.freq=8000, w.len=512.
 #' Several parts where changed, in particular log math, so this won't be
 #' directly comparable to the original code in the paper.
 #'
 #' @param folder a path to the folder with audio files to import.
-#' @param save_csv logical. Whether to save a csv in the working directory.
-#' @param csv_name character vector. When 'save_csv' is TRUE, optionally provide a file name.
-#' @param wlen the window length to compute the spectrogram (i.e., FFT window size).
-#' @param wfun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
-#' @param min_freq miminum frequency to use when calculating the value, in Hertz. Default = NA.
-#' @param max_freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
-#' @param normspec logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).
-#' @param noisered numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.
-#' @param rmoff logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
+#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
+#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param min.freq miminum frequency to use when calculating the value, in Hertz. Default = NA.
+#' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
+#' @param norm.spec logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).
+#' @param noise.red numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.
+#' @param rm.offset logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 
 #' @return A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
@@ -38,17 +39,18 @@
 #' bi_folder(path/to/folder)
 
 bi_folder <- function (folder,
-                       save_csv = FALSE,
-                       csv_name = "bi_results.csv",
-                       wlen = 512,
-                       wfun = "hanning",
-                       min_freq = 2000,
-                       max_freq = 8000,
-                       normspec = FALSE,
-                       noisered = 0,
-                       rmoff = TRUE){
+                       save.csv = FALSE,
+                       csv.name = "bi_results.csv",
+                       w.len = 512,
+                       w.fun = "hanning",
+                       min.freq = 2000,
+                       max.freq = 8000,
+                       norm.spec = FALSE,
+                       noise.red = 0,
+                       rm.offset = TRUE,
+                       n.cores = -1){
 
-  
+
   #  Quiet function from SimDesign package to run functions without printing
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -59,7 +61,7 @@ bi_folder <- function (folder,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-  
+
   cat("Evaluating the job...\n\n")
 
   setwd(folder)
@@ -68,13 +70,13 @@ bi_folder <- function (folder,
   fileName <- tibble(file_name = audiolist)
   nFiles <- length(audiolist)
 
-  args_list <- list(wlen = wlen,
-                    wfun = wfun,
-                    min_freq = min_freq,
-                    max_freq = max_freq,
-                    normspec = normspec,
-                    noisered = noisered,
-                    rmoff = rmoff)
+  args_list <- list(w.len = w.len,
+                    w.fun = w.fun,
+                    min.freq = min.freq,
+                    max.freq = max.freq,
+                    norm.spec = norm.spec,
+                    noise.red = noise.red,
+                    rm.offset = rm.offset)
 
 
   # Evaluate the duration of the analysis
@@ -85,13 +87,13 @@ bi_folder <- function (folder,
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   bi1 <- quiet(bi(sound1,
-                  args_list$wlen,
-                  args_list$wfun,
-                  args_list$min_freq,
-                  args_list$max_freq,
-                  args_list$normspec,
-                  args_list$noisered,
-                  args_list$rmoff))
+                  args_list$w.len,
+                  args_list$w.fun,
+                  args_list$min.freq,
+                  args_list$max.freq,
+                  args_list$norm.spec,
+                  args_list$noise.red,
+                  args_list$rm.offset))
 
   tibble(file_name = "filename") %>% bind_cols(bi1)
 
@@ -103,26 +105,32 @@ bi_folder <- function (folder,
   rm(sound1)
   rm(bi1)
 
-  # Declare the number of cores to be used (all but one of the available cores)
-  cores <- detectCores() - 1 # Leave one core free
-  # Limit the number of cores to the number of files, if 'cores' was initially a higher number
-  if (cores > nFiles){
-    cores <- nFiles
+  # Assess the number of cores to be used
+  if(is.null(n.cores)){
+    num_cores <- 1
+  }else if(n.cores == -1){
+    num_cores <- parallel::detectCores() - 1
+  }else{
+    num_cores <- n.cores
+  }
+
+  if(nFiles < num_cores){
+    num_cores <- nFiles
   }
 
   # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(cores)
+  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
   # Add overhead time
   adjustedTotalTime <- estimatedTotalTime
   # Calculate the end time
   expectedCompletionTime <- Sys.time() + adjustedTotalTime
   # Setup parallel back-end
-  cl <- makeCluster(cores[1])
+  cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
 
   cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
   cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-  cat("Analyzing", nFiles, type, "files using", cores, "cores... \n")
+  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
 
 
   # Start loop
@@ -134,13 +142,13 @@ bi_folder <- function (folder,
 
                        # Calculate BI and keep its default output columns
                        bi <- bi(sound,
-                                  args_list$wlen,
-                                  args_list$wfun,
-                                  args_list$min_freq,
-                                  args_list$max_freq,
-                                  args_list$normspec,
-                                  args_list$noisered,
-                                  args_list$rmoff)
+                                  args_list$w.len,
+                                  args_list$w.fun,
+                                  args_list$min.freq,
+                                  args_list$max.freq,
+                                  args_list$norm.spec,
+                                  args_list$noise.red,
+                                  args_list$rm.offset)
 
                        # Combine the results for each file into a single row
                        tibble(file_name = file) %>%
@@ -156,8 +164,8 @@ bi_folder <- function (folder,
 
   stopCluster(cl)
 
-  if(save_csv == TRUE){
-    write.csv(resultsWithMetadata, csv_name, row.names = FALSE)
+  if(save.csv == TRUE){
+    write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
 
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))

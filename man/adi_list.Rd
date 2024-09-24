@@ -2,10 +2,10 @@
 % Please edit documentation in R/adi_list.R
 \name{adi_list}
 \alias{adi_list}
-\title{Acoustic Diversity Index - list input}
+\title{Calculate the Acoustic Diversity Index on the Files in a List}
 \usage{
 adi_list(
-  audiolist,
+  audio.list,
   save.csv = FALSE,
   csv.name = "adi_results.csv",
   freq.res = 100,
@@ -19,11 +19,12 @@ adi_list(
   rm.offset = TRUE,
   props = FALSE,
   prop.den = 1,
-  db.fs = TRUE
+  db.fs = TRUE,
+  n.cores = -1
 )
 }
 \arguments{
-\item{audiolist}{a list of audio files to analyze.}
+\item{audio.list}{a list of audio files to analyze.}
 
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 
@@ -50,6 +51,8 @@ adi_list(
 \item{props}{logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.}
 
 \item{prop.den}{numeric. Indicates how the energy proportion is calculated.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 }
 \value{
 a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.

@@ -1,4 +1,4 @@
-#' Acoustic Diversity Index - folder input
+#' Calculate the Acoustic Diversity Index on the Files in a Folder
 #' @description
 #' Calculates the Acoustic Diversity Index for all the files in a folder, with extended parameter options.
 #' It uses parallel processing with all but one of the available cores.
@@ -18,6 +18,8 @@
 #' @param rmoff logical. Whether to remove DC offset before computing ADI (recommended) or not.
 #' @param props logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.
 #' @param prop.den numeric. Indicates how the energy proportion is calculated.
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
+
 #'
 #' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
@@ -55,7 +57,8 @@ adi_folder <- function (folder,
                         rm.offset = TRUE,
                         props = FALSE,
                         prop.den = 1,
-                        db.fs = TRUE){
+                        db.fs = TRUE,
+                        n.cores = -1){
 
 
   cat("Evaluating the job...\n\n")
@@ -113,26 +116,32 @@ adi_folder <- function (folder,
   rm(sound1)
   rm(adi1)
 
-  # Declare the number of cores to be used (all but one of the available cores)
-  cores <- detectCores() - 1 # Leave one core free
-  # Limit the number of cores to the number of files, if 'cores' was initially a higher number
-  if (cores > nFiles){
-    cores <- nFiles
+  if(is.null(n.cores)){
+    num_cores <- 1
+  }else if(n.cores == -1){
+    num_cores <- parallel::detectCores() - 1  # Detect available cores
+  }else{
+    num_cores <- n.cores
   }
 
+  if(nFiles < num_cores){
+    num_cores <- nFiles
+  }
+
+
   # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(cores)
+  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
   # Add overhead time
   adjustedTotalTime <- estimatedTotalTime
   # Calculate the end time
   expectedCompletionTime <- Sys.time() + adjustedTotalTime
   # Setup parallel back-end
-  cl <- makeCluster(cores[1])
+  cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
 
   cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
   cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-  cat("Analyzing", nFiles, type, "files using", cores, "cores... \n")
+  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
 
 
   # Start loop

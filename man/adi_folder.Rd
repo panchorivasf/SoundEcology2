@@ -2,7 +2,7 @@
 % Please edit documentation in R/adi_folder.R
 \name{adi_folder}
 \alias{adi_folder}
-\title{Acoustic Diversity Index - folder input}
+\title{Calculate the Acoustic Diversity Index on the Files in a Folder}
 \usage{
 adi_folder(
   folder,
@@ -19,7 +19,8 @@ adi_folder(
   rm.offset = TRUE,
   props = FALSE,
   prop.den = 1,
-  db.fs = TRUE
+  db.fs = TRUE,
+  n.cores = -1
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ adi_folder(
 \item{props}{logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.}
 
 \item{prop.den}{numeric. Indicates how the energy proportion is calculated.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 
 \item{rmoff}{logical. Whether to remove DC offset before computing ADI (recommended) or not.}
 }

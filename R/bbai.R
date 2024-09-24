@@ -5,7 +5,7 @@
 #' @param wave A `Wave` object containing the audio signal to be analyzed.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
-#' @param rmoffset Logical. Should the DC offset be removed from the audio signal? Defaults to `TRUE`.
+#' @param rm.offset Logical. Should the DC offset be removed from the audio signal? Defaults to `TRUE`.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
 #' @param cutoff Numeric. The amplitude threshold (in dBFS) for removing low-amplitude values in the spectrogram. Default is `-50`.
 #' @param click.height Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is `10`.
@@ -34,7 +34,7 @@
 bbai <- function(wave,
                  channel = 'each',
                  hpf = 0,
-                 rmoffset = TRUE,
+                 rm.offset = TRUE,
                  freq.res = 100,
                  cutoff = -60,
                  click.length = 10,
@@ -69,15 +69,15 @@ bbai <- function(wave,
 
   calculate_index <- function(wave,
                               channel,
-                              rmoffset,
+                              rm.offset,
                               hpf,
                               freq.res,
                               cutoff){
 
 
     # Remove DC offset
-    if (rmoffset) {
-      wave <- rmoffset(wave, output = "Wave")
+    if (rm.offset) {
+      wave <- seewave::rmoffset(wave, output = "Wave")
     }
 
 
@@ -342,10 +342,10 @@ bbai <- function(wave,
 
     if (verbose) cat("Calculating Broadband Activity Index on 2 channels... \n")
 
-    bbai_left <- calculate_index(wave.left, rmoffset = rmoffset,
+    bbai_left <- calculate_index(wave.left, rm.offset = rm.offset,
                                  hpf = hpf, freq.res = freq.res,
                                  cutoff = cutoff)
-    bbai_right <- calculate_index(wave.right, rmoffset = rmoffset,
+    bbai_right <- calculate_index(wave.right, rm.offset = rm.offset,
                                   hpf = hpf, freq.res = freq.res,
                                   cutoff = cutoff)
 
@@ -406,7 +406,7 @@ bbai <- function(wave,
 
     # Calulate NBAI
     bbai_global <- calculate_index(wave,
-                                   rmoffset = rmoffset,
+                                   rm.offset = rm.offset,
                                    channel = channel,
                                    hpf = hpf,
                                    freq.res = freq.res,

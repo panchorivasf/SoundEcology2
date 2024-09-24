@@ -8,7 +8,7 @@ bbai(
   wave,
   channel = "each",
   hpf = 0,
-  rmoffset = TRUE,
+  rm.offset = TRUE,
   freq.res = 100,
   cutoff = -60,
   click.length = 10,
@@ -27,7 +27,7 @@ bbai(
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
 
-\item{rmoffset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
+\item{rm.offset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
 
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 

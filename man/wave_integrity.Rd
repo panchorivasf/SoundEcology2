@@ -30,5 +30,5 @@ A tibble with summary data on file size, including the last day with complete re
 This function parses all the WAVE files in a folder and checks their size, reporting corrupted files.
 }
 \examples{
-integrity <- wave_integrity( "pathToFolder", ggplot = FALSE)
+integrity <- wave_integrity("pathToFolder", ggplot = FALSE)
 }

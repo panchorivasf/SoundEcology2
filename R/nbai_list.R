@@ -1,8 +1,8 @@
-#' Narrow-Band Activity Index for Files in a List
+#' Narrow-Band Activity Index for audio.list in a List
 #' @description
 #' NBAI describes the relative amount of narrow-band persistent sound activity, like that of Cicadas and Orthopterans. This index can be used to evaluate insect activity and their influence on other soundscape metrics (e.g., summary acoustic indices).
 #'
-#' @param files Character. A list containing the names of the wave files to analyze.
+#' @param audio.list Character. A list containing the names of the wave audio.list to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
@@ -11,27 +11,26 @@
 #' @param plot.binary.spec Logical. Whether to plot the binary spectrogram used for the analysis. Allowed only when Wave is mono or when one channel is selected from a stereo file.
 #' @param dark.plot Logical. If true (default) a the binary spectrogram will have a black background.
 #' @param plot.activity Logical. If true, a barplot depicting the percent activity in each frequency bin will be returned. Default is FALSE.
-#' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #'
 #' @return A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI) summary statistics, and 3) a tibble with NBI spectral, which number of rows equals the number of frequency bins in the analysis.
 #' @export
 #'
-#' @import tuneR
-#' @import seewave
-#' @import patchwork
-#' @import ggplot2
-#' @import dplyr
+#' @importFrom tibble tibble
+#' @importFrom dplyr bind_cols select
+#' @importFrom parallel detectCores makeCluster stopCluster
+#' @importFrom doParallel registerDoParallel
+#' @importFrom foreach %dopar% foreach
+#' @importFrom tuneR readWave
+#' @importFrom lubridate seconds
+#' @importFrom utils write.csv
 #'
-#' @examples nbai(wave, channel = 'left', plot = TRUE, verbose = TRUE)
+#' @examples nbai_list(wave.list, channel = 'left', plot = TRUE)
 
-nbai_list <- function(files, channel = "each", output.csv = "nbai_results.csv", ncores = NULL) {
-  library(tibble)
-  library(foreach)
-  library(doParallel)
-  library(parallel)
-  library(tuneR)
-  library(seewave)
-  library(tidyverse)
+nbai_list <- function(audio.list,
+                      channel = "each",
+                      output.csv = "nbai_results.csv",
+                      n.cores = -1) {
 
   cat("Evaluating the job...\n")
 
@@ -45,15 +44,15 @@ nbai_list <- function(files, channel = "each", output.csv = "nbai_results.csv", 
     out
   }
 
-  filename <- tibble(filename = files)
-  nFiles <- length(files)
+  filename <- tibble(filename = audio.list)
+  naudio.list <- length(audio.list)
 
 
   # Evaluate the duration of the analysis
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(files[1])
+  sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   nbai1 <- quiet(nbai(sound1, channel = 'mix'))
@@ -62,29 +61,29 @@ nbai_list <- function(files, channel = "each", output.csv = "nbai_results.csv", 
   # Assess how long it takes to parse 1 file
   timePerFile <-  Sys.time() - startTime
   # Add overhead per file
-  timePerFile <- timePerFile + as.numeric(seconds(2.2))
+  timePerFile <- timePerFile + as.numeric(lubridate::seconds(2.2))
 
   rm(sound1)
   rm(nbai1)
 
 
-  if(is.null(ncores)){
+  if(is.null(n.cores)){
     num_cores <- 1
-  }else if(ncores == -1){
-    num_cores <- parallel::detectCores() - 1  # Detect available cores
+  }else if(n.cores == -1){
+    num_cores <- parallel::detectCores() - 1
   }else{
-    num_cores <- ncores
+    num_cores <- n.cores
   }
 
-  if(nFiles < num_cores){
-    num_cores <- nFiles
+  if(naudio.list < num_cores){
+    num_cores <- naudio.list
   }
 
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
 
   # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
+  estimatedTotalTime <- (timePerFile * naudio.list) / as.numeric(num_cores)
   # Add overhead time
   adjustedTotalTime <- estimatedTotalTime
   # Calculate the end time
@@ -93,11 +92,11 @@ nbai_list <- function(files, channel = "each", output.csv = "nbai_results.csv", 
 
   cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
   cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
+  cat("Analyzing", naudio.list, type, "audio.list using", num_cores, "cores... \n")
 
 
   # Define parallel computation
-  results <- foreach(file = files, .packages = c("soundecology2", "tuneR", "seewave", "tibble")) %dopar% {
+  results <- foreach(file = audio.list, .packages = c("soundecology2", "tuneR", "seewave", "tibble")) %dopar% {
 
     filename <- basename(file)  # Get file name without path
 

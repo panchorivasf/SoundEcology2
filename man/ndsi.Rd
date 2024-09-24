@@ -6,25 +6,25 @@
 \usage{
 ndsi(
   wave,
-  wlen = 1024,
-  anthro_min = 1000,
-  anthro_max = 2000,
-  bio_min = 2000,
-  bio_max = 11000
+  w.len = 1024,
+  anthro.min = 1000,
+  anthro.max = 2000,
+  bio.min = 2000,
+  bio.max = 11000
 )
 }
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
 
-\item{wlen}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
 
-\item{anthro_min}{minimum value of the range of frequencies of the anthrophony.}
+\item{anthro.min}{minimum value of the range of frequencies of the anthrophony.}
 
-\item{anthro_max}{maximum value of the range of frequencies of the anthrophony.}
+\item{anthro.max}{maximum value of the range of frequencies of the anthrophony.}
 
-\item{bio_min}{minimum value of the range of frequencies of the biophony.}
+\item{bio.min}{minimum value of the range of frequencies of the biophony.}
 
-\item{bio_max}{maximum value of the range of frequencies of the biophony.}
+\item{bio.max}{maximum value of the range of frequencies of the biophony.}
 }
 \value{
 a wide format tibble with NDSI values per channel (if stereo), parameters used and audio metadata

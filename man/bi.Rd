@@ -6,31 +6,31 @@
 \usage{
 bi(
   wave,
-  wlen = 512,
-  wfun = "hanning",
-  min_freq = 2000,
-  max_freq = 8000,
-  normspec = FALSE,
-  noisered = 0,
-  rmoff = TRUE
+  w.len = 512,
+  w.fun = "hanning",
+  min.freq = 2000,
+  max.freq = 8000,
+  norm.spec = FALSE,
+  noise.red = 0,
+  rm.offset = TRUE
 )
 }
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
 
-\item{wlen}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
 
-\item{wfun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
-\item{min_freq}{miminum frequency to use when calculating the value, in Hertz. Default = NA.}
+\item{min.freq}{miminum frequency to use when calculating the value, in Hertz. Default = NA.}
 
-\item{max_freq}{maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).}
+\item{max.freq}{maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).}
 
-\item{normspec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).}
+\item{norm.spec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).}
 
-\item{noisered}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.}
+\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.}
 
-\item{rmoff}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
+\item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
 }
 \value{
 A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used for the calculation.
@@ -39,7 +39,7 @@ A tibble (data frame) with the BI values for each channel (if stereo), metadata,
 Inspired by the "Bioacoustic Index" from the paper:Boelman NT, Asner GP, Hart PJ, Martin RE. 2007.
 Multi-trophic invasion resistance in Hawaii: bioacoustics, field surveys, and airborne
 remote sensing. Ecol Applications 17(8):2137-44. Based on Matlab code provided by NT Boelman.
-Boelman et al. 2007 used min_freq=2000, max_freq=8000, wlen=512.
+Boelman et al. 2007 used min.freq=2000, max.freq=8000, w.len=512.
 Several parts where changed, in particular log math, so this won't be
 directly comparable to the original code in the paper.
 }

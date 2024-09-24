@@ -11,20 +11,20 @@
 #' @param plot.binary.spec Logical. Whether to plot the binary spectrogram used for the analysis. Allowed only when Wave is mono or when one channel is selected from a stereo file.
 #' @param dark.plot Logical. If true (default) a the binary spectrogram will have a black background.
 #' @param plot.activity Logical. If true, a barplot depicting the percent activity in each frequency bin will be returned. Default is FALSE.
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
 #'
 #' @return A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI) summary statistics, and 3) a tibble with NBI spectral, which number of rows equals the number of frequency bins in the analysis.
 #' @export
 #'
-#' @import tuneR
-#' @import seewave
-#' @import patchwork
-#' @import ggplot2
-#' @import dplyr
-#' @import tibble
-#' @import foreach
-#' @import doParallel
-#' @import parallel
+#' @importFrom tibble tibble
+#' @importFrom dplyr bind_cols select
+#' @importFrom parallel detectCores makeCluster stopCluster
+#' @importFrom doParallel registerDoParallel
+#' @importFrom foreach %dopar% foreach
+#' @importFrom tuneR readWave
+#' @importFrom lubridate seconds
+#' @importFrom utils write.csv
 #'
 #' @examples nbai(wave, channel = 'left', plot = TRUE, verbose = TRUE)
 
@@ -35,7 +35,7 @@ nbai_folder <- function(folder,
                         cutoff = -60,
                         activity.cutoff = 10,
                         output.csv = "nbai_results.csv",
-                        ncores = -1) {
+                        n.cores = -1) {
 
   cat("Evaluating the job...\n")
 
@@ -75,12 +75,12 @@ nbai_folder <- function(folder,
   rm(nbai1)
 
 
-  if(is.null(ncores)){
+  if(is.null(n.cores)){
     num_cores <- 1
-  }else if(ncores == -1){
+  }else if(n.cores == -1){
     num_cores <- parallel::detectCores() - 1  # Detect available cores
   }else{
-    num_cores <- ncores
+    num_cores <- n.cores
   }
 
   if(nFiles < num_cores){

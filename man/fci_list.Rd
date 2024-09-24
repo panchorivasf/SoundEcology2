@@ -8,7 +8,7 @@ fci_list(
   audio.list,
   output.csv = "fci_results.csv",
   channel = "left",
-  rmoffset = TRUE,
+  rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
   freq.res = 100,
@@ -34,7 +34,7 @@ fci_list(
 
 \item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.}
 
-\item{rmoffset}{Logical. Whether to remove the DC offset from the signal. Default is TRUE.}
+\item{rm.offset}{Logical. Whether to remove the DC offset from the signal. Default is TRUE.}
 
 \item{hpf}{High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.}
 

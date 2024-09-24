@@ -6,7 +6,7 @@
 #' @param folder The folder containing the WAV files to analyze.
 #' @param output.csv The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
 #' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.
-#' @param rmoffset Logical. Whether to remove the DC offset from the signal. Default is TRUE.
+#' @param rm.offset Logical. Whether to remove the DC offset from the signal. Default is TRUE.
 #' @param hpf High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.
 #' @param cutoff The amplitude threshold (in dB) below which frequencies will be considered inactive. Default is -60.
 #' @param freq.res Frequency resolution of the spectrogram in Hz. Default is 100.
@@ -36,7 +36,7 @@
 fci_folder <- function(folder,
                       output.csv = "fci_results.csv",
                       channel = 'each',
-                      rmoffset = TRUE,
+                      rm.offset = TRUE,
                       hpf = 0,
                       cutoff = -60,
                       freq.res = 100,
@@ -134,7 +134,7 @@ fci_folder <- function(folder,
 
     results <- fci(wave = audio,
                   channel = channel,
-                  rmoffset = rmoffset,
+                  rm.offset = rm.offset,
                   hpf = hpf,
                   cutoff = cutoff,
                   freq.res = freq.res,

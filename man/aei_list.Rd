@@ -5,50 +5,53 @@
 \title{Acoustic Evenness Index - list input}
 \usage{
 aei_list(
-  audiolist,
-  save_csv = FALSE,
-  csv_name = "aei_results.csv",
-  wlen = 512,
-  wfun = "hanning",
-  min_freq = 0,
-  max_freq = 10000,
-  nbands = 10,
-  db_threshold = 5,
-  normspec = FALSE,
-  noisered = 2,
-  rmoff = TRUE,
+  audio.list,
+  save.csv = FALSE,
+  csv.name = "aei_results.csv",
+  w.len = 512,
+  w.fun = "hanning",
+  min.freq = 0,
+  max.freq = 10000,
+  n.bands = 10,
+  cutoff = 5,
+  norm.spec = FALSE,
+  noise.red = 2,
+  rm.offset = TRUE,
   props = TRUE,
-  propden = 1
+  prop.den = 1,
+  n.cores = -1
 )
 }
 \arguments{
-\item{audiolist}{a list with the audio files to import.}
+\item{audio.list}{a list with the audio files to import.}
 
-\item{save_csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a csv in the working directory.}
 
-\item{csv_name}{character vector. When 'save_csv' is TRUE, optionally provide a file name.}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{wlen}{window length to compute the spectrogram}
+\item{w.len}{window length to compute the spectrogram}
 
-\item{wfun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
-\item{min_freq}{minimum frequency to compute the spectrogram}
+\item{min.freq}{minimum frequency to compute the spectrogram}
 
-\item{max_freq}{maximum frequency to compute the spectrogram}
+\item{max.freq}{maximum frequency to compute the spectrogram}
 
-\item{nbands}{number of bands to split the spectrogram}
+\item{n.bands}{number of bands to split the spectrogram}
 
-\item{db_threshold}{dB threshold to calculate energy proportions (if normspec = FALSE, set to 5 or above)}
+\item{cutoff}{dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above)}
 
-\item{normspec}{logical. Whether to normalize the spectrogram (not recommended) or not (normalized spectrograms with different SNR are not comparable).}
+\item{norm.spec}{logical. Whether to normalize the spectrogram (not recommended) or not (normalized spectrograms with different SNR are not comparable).}
 
-\item{noisered}{numeric. noise reduction (subtract median from the amplitude values); 1=rows, 2=columns, 3=none.}
+\item{noise.red}{numeric. noise reduction (subtract median from the amplitude values); 1=rows, 2=columns, 3=none.}
 
-\item{rmoff}{logical. Whether to remove DC offset before computing aei (recommended) or not.}
+\item{rm.offset}{logical. Whether to remove DC offset before computing aei (recommended) or not.}
 
 \item{props}{logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.}
 
-\item{propden}{numeric. Indicates how the energy proportion is calculated by manipulating the denominator.}
+\item{prop.den}{numeric. Indicates how the energy proportion is calculated by manipulating the denominator.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 }
 \value{
 a tibble (data frame) with the aei values for each channel (if stereo), metadata, and the parameters used for the calculation.
@@ -59,9 +62,9 @@ It uses parallel processing with all but one of the available cores.
 Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
 }
 \details{
-Options for propden:
+Options for prop.den:
 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
-2 = The "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max_freq')
+2 = The "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
 3 = The "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
 It uses parallel processing with all but one of the available cores.
 Optimized to facilitate working with a list of audio files before importing them into R.

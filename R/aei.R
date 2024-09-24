@@ -8,17 +8,17 @@
 #' The new version allows the user to choose between different ways to compute
 #' the proportions before calculating the Gini, among other new parameter options (see Details)
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
-#' @param wlen the window length to compute the spectrogram (i.e., FFT window size).
-#' @param wfun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
-#' @param min_freq minimum frequency to compute the spectrogram.
-#' @param max_freq maximum frequency to compute the spectrogram.
-#' @param nbands number of bands to split the spectrogram.
-#' @param db_threshold dB threshold to calculate energy proportions (if normspec = FALSE, set to 5 or above).
-#' @param normspec logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).
-#' @param noisered numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.
-#' @param rmoff logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
+#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param min.freq minimum frequency to compute the spectrogram.
+#' @param max.freq maximum frequency to compute the spectrogram.
+#' @param n.bands number of bands to split the spectrogram.
+#' @param cutoff dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above).
+#' @param norm.spec logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).
+#' @param noise.red numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.
+#' @param rm.offset logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
 #' @param props logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.
-#' @param propden numeric; indicates how the energy proportion is calculated.
+#' @param prop.den numeric; indicates how the energy proportion is calculated.
 #'
 #' @return A tibble (data frame) with the AEI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
@@ -29,38 +29,38 @@
 #' @import dplyr
 #' @examples aei(tropicalsound)
 aei <- function(wave,
-                wlen = 512,
-                wfun = "hanning",
-                min_freq = 0,
-                max_freq = 10000,
-                nbands = 10,
-                db_threshold = 5,
-                normspec = FALSE,
-                noisered = 2,
-                rmoff = TRUE,
+                w.len = 512,
+                w.fun = "hanning",
+                min.freq = 0,
+                max.freq = 10000,
+                n.bands = 10,
+                cutoff = 5,
+                norm.spec = FALSE,
+                noise.red = 2,
+                rm.offset = TRUE,
                 props = TRUE,
-                propden = 1){
+                prop.den = 1){
 
 
 
 
   # Store the frequency step (band "height") # NEW 09/25/2023 Francisco Rivas
-  freq_step <- (max_freq - min_freq)/nbands
+  freq_step <- (max.freq - min.freq)/n.bands
 
 
-  db_threshold <- as.numeric(db_threshold)
+  cutoff <- as.numeric(cutoff)
 
   #test arguments
-  if (is.numeric(as.numeric(max_freq))){
-    max_freq <- as.numeric(max_freq)
+  if (is.numeric(as.numeric(max.freq))){
+    max.freq <- as.numeric(max.freq)
   } else{
-    stop(" max_freq is not a number.")
+    stop(" max.freq is not a number.")
   }
 
-  if (is.numeric(as.numeric(db_threshold))){
-    db_threshold <- as.numeric(db_threshold)
+  if (is.numeric(as.numeric(cutoff))){
+    cutoff <- as.numeric(cutoff)
   } else{
-    stop(" db_threshold is not a number.")
+    stop(" cutoff is not a number.")
   }
 
   if (is.numeric(as.numeric(freq_step))){
@@ -92,20 +92,20 @@ aei <- function(wave,
     subA = spectrum[miny:maxy,] # a subset f of the amplitude matrix (i.e. a single frequency band)
 
 
-    minspec <- round(0/freq_row) # lower end of the spectrogram defined by min_freq
-    maxspec <- round(max_freq/freq_row) # upper end of the spectrogram defined by max_freq
-    speclims <- spectrum[minspec:maxspec,] # the spectrogram with range defined by min_freq and max_freq
+    minspec <- round(0/freq_row) # lower end of the spectrogram defined by min.freq
+    maxspec <- round(max.freq/freq_row) # upper end of the spectrogram defined by max.freq
+    speclims <- spectrum[minspec:maxspec,] # the spectrogram with range defined by min.freq and max.freq
 
     # Calculate the proportion of cells in f that are higher than the dB threshold
-    if(propden == 1){ #original AEI proportion calculation (within frequency band)
+    if(prop.den == 1){ #original AEI proportion calculation (within frequency band)
       index1 <- length(subA[subA>db]) / length(subA)
 
-    }else if(propden == 2){
+    }else if(prop.den == 2){
       # Alternative 2: over the user-defined spectrogram range
       # (cells above the energy threshold across the spectrogram)
       index1 <- length(subA[subA>db]) / length(speclims[speclims>db])
 
-    }else if(propden == 3){
+    }else if(prop.den == 3){
       # Alternative 3: over the whole spectrogram
       # (over all the pixels above the threshold up to the Nyquist frequency)
       index1 <- length(subA[subA>db]) / length(spectrum[spectrum>db])
@@ -115,18 +115,18 @@ aei <- function(wave,
 
 
   # Save the denominator used in the proportion calculation
-  if(propden == 1){
-    propdenom <- "within band"
-  }else if(propden == 2){
-    propdenom <- "max_freq"
-  }else if(propden == 3){
-    propdenom <- "nyquist"
+  if(prop.den == 1){
+    prop.denom <- "within band"
+  }else if(prop.den == 2){
+    prop.denom <- "max.freq"
+  }else if(prop.den == 3){
+    prop.denom <- "nyquist"
   }
 
   # Add information about noise reduction procedure
-  if(noisered == 1){
+  if(noise.red == 1){
     noise <- "rows"
-  } else if(noisered == 2){
+  } else if(noise.red == 2){
     noise <- "columns"
   } else {
     noise <- "none"
@@ -144,13 +144,13 @@ aei <- function(wave,
   #to keep each row every 10Hz
   #Frequencies and seconds covered by each
   # freq_per_row = 10
-  # wlen = samplingrate/freq_per_row
+  # w.len = samplingrate/freq_per_row
   # Calculate frequency resolution (i.e., frequency bin width)
-  freq_per_row = samplingrate/wlen
+  freq_per_row = samplingrate/w.len
 
-  # Adding 1 if wlen is an odd number (new behavior in seewave)
+  # Adding 1 if w.len is an odd number (new behavior in seewave)
   # fix by JSueur
-  if(wlen%%2 == 1) {wlen <- wlen+1}
+  if(w.len%%2 == 1) {w.len <- w.len+1}
 
 
   #Stereo file
@@ -163,40 +163,40 @@ aei <- function(wave,
     rm(wave)
 
     # Remove DC offset
-    if(rmoff == TRUE){
+    if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rmoffset(left)
-      right <- rmoffset(right)
+      left <- rm.offsetset(left)
+      right <- rm.offsetset(right)
     }
 
-    if(noisered == 1){
+    if(noise.red == 1){
       cat("Applying noise reduction filter to each row...\n")
-    } else if (noisered == 2){
+    } else if (noise.red == 2){
       cat("Applying noise reduction filter to each column...\n")
     }
 
 
     # #matrix of values
-    # specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE)$amp
-    # specA_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE)$amp
-    # Generate normalized spectrogram if normspec = TRUE
-    if(normspec == TRUE){
+    # specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE)$amp
+    # specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE)$amp
+    # Generate normalized spectrogram if norm.spec = TRUE
+    if(norm.spec == TRUE){
 
       cat("Using normalized spectrograms.\n\n")
 
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen,
-                              wn = wfun, noisereduction = noisered,
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len,
+                              wn = w.fun, noise.reduction = noise.red,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen,
-                               wn = wfun, noisereduction = noisered,
+        specA_right <- spectro(right, f = samplingrate, wl = w.len,
+                               wn = w.fun, noise.reduction = noise.red,
                                plot = FALSE)$amp
-      }else if (noisered == 0) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen,
-                              wn = wfun, noisereduction = NULL,
+      }else if (noise.red == 0) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len,
+                              wn = w.fun, noise.reduction = NULL,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen,
-                               wn = wfun, noisereduction = NULL,
+        specA_right <- spectro(right, f = samplingrate, wl = w.len,
+                               wn = w.fun, noise.reduction = NULL,
                                plot = FALSE)$amp
       }
 
@@ -208,18 +208,18 @@ aei <- function(wave,
       # Without normalizing the spectrogram
       cat("Using raw amplitude values (no spectrogram normalization)...\n\n")
 
-      # if(!is.null(noisered)){
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+      # if(!is.null(noise.red)){
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power",
-                              noisereduction = noisered)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE,
+                              noise.reduction = noise.red)$amp
+        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
                                norm=FALSE,dB=NULL,unit="power",
-                               noisereduction = noisered)$amp
-      }else if(noisered == 0){
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+                               noise.reduction = noise.red)$amp
+      }else if(noise.red == 0){
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power")$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE,
+        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
                                norm=FALSE,dB=NULL,unit="power")$amp
       }
 
@@ -236,21 +236,21 @@ aei <- function(wave,
 
     # rm(left,right)
 
-    if (max_freq > nyquist_freq) {
-      cat(paste("\n WARNING: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max_freq, "Hz. The value of max_freq was changed to ", nyquist_freq, ".\n\n", sep=""))
-      max_freq <- nyquist_freq
+    if (max.freq > nyquist_freq) {
+      cat(paste("\n WARNING: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max.freq, "Hz. The value of max.freq was changed to ", nyquist_freq, ".\n\n", sep=""))
+      max.freq <- nyquist_freq
     }
 
     # Set the frequency bands (Fran's comment)
-    # Freq<-seq(from = 0, to = max_freq - freq_step, by = freq_step)
-    Freq <- seq(from = min_freq, to = max_freq - freq_step, by = freq_step)
+    # Freq<-seq(from = 0, to = max.freq - freq_step, by = freq_step)
+    Freq <- seq(from = min.freq, to = max.freq - freq_step, by = freq_step)
 
 
     #LEFT CHANNEL
     Score <- rep(NA, length(Freq))
 
     for (j in 1:length(Freq)) {
-      Score[j] = getscore(specA_left, Freq[j], (Freq[j] + freq_step), db_threshold, freq_per_row)
+      Score[j] = getscore(specA_left, Freq[j], (Freq[j] + freq_step), cutoff, freq_per_row)
     }
 
 
@@ -260,13 +260,13 @@ aei <- function(wave,
     Score <- rep(NA, length(Freq))
 
     for (j in 1:length(Freq)) {
-      Score[j] = getscore(specA_right, Freq[j], (Freq[j] + freq_step), db_threshold, freq_per_row)
+      Score[j] = getscore(specA_right, Freq[j], (Freq[j] + freq_step), cutoff, freq_per_row)
     }
 
     right_vals = Score
 
     # 		cat(" ==============================================\n")
-    # 		cat(paste(" Results (with a dB threshold of ", db_threshold, ")\n\n", sep=""))
+    # 		cat(paste(" Results (with a dB threshold of ", cutoff, ")\n\n", sep=""))
 
     left_bandvals_return <- rep(NA, length(Freq))
     right_bandvals_return <- rep(NA, length(Freq))
@@ -359,16 +359,16 @@ aei <- function(wave,
 
     # Add metadata columns
     aeiOutputStereo <- aeiOutputStereo %>%
-      add_column(wlen = wlen,
-                 wfun = wfun,
-                 dbth = db_threshold,
-                 minf = min_freq,
-                 maxf = max_freq,
-                 nbands = nbands,
-                 norm = normspec,
-                 noisered = noise,
-                 rmoff = rmoff,
-                 propden = propdenom,
+      add_column(w.len = w.len,
+                 w.fun = w.fun,
+                 dbth = cutoff,
+                 minf = min.freq,
+                 maxf = max.freq,
+                 n.bands = n.bands,
+                 norm = norm.spec,
+                 noise.red = noise,
+                 rm.offset = rm.offset,
+                 prop.den = prop.denom,
                  samp = samplingrate,
                  freqres = freq_per_row,
                  nyq = nyquist_freq,
@@ -421,42 +421,42 @@ aei <- function(wave,
     rm(wave)
 
     # Remove DC offset
-    if(rmoff == TRUE){
+    if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rmoffset(left)
+      left <- rm.offsetset(left)
     }
 
 
-    if(noisered == 1){
+    if(noise.red == 1){
       cat("Applying noise reduction filter (subtract median amplitude) to each row...\n")
-    }else if(noisered == 2){
+    }else if(noise.red == 2){
       cat("Applying a noise reduction filter (subtract median amplitude) to each column...\n")
     }
 
-    # Generate normalized spectrogram if normspec = TRUE
-    if(normspec == TRUE){
+    # Generate normalized spectrogram if norm.spec = TRUE
+    if(norm.spec == TRUE){
 
       cat("Using normalized spectrograms.\n\n")
 
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
-                              noisereduction = noisered)$amp
-      }else if (noisered == 3) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE)$amp
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
+                              noise.reduction = noise.red)$amp
+      }else if (noise.red == 3) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE)$amp
       }
       rm(left)
 
     }else{
       # Without normalizing the spectrogram
       cat("Using raw amplitude values (no spectrogram normalization)...\n\n")
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power",
-                              noisereduction = noisered)$amp
-      }else if (noisered == 3) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+                              noise.reduction = noise.red)$amp
+      }else if (noise.red == 3) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power",
-                              noisereduction = noisered)$amp
+                              noise.reduction = noise.red)$amp
       }
       # Transform to decibels
       specA_left <- 10*log10(specA_left^2)
@@ -465,17 +465,17 @@ aei <- function(wave,
 
     }
 
-    if (max_freq>nyquist_freq) {
-      cat(paste("\n WARNING: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max_freq, "Hz. The value of max_freq was changed to ", nyquist_freq, ".\n\n", sep=""))
-      max_freq <- nyquist_freq
+    if (max.freq>nyquist_freq) {
+      cat(paste("\n WARNING: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max.freq, "Hz. The value of max.freq was changed to ", nyquist_freq, ".\n\n", sep=""))
+      max.freq <- nyquist_freq
     }
 
-    Freq <- seq(from = min_freq, to = max_freq - freq_step, by = freq_step)
+    Freq <- seq(from = min.freq, to = max.freq - freq_step, by = freq_step)
 
     Score <- rep(NA, length(Freq))
 
     for (j in 1:length(Freq)) {
-      Score[j] = getscore(specA_left, Freq[j], (Freq[j] + freq_step), db_threshold, freq_per_row)
+      Score[j] = getscore(specA_left, Freq[j], (Freq[j] + freq_step), cutoff, freq_per_row)
     }
 
     left_vals = Score
@@ -525,16 +525,16 @@ aei <- function(wave,
 
     # Add metadata columns
     aeiOutputMono <- aeiOutputMono %>%
-      add_column(wlen = wlen,
-                 wfun = wfun,
-                 dbth = db_threshold,
-                 minf = min_freq,
-                 maxf = max_freq,
-                 nbands = nbands,
-                 norm = normspec,
-                 noisered = noise,
-                 rmoff = rmoff,
-                 propden = propdenom,
+      add_column(w.len = w.len,
+                 w.fun = w.fun,
+                 dbth = cutoff,
+                 minf = min.freq,
+                 maxf = max.freq,
+                 n.bands = n.bands,
+                 norm = norm.spec,
+                 noise.red = noise,
+                 rm.offset = rm.offset,
+                 prop.den = prop.denom,
                  samp = samplingrate,
                  freqres = freq_per_row,
                  nyq = nyquist_freq,

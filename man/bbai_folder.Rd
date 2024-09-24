@@ -8,7 +8,7 @@ bbai_folder(
   folder,
   channel = "each",
   hpf = 0,
-  rmoffset = TRUE,
+  rm.offset = TRUE,
   freq.res = 100,
   cutoff = -60,
   click.length = 10,
@@ -16,7 +16,7 @@ bbai_folder(
   gap.allowance = 2,
   verbose = FALSE,
   output.csv = "bbai_results.csv",
-  ncores = NULL
+  n.cores = -1
 )
 }
 \arguments{
@@ -26,7 +26,7 @@ bbai_folder(
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
 
-\item{rmoffset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
+\item{rm.offset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
 
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 
@@ -37,6 +37,8 @@ bbai_folder(
 \item{gap.allowance}{Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click. Default is \code{2}. Gaps larger than this value will split clicks.}
 
 \item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 
 \item{click.height}{Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is \code{10}.}
 

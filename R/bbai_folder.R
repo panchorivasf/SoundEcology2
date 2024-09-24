@@ -5,7 +5,7 @@
 #' @param folder Character. The path to a folder with the wave files to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
-#' @param rmoffset Logical. Should the DC offset be removed from the audio signal? Defaults to `TRUE`.
+#' @param rm.offset Logical. Should the DC offset be removed from the audio signal? Defaults to `TRUE`.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
 #' @param cutoff Numeric. The amplitude threshold (in dBFS) for removing low-amplitude values in the spectrogram. Default is `-50`.
 #' @param click.height Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is `10`.
@@ -14,6 +14,7 @@
 #' @param plot Logical. Should a spectrogram with highlighted clicks be plotted? Default is `TRUE`.
 #' @param dark.plot Logical. Should the plot use a dark theme (black background)? Default is `FALSE`.
 #' @param plot.title Character. The title for the plot, if `plot` is `TRUE`. Default is `NULL`.
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
 
 #' @return A tibble containing the following columns:
@@ -40,7 +41,7 @@
 bbai_folder <- function(folder,
                         channel = 'each',
                         hpf = 0,
-                        rmoffset = TRUE,
+                        rm.offset = TRUE,
                         freq.res = 100,
                         cutoff = -60,
                         click.length = 10,
@@ -48,7 +49,7 @@ bbai_folder <- function(folder,
                         gap.allowance = 2,
                         verbose = FALSE,
                         output.csv = "bbai_results.csv",
-                        ncores = NULL) {
+                        n.cores = -1) {
 
 
   cat("Evaluating the job...\n")
@@ -89,12 +90,12 @@ bbai_folder <- function(folder,
   rm(bbai1)
 
 
-  if(is.null(ncores)){
+  if(is.null(n.cores)){
     num_cores <- 1
-  }else if(ncores == -1){
+  }else if(n.cores == -1){
     num_cores <- parallel::detectCores() - 1
   }else{
-    num_cores <- ncores
+    num_cores <- n.cores
   }
 
   if(nFiles < num_cores){
@@ -152,7 +153,7 @@ bbai_folder <- function(folder,
       bbai <- bbai(audio,
                    channel = channel,
                    hpf = hpf,
-                   rmoffset = rmoffset,
+                   rm.offset = rm.offset,
                    freq.res = freq.res,
                    cutoff = cutoff,
                    click.length = click.length,

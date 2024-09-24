@@ -6,43 +6,43 @@
 \usage{
 aei(
   wave,
-  wlen = 512,
-  wfun = "hanning",
-  min_freq = 0,
-  max_freq = 10000,
-  nbands = 10,
-  db_threshold = 5,
-  normspec = FALSE,
-  noisered = 2,
-  rmoff = TRUE,
+  w.len = 512,
+  w.fun = "hanning",
+  min.freq = 0,
+  max.freq = 10000,
+  n.bands = 10,
+  cutoff = 5,
+  norm.spec = FALSE,
+  noise.red = 2,
+  rm.offset = TRUE,
   props = TRUE,
-  propden = 1
+  prop.den = 1
 )
 }
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
 
-\item{wlen}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
 
-\item{wfun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
-\item{min_freq}{minimum frequency to compute the spectrogram.}
+\item{min.freq}{minimum frequency to compute the spectrogram.}
 
-\item{max_freq}{maximum frequency to compute the spectrogram.}
+\item{max.freq}{maximum frequency to compute the spectrogram.}
 
-\item{nbands}{number of bands to split the spectrogram.}
+\item{n.bands}{number of bands to split the spectrogram.}
 
-\item{db_threshold}{dB threshold to calculate energy proportions (if normspec = FALSE, set to 5 or above).}
+\item{cutoff}{dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above).}
 
-\item{normspec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).}
+\item{norm.spec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).}
 
-\item{noisered}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
+\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
 
-\item{rmoff}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
+\item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
 
 \item{props}{logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.}
 
-\item{propden}{numeric; indicates how the energy proportion is calculated.}
+\item{prop.den}{numeric; indicates how the energy proportion is calculated.}
 }
 \value{
 A tibble (data frame) with the AEI values for each channel (if stereo), metadata, and the parameters used for the calculation.

@@ -2,19 +2,21 @@
 % Please edit documentation in R/nbai_list.R
 \name{nbai_list}
 \alias{nbai_list}
-\title{Narrow-Band Activity Index for Files in a List}
+\title{Narrow-Band Activity Index for audio.list in a List}
 \usage{
 nbai_list(
-  files,
+  audio.list,
   channel = "each",
   output.csv = "nbai_results.csv",
-  ncores = NULL
+  n.cores = -1
 )
 }
 \arguments{
-\item{files}{Character. A list containing the names of the wave files to analyze.}
+\item{audio.list}{Character. A list containing the names of the wave audio.list to analyze.}
 
 \item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
 
@@ -29,8 +31,6 @@ nbai_list(
 \item{dark.plot}{Logical. If true (default) a the binary spectrogram will have a black background.}
 
 \item{plot.activity}{Logical. If true, a barplot depicting the percent activity in each frequency bin will be returned. Default is FALSE.}
-
-\item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
 }
 \value{
 A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI) summary statistics, and 3) a tibble with NBI spectral, which number of rows equals the number of frequency bins in the analysis.
@@ -39,5 +39,5 @@ A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-
 NBAI describes the relative amount of narrow-band persistent sound activity, like that of Cicadas and Orthopterans. This index can be used to evaluate insect activity and their influence on other soundscape metrics (e.g., summary acoustic indices).
 }
 \examples{
-nbai(wave, channel = 'left', plot = TRUE, verbose = TRUE)
+nbai_list(wave.list, channel = 'left', plot = TRUE)
 }

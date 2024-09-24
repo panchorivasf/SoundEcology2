@@ -3,18 +3,18 @@
 #' Inspired by the "Bioacoustic Index" from the paper:Boelman NT, Asner GP, Hart PJ, Martin RE. 2007.
 #' Multi-trophic invasion resistance in Hawaii: bioacoustics, field surveys, and airborne
 #' remote sensing. Ecol Applications 17(8):2137-44. Based on Matlab code provided by NT Boelman.
-#' Boelman et al. 2007 used min_freq=2000, max_freq=8000, wlen=512.
+#' Boelman et al. 2007 used min.freq=2000, max.freq=8000, w.len=512.
 #' Several parts where changed, in particular log math, so this won't be
 #' directly comparable to the original code in the paper.
 #'
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
-#' @param wlen the window length to compute the spectrogram (i.e., FFT window size).
-#' @param wfun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
-#' @param min_freq miminum frequency to use when calculating the value, in Hertz. Default = NA.
-#' @param max_freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
-#' @param normspec logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).
-#' @param noisered numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.
-#' @param rmoff logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
+#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param min.freq miminum frequency to use when calculating the value, in Hertz. Default = NA.
+#' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
+#' @param norm.spec logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).
+#' @param noise.red numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.
+#' @param rm.offset logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
 
 #' @return A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
@@ -23,41 +23,41 @@
 #' @examples bi(tropicalsound)
 
 bi <- function(wave,
-               wlen = 512,
-               wfun = "hanning",
-               min_freq = 2000,
-               max_freq = 8000,
-               normspec = FALSE,
-               noisered = 0,
-               rmoff = TRUE){
+               w.len = 512,
+               w.fun = "hanning",
+               min.freq = 2000,
+               max.freq = 8000,
+               norm.spec = FALSE,
+               noise.red = 0,
+               rm.offset = TRUE){
 
   #test arguments
-  if (is.numeric(as.numeric(min_freq))){
-    min_freq <- as.numeric(min_freq)
+  if (is.numeric(as.numeric(min.freq))){
+    min.freq <- as.numeric(min.freq)
   } else{
-    stop(" min_freq is not a number.")
+    stop(" min.freq is not a number.")
   }
 
-  if (is.numeric(as.numeric(max_freq))){
-    max_freq <- as.numeric(max_freq)
+  if (is.numeric(as.numeric(max.freq))){
+    max.freq <- as.numeric(max.freq)
   } else{
-    stop(" max_freq is not a number.")
+    stop(" max.freq is not a number.")
   }
 
-  if (is.numeric(as.numeric(wlen))){
-    wlen <- as.numeric(wlen)
+  if (is.numeric(as.numeric(w.len))){
+    w.len <- as.numeric(w.len)
   } else{
-    stop(" wlen is not a number.")
+    stop(" w.len is not a number.")
   }
 
   # Add information about noise reduction procedure
-  if(noisered == 1){
+  if(noise.red == 1){
     cat("Applying noise reduction filter (subtract median amplitude) to each row...\n")
     noise <- "rows"
-  } else if(noisered == 2){
+  } else if(noise.red == 2){
     cat("Applying a noise reduction filter (subtract median amplitude) to each column...\n")
     noise <- "columns"
-  } else if(noisered == 0) {
+  } else if(noise.red == 0) {
     noise <- "none"
   }
 
@@ -68,21 +68,21 @@ bi <- function(wave,
   nyquist_freq <- samplingrate/2
 
   # The maximum frequency must be equal or smaller than the Nyquist frequency
-  if (max_freq > nyquist_freq) {
-    cat(paste("\n WARNING: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max_freq, "Hz. The value of max_freq was changed to ", nyquist_freq, ".\n\n", sep = ""))
-    max_freq <- nyquist_freq
+  if (max.freq > nyquist_freq) {
+    cat(paste("\n WARNING: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max.freq, "Hz. The value of max.freq was changed to ", nyquist_freq, ".\n\n", sep = ""))
+    max.freq <- nyquist_freq
   }
 
 
-  freq_per_row = samplingrate/wlen
+  freq_per_row = samplingrate/w.len
 
   # freq_per_row = 10
-  # wlen = samplingrate/freq_per_row
+  # w.len = samplingrate/freq_per_row
 
 
 
-  if (max_freq > nyquist_freq) {
-    cat(paste("\n ERROR: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max_freq, "Hz.\n\n", sep = ""))
+  if (max.freq > nyquist_freq) {
+    cat(paste("\n ERROR: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max.freq, "Hz.\n\n", sep = ""))
     #break
   }
 
@@ -95,46 +95,46 @@ bi <- function(wave,
     # rm(wave)
 
     # Remove DC offset
-    if(rmoff == TRUE){
+    if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rmoffset(left)
-      right <- rmoffset(right)
+      left <- rm.offsetset(left)
+      right <- rm.offsetset(right)
     }
 
-    if(noisered == 1){
+    if(noise.red == 1){
       cat("Applying noise reduction filter to each row...\n")
-    } else if (noisered == 2){
+    } else if (noise.red == 2){
       cat("Applying noise reduction filter to each column...\n")
     }
 
 
 
     # #Get values
-    # spec_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE, dB = "max0")$amp
-    # spec_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE, dB = "max0")$amp
+    # spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE, dB = "max0")$amp
+    # spec_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE, dB = "max0")$amp
     # #Clear from memory
     # rm(left, right)
 
 
 
-    # Generate normalized spectrogram if normspec = TRUE
-    if(normspec == TRUE){
+    # Generate normalized spectrogram if norm.spec = TRUE
+    if(norm.spec == TRUE){
 
       cat("Using normalized spectrograms.\n\n")
 
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen,
-                              wn = wfun, noisereduction = noisered,
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len,
+                              wn = w.fun, noise.reduction = noise.red,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen,
-                               wn = wfun, noisereduction = noisered,
+        specA_right <- spectro(right, f = samplingrate, wl = w.len,
+                               wn = w.fun, noise.reduction = noise.red,
                                plot = FALSE)$amp
-      }else if (noisered == 0) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen,
-                              wn = wfun, noisereduction = NULL,
+      }else if (noise.red == 0) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len,
+                              wn = w.fun, noise.reduction = NULL,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen,
-                               wn = wfun, noisereduction = NULL,
+        specA_right <- spectro(right, f = samplingrate, wl = w.len,
+                               wn = w.fun, noise.reduction = NULL,
                                plot = FALSE)$amp
       }
 
@@ -146,18 +146,18 @@ bi <- function(wave,
       # Without normalizing the spectrogram
       cat("Using raw amplitude values (no spectrogram normalization)...\n\n")
 
-      # if(!is.null(noisered)){
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+      # if(!is.null(noise.red)){
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power",
-                              noisereduction = noisered)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE,
+                              noise.reduction = noise.red)$amp
+        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
                                norm=FALSE,dB=NULL,unit="power",
-                               noisereduction = noisered)$amp
-      }else if(noisered == 0){
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+                               noise.reduction = noise.red)$amp
+      }else if(noise.red == 0){
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power")$amp
-        specA_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE,
+        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
                                norm=FALSE,dB=NULL,unit="power")$amp
       }
 
@@ -178,15 +178,15 @@ bi <- function(wave,
     # bin width
     rows_width = length(specA_left) / nyquist_freq
 
-    min_row = min_freq * rows_width
-    max_row = max_freq * rows_width
+    min_row = min.freq * rows_width
+    max_row = max.freq * rows_width
 
     #Select rows
     specA_left_segment <- specA_left[min_row:max_row]
     specA_right_segment <- specA_right[min_row:max_row]
 
-    freq_range <- max_freq - min_freq
-    freqs <- seq(from = min_freq, to = max_freq, length.out = length(specA_left_segment))
+    freq_range <- max.freq - min.freq
+    freqs <- seq(from = min.freq, to = max.freq, length.out = length(specA_left_segment))
 
     specA_left_segment_normalized <- specA_left_segment - min(specA_left_segment)
     specA_right_segment_normalized <- specA_right_segment - min(specA_right_segment)
@@ -214,13 +214,13 @@ bi <- function(wave,
       add_column(value_avg = ((biOutputStereo$value_l+biOutputStereo$value_r)/2), .after = "value_r")
 
     biOutputStereo <- biOutputStereo %>%
-      add_column(wlen = wlen,
-                 wfun = wfun,
-                 minf = min_freq,
-                 maxf = max_freq,
-                 norm = normspec,
-                 noisered = noise,
-                 rmoff = rmoff,
+      add_column(w.len = w.len,
+                 w.fun = w.fun,
+                 minf = min.freq,
+                 maxf = max.freq,
+                 norm = norm.spec,
+                 noise.red = noise,
+                 rm.offset = rm.offset,
                  samp = samplingrate,
                  freqres = freq_per_row,
                  nyq = nyquist_freq,
@@ -237,19 +237,19 @@ bi <- function(wave,
     left<-channel(wave, which = c("left"))
 
     # Remove DC offset
-    if(rmoff == TRUE){
+    if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rmoffset(left)
+      left <- rm.offsetset(left)
     }
 
     # # Add information about noise reduction procedure
-    # if(noisered == 1){
+    # if(noise.red == 1){
     #   cat("Applying noise reduction filter (subtract median amplitude) to each row...\n")
     #   noise <- "rows"
-    # } else if(noisered == 2){
+    # } else if(noise.red == 2){
     #   cat("Applying a noise reduction filter (subtract median amplitude) to each column...\n")
     #   noise <- "columns"
-    # } else if(noisered == 0) {
+    # } else if(noise.red == 0) {
     #   noise <- "none"
     # }
     #
@@ -258,28 +258,28 @@ bi <- function(wave,
 #
 #     #Get values
 #     # cat("\n Calculating index. Please wait... \n\n")
-#     spec_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE, dB = "max0")$amp
+#     spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE, dB = "max0")$amp
 #     #Clear from memory
 #     rm(left)
 
-    # Generate normalized spectrogram if normspec = TRUE
-    if(normspec == TRUE){
+    # Generate normalized spectrogram if norm.spec = TRUE
+    if(norm.spec == TRUE){
 
       cat("Using normalized spectrograms.\n\n")
 
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen,
-                              wn = wfun, noisereduction = noisered,
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len,
+                              wn = w.fun, noise.reduction = noise.red,
                               plot = FALSE)$amp
-        # specA_right <- spectro(right, f = samplingrate, wl = wlen,
-        #                        wn = wfun, noisereduction = noisered,
+        # specA_right <- spectro(right, f = samplingrate, wl = w.len,
+        #                        wn = w.fun, noise.reduction = noise.red,
         #                        plot = FALSE)$amp
-      }else if (noisered == 0) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen,
-                              wn = wfun, noisereduction = NULL,
+      }else if (noise.red == 0) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len,
+                              wn = w.fun, noise.reduction = NULL,
                               plot = FALSE)$amp
-        # specA_right <- spectro(right, f = samplingrate, wl = wlen,
-        #                        wn = wfun, noisereduction = NULL,
+        # specA_right <- spectro(right, f = samplingrate, wl = w.len,
+        #                        wn = w.fun, noise.reduction = NULL,
         #                        plot = FALSE)$amp
       }
 
@@ -291,18 +291,18 @@ bi <- function(wave,
       # Without normalizing the spectrogram
       cat("Using raw amplitude values (no spectrogram normalization)...\n\n")
 
-      # if(!is.null(noisered)){
-      if(noisered == 1 || noisered == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+      # if(!is.null(noise.red)){
+      if(noise.red == 1 || noise.red == 2) {
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power",
-                              noisereduction = noisered)$amp
-        # specA_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE,
+                              noise.reduction = noise.red)$amp
+        # specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
         #                        norm=FALSE,dB=NULL,unit="power",
-        #                        noisereduction = noisered)$amp
-      }else if(noisered == 0){
-        specA_left <- spectro(left, f = samplingrate, wl = wlen, plot = FALSE,
+        #                        noise.reduction = noise.red)$amp
+      }else if(noise.red == 0){
+        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,unit="power")$amp
-        # specA_right <- spectro(right, f = samplingrate, wl = wlen, plot = FALSE,
+        # specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
         #                        norm=FALSE,dB=NULL,unit="power")$amp
       }
 
@@ -325,13 +325,13 @@ bi <- function(wave,
     #How much Hz are covered per row
     rows_width = length(specA_left) / nyquist_freq
 
-    min_row = min_freq * rows_width
-    max_row = max_freq * rows_width
+    min_row = min.freq * rows_width
+    max_row = max.freq * rows_width
 
     #Select rows
     specA_left_segment <- specA_left[min_row:max_row]
-    freq_range <- max_freq - min_freq
-    freqs <- seq(from = min_freq, to = max_freq, length.out = length(specA_left_segment))
+    freq_range <- max.freq - min.freq
+    freqs <- seq(from = min.freq, to = max.freq, length.out = length(specA_left_segment))
 
     specA_left_segment_normalized <- specA_left_segment - min(specA_left_segment)
 
@@ -348,13 +348,13 @@ bi <- function(wave,
 
 
     biOutputMono <- biOutputMono %>%
-      add_column(wlen = wlen,
-                 wfun = wfun,
-                 minf = min_freq,
-                 maxf = max_freq,
-                 norm = normspec,
-                 noisered = noise,
-                 rmoff = rmoff,
+      add_column(w.len = w.len,
+                 w.fun = w.fun,
+                 minf = min.freq,
+                 maxf = max.freq,
+                 norm = norm.spec,
+                 noise.red = noise,
+                 rm.offset = rm.offset,
                  samp = samplingrate,
                  freqres = freq_per_row,
                  nyq = nyquist_freq,

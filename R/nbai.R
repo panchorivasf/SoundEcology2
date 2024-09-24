@@ -39,8 +39,6 @@ nbai <- function(wave,
 
   if(plot.binary.spec&&plot.activity)stop("Plot only binary or activity...")
 
-  # Check if the wave is stereo
-  # Check if the wave is stereo
   if (wave@stereo) {
     if (channel == 'each') {
       wave.left <- tuneR::channel(wave, 'left')

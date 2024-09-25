@@ -28,7 +28,7 @@ tai_folder(
 
 \item{n.windows}{Numeric. Number of time windows to divide the signal into for analysis. Default is 60.}
 
-\item{freq.res}{Numeric. Frequency resolution (in Hz) for the spectrogram analysis. Default is 100.}
+\item{freq.res}{Numeric. Frequency resolution (Hz per bin) for the spectrogram analysis. Default is 100.}
 
 \item{plot}{Logical. If TRUE, generates a plot of the trill index over time. Default is TRUE.}
 

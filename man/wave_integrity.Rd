@@ -8,8 +8,9 @@ wave_integrity(
   folder,
   type = "lines",
   ggplot = TRUE,
-  output.file = "wave_integrity_summary.xlsx",
-  plot.file = "wave_integrity_plot.png"
+  plot.file = "wave_integrity_plot.png",
+  log.file = "wave_integrity_log.txt",
+  n.cores = -1
 )
 }
 \arguments{
@@ -19,9 +20,11 @@ wave_integrity(
 
 \item{ggplot}{Logical. If TRUE, the plot is produced with ggplot2. If FALSE, base plot is used.}
 
-\item{output.file}{Character. A name for the output .xlsx file. Include the extension in the string.}
-
 \item{plot.file}{Character. A name for the output plot. Include the extension in the string.}
+
+\item{log.file}{Character. A name for the log file (text file) output.}
+
+\item{n.cores}{Numeric. Number of cores to use in parallel processing. Defults to NULL (no parallel processing).}
 }
 \value{
 A tibble with summary data on file size, including the last day with complete recordings and days with corrupted files (i.e., smaller than most).

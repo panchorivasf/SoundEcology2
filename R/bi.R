@@ -123,18 +123,30 @@ bi <- function(wave,
       cat("Using normalized spectrograms.\n\n")
 
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len,
-                              wn = w.fun, noise.reduction = noise.red,
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              wn = w.fun,
+                              noise.reduction = noise.red,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len,
-                               wn = w.fun, noise.reduction = noise.red,
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               wn = w.fun,
+                               noise.reduction = noise.red,
                                plot = FALSE)$amp
       }else if (noise.red == 0) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len,
-                              wn = w.fun, noise.reduction = NULL,
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              wn = w.fun,
+                              noise.reduction = NULL,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len,
-                               wn = w.fun, noise.reduction = NULL,
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               wn = w.fun,
+                               noise.reduction = NULL,
                                plot = FALSE)$amp
       }
 
@@ -148,23 +160,46 @@ bi <- function(wave,
 
       # if(!is.null(noise.red)){
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power",
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
+                              norm=FALSE,
+                              dB=NULL,
                               noise.reduction = noise.red)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
-                               norm=FALSE,dB=NULL,unit="power",
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               plot = FALSE,
+                               norm=FALSE,
+                               dB=NULL,
                                noise.reduction = noise.red)$amp
       }else if(noise.red == 0){
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power")$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
-                               norm=FALSE,dB=NULL,unit="power")$amp
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
+                              norm=FALSE,
+                              dB=NULL)$amp
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               plot = FALSE,
+                               norm=FALSE,
+                               dB=NULL)$amp
       }
 
+      amp_max <- switch(as.character(wave@bit),
+                        `16` = 32767,
+                        `24` = 8388607,
+                        `32` = 2147483647,
+                        stop("Unsupported bit depth"))
 
-      # Transform to decibels
-      specA_left <- 10*log10(specA_left^2)
-      specA_right <- 10*log10(specA_right^2)
+      # Convert amplitude to dBFS
+      specA_left <- 20*log10(specA_left/amp_max)
+      # specA_left <- 10*log10(specA_left^2)
+      specA_right <- 20*log10(specA_right/amp_max)
+      # specA_right <- 10*log10(specA_right^2)
 
       rm(left)
       rm(right)
@@ -239,7 +274,7 @@ bi <- function(wave,
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rm.offsetset(left)
+      left <- seewave::rmoffsetset(left, output = "Wave")
     }
 
     # # Add information about noise reduction procedure
@@ -268,15 +303,21 @@ bi <- function(wave,
       cat("Using normalized spectrograms.\n\n")
 
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len,
-                              wn = w.fun, noise.reduction = noise.red,
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              wn = w.fun,
+                              noise.reduction = noise.red,
                               plot = FALSE)$amp
         # specA_right <- spectro(right, f = samplingrate, wl = w.len,
         #                        wn = w.fun, noise.reduction = noise.red,
         #                        plot = FALSE)$amp
       }else if (noise.red == 0) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len,
-                              wn = w.fun, noise.reduction = NULL,
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              wn = w.fun,
+                              noise.reduction = NULL,
                               plot = FALSE)$amp
         # specA_right <- spectro(right, f = samplingrate, wl = w.len,
         #                        wn = w.fun, noise.reduction = NULL,
@@ -293,31 +334,43 @@ bi <- function(wave,
 
       # if(!is.null(noise.red)){
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power",
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
+                              norm=FALSE,
+                              dB=NULL,
                               noise.reduction = noise.red)$amp
         # specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
         #                        norm=FALSE,dB=NULL,unit="power",
         #                        noise.reduction = noise.red)$amp
       }else if(noise.red == 0){
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power")$amp
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
+                              norm=FALSE,
+                              dB=NULL,unit="power")$amp
         # specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
         #                        norm=FALSE,dB=NULL,unit="power")$amp
       }
 
+      amp_max <- switch(as.character(wave@bit),
+                        `16` = 32767,
+                        `24` = 8388607,
+                        `32` = 2147483647,
+                        stop("Unsupported bit depth"))
 
+      # Convert amplitude to dBFS
+      specA_left <- 20*log10(specA_left/amp_max)
       # Transform to decibels
-      specA_left <- 10*log10(specA_left^2)
+      # specA_left <- 10*log10(specA_left^2)
       # specA_right <- 10*log10(specA_right^2)
 
       rm(left)
       # rm(right)
 
     }
-
-
-
 
     #Get average in time
     specA_left <- apply(specA_left, 1, meandB)

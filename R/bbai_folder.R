@@ -78,7 +78,7 @@ bbai_folder <- function(folder,
   sound1 <- readWave(files[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
-  bbai1 <- quiet(bbai(sound1, channel = 'mix'))
+  bbai1 <- quiet(bbai(sound1, channel = channel))
   tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
 
   # Assess how long it takes to parse 1 file
@@ -129,43 +129,22 @@ bbai_folder <- function(folder,
     # Initialize an empty tibble for the results
     result_list <- list()
 
-    # # Handle different channel selections
-    # if (channel == "each") {
-    #   # Process each channel separately
-    #   bbai_left <- bbai(audio, plot.title = filename, channel = "left")$summary
-    #   bbai_right <- bbai(audio, plot.title = filename, channel = "right")$summary
-    #
-    #   bbai <- bbai_left %>%
-    #     dplyr::select(-c(value))
-    #
-    #   # Combine the results into one row with 'value_l' and 'value_r' columns
-    #   result_list <- list(tibble(
-    #     file_name = filename,
-    #     value_l = bbai_left$value,
-    #     value_r = bbai_right$value,
-    #     value_avg = round((bbai_left$value + bbai_right$value) / 2, 3),
-    #     nbai
-    #   ))
+    bbai <- bbai(audio,
+                 channel = channel,
+                 hpf = hpf,
+                 rm.offset = rm.offset,
+                 freq.res = freq.res,
+                 cutoff = cutoff,
+                 click.length = click.length,
+                 difference = difference,
+                 gap.allowance = gap.allowance,
+                 verbose = FALSE
+    )
 
+    result_list <- list(
+      tibble(file_name = filename, channel = channel, bbai)
+    )
 
-    # } else {
-      # Process selected channel ("left", "right", or "mix")
-      bbai <- bbai(audio,
-                   channel = channel,
-                   hpf = hpf,
-                   rm.offset = rm.offset,
-                   freq.res = freq.res,
-                   cutoff = cutoff,
-                   click.length = click.length,
-                   difference = difference,
-                   gap.allowance = gap.allowance,
-                   verbose = FALSE
-                   )
-
-      result_list <- list(
-        tibble(file_name = filename, channel = channel, bbai)
-      )
-    # }
 
     return(do.call(rbind, result_list))
   }

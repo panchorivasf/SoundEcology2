@@ -25,9 +25,7 @@
 
 #' @export
 #'
-#' @importFrom seewave rmoffset
-#' @importFrom seewave spectro
-#' @importFrom seewave duration
+#' @importFrom seewave duration rmoffset fir
 #' @importFrom reshape2 melt
 #'
 #' @examples bbai(wave)
@@ -74,16 +72,14 @@ bbai <- function(wave,
                               freq.res,
                               cutoff){
 
-
     # Remove DC offset
     if (rm.offset) {
       wave <- seewave::rmoffset(wave, output = "Wave")
     }
 
-
     # Apply high-pass filter
     if (hpf > 0) {
-      wave <- fir(wave, from=hpf, to = NULL, bandpass = TRUE, output = "Wave", wl = 1024)
+      wave <- seewave::fir(wave, wl = 1024, from = hpf, to = NULL, bandpass = TRUE, output = "Wave")
     } else if (hpf < 0) {
       stop("HPF should be either 0 or a positive number (in Hertz) \n")
     }
@@ -92,11 +88,10 @@ bbai <- function(wave,
                                  freq.res = freq.res,
                                  cutoff = cutoff)
 
-
     # Initialize the number of time frames with clicks and list for click heights
     click_time_frames <- 0
-    click_heights <- c()  # Store lengths of clicks in frequency bins
-    centroids <- c()      # Store centroids of clicks
+    click_heights <- c()
+    centroids <- c()
 
     n_freq_bins <- nrow(matrix)
     n_time_frames <- ncol(matrix)
@@ -104,7 +99,7 @@ bbai <- function(wave,
     # Create a logical matrix to store click detection
     click_matrix <- matrix(FALSE, nrow = n_freq_bins, ncol = n_time_frames)
 
-    freq_values <- seq(0, wave@samp.rate / 2, length.out = n_freq_bins) / 1000  # Frequency in kHz
+    freq_values <- seq(0, wave@samp.rate / 2, length.out = n_freq_bins) / 1000
 
     for (i in 1:n_time_frames) {
       diff_vec <- diff(matrix[, i], na.rm = TRUE)
@@ -156,178 +151,45 @@ bbai <- function(wave,
     }
 
     # Compute the statistics for the click heights
-    if (length(click_heights) > 1) {
-      click_sum <- sum(click_heights)
-      click_mean <- round(mean(click_heights), 1)
-      click_variance <- round(var(click_heights), 1)
-      click_sd <- round(sd(click_heights), 1)
-    } else {
-      click_sum <- NA
-      click_mean <- NA
-      click_variance <- NA
-      click_sd <- NA
-    }
+    click_sum <- ifelse(length(click_heights) > 1, sum(click_heights), 0)
+    click_mean <- ifelse(length(click_heights) > 1, round(mean(click_heights), 1), 0)
+    click_variance <- ifelse(length(click_heights) > 1, round(var(click_heights), 1), 0)
+    click_sd <- ifelse(length(click_heights) > 1, round(sd(click_heights), 1), 0)
 
     # Analyze centroid frequencies
-    if (length(centroids) > 1) {
-      mean_centroid <- round(mean(centroids), 1)
-      sd_centroid <- round(sd(centroids), 1)
-      var_centroid <- round(var(centroids), 1)
-    } else {
-      mean_centroid <- NA
-      sd_centroid <- NA
-      var_centroid <- NA
-    }
-
+    mean_centroid <- ifelse(length(centroids) > 1, round(mean(centroids), 1), 0)
+    sd_centroid <- ifelse(length(centroids) > 1, round(sd(centroids), 1), 0)
+    var_centroid <- ifelse(length(centroids) > 1, round(var(centroids), 1), 0)
 
     # Identify click clusters by checking gaps between click frames
     click_times <- which(apply(click_matrix, 2, any))
-
-    if (length(click_times) > 1) {
-      click_diffs <- diff(click_times)
-
-      # Calculate the average distance between all clicks (mean.all.click.dist)
-      mean_all_click_dist <- round(mean(click_diffs))
-
-    } else {
-      # mean_click_dist_in_clust <- NA
-      mean_all_click_dist <- NA
-      # n_clusters <- NA
-    }
+    mean_all_click_dist <- ifelse(length(click_times) > 1, round(mean(diff(click_times))), 0)
 
     # Calculate the total number of cells in the spectrogram
     total_cells <- n_freq_bins * n_time_frames
 
     # Step 3: Calculate the proportion of clicks
-    broadband_activity <- round((click_sum / total_cells)*100,1)
+    broadband_activity <- round((click_sum / total_cells) * 100, 1)
 
     n_clicks <- length(click_heights)
 
-
-    # if (is.na(broadband_activity)) {
-    #   broadband_activity <- 0
-    #   noise <- FALSE
-    #   biophony <- FALSE
-    #   # } else if (mean_centroid > 5 || (!is.na(mean_all_click_dist) & mean_all_click_dist < 7 || n_clicks > 1000)) {
-    # } else if (mean_centroid > 5 || n_clicks > 1000) {
-    #
-    #   biophony <- TRUE
-    # } else {
-    #   biophony <- FALSE
-    # }
-    #
-
-    # # Check for noise
-    # if (click_variance > 100 || var_centroid > 10 || mean_centroid < 3  || broadband_activity < 1) {
-    #   noise <- TRUE
-    # } else {
-    #   noise <- FALSE
-    # }
-    #
-
     cat("Broadband Activity: ", broadband_activity, "\n")
 
-    # Update the data frame with the new metric
     summary <- tibble(
       index = "bbai",
       value = broadband_activity,
-      nclicks = length(click_heights),
+      nclicks = n_clicks,
       mean.length = click_mean,
       var.length = click_variance,
       sd.length = click_sd,
       mean.centroid = mean_centroid,
       sd.centroid = sd_centroid,
       var.centroid = var_centroid,
-      # n.click.clusters = n_clusters,
       mean.click.dist = mean_all_click_dist
-      # clus.mean.click.dist = mean_click_dist_in_clust,
-      # biophony = biophony,
-      # noise = noise
     )
 
-    # If plot is TRUE, generate the spectrogram with clicks highlighted
-    if (plot) {
-      time_values <- seq(0, total_duration, length.out = n_time_frames)
-      freq_values <- seq(0, by = samp_rate / 2 / n_freq_bins, length.out = n_freq_bins) / 1000
-
-      if (!is.null(click_matrix) && any(click_matrix)) {
-        combined_matrix <- matrix
-        combined_matrix[click_matrix] <- 0
-
-        plot_data <- as.data.frame(combined_matrix)
-        colnames(plot_data) <- time_values
-        plot_data <- cbind(Frequency = freq_values, plot_data)
-        plot_data <- reshape2::melt(plot_data, id.vars = "Frequency", variable.name = "Time", value.name = "dB")
-        plot_data$Time <- as.numeric(as.character(plot_data$Time))
-        plot_data$Click <- as.vector(click_matrix)
-
-        color_func <- scales::col_numeric(palette = c(if (dark.plot) "black" else "white", "#2c7bb6","#00a6ca","#00ccbc","#90eb9d",
-                                                      "#ffff8c", "#f9d057", "#f29e2e","#e76818","#d7191c"),
-                                          domain = c(-60, 0), na.color = "transparent")
-
-        plot_data$Color <- color_func(plot_data$dB)
-
-        p <- ggplot(plot_data, aes(x = Time, y = Frequency)) +
-          geom_tile(aes(fill = Color), color = NA) +
-          scale_fill_identity(na.value = "transparent") +
-          labs(x = "Time (s)", y = "Frequency (kHz)", title = plot.title) +
-          theme_bw() +
-          theme(legend.position = "none")
-
-        p <- p + geom_tile(data = subset(plot_data, Click == TRUE), fill = "red", color = NA) +
-          scale_x_continuous(expand = c(0,0)) +
-          scale_y_continuous(expand = c(0,0)) +
-
-          annotate("label", x = max(plot_data$Time) * 0.8, y = max(plot_data$Frequency) * 0.95,
-                   label = paste("BBAI:", summary$value,
-                                 "\nN. clicks:", summary$nclicks,
-                                 # "\nNoise:", summary$noise,
-                                 # "\nInsect:", summary$biophony,
-                                 "\nMean.click.dist.:", summary$mean.click.dist, "fr",
-                                 # "\nClick length stats:",
-                                 "\nMean.length:", summary$mean.length,
-                                 "\nVar.length:", summary$var.length,
-                                 "\nSD.length:", summary$sd.length,
-                                 # "\nClick centroid stats:",
-                                 "\nMean.cent:", summary$mean.centroid, "kHz",
-                                 "\nVar.cent:", summary$var.centroid, "kHz",
-                                 "\nSD.cent:", summary$sd.centroid, "kHz",
-                                 # "\nClick dist. stats:",
-                                 # "\nN.clusters:", summary$n.click.clusters,
-                                 # "\nClus.mean.click.dist.:", summary$clus.mean.click.dist, "fr",
-                                 "\nParameters:",
-                                 "\nCutoff:", cutoff, "dB",
-                                 "\nMin. click h.:", click.length,
-                                 "\nMax. amp. diff.:", difference
-                   ),
-                   hjust = 0, vjust = 1, size = 3.5, color = "black",
-                   label.size = 0.5, label.padding = unit(0.5, "lines"),
-                   fontface = "italic", fill = "white")
-
-        if (dark.plot) {
-          p <- p + theme(
-            plot.background = element_rect(fill = "black", color = NA),
-            panel.background = element_rect(fill = "black", color = NA),
-            axis.text = element_text(color = "white"),
-            axis.title = element_text(color = "white"),
-            axis.line = element_line(color = "white"),
-            axis.ticks = element_line(color = "white"),
-            panel.grid.major = element_line(color = scales::alpha("white", 0.2), linetype = "solid", linewidth = 0.3),
-            panel.grid.minor = element_line(color = scales::alpha("white", 0.2), linetype = "solid", linewidth = 0.05),
-            plot.title = element_text(color = "white", face = "bold", size = 14)
-          )
-        }
-
-        print(p)
-      } else {
-        warning("No clicks detected, skipping plot generation.")
-      }
-    }
-
     return(summary)
-
   }
-
 
   # Calculate the index based on the stereo condition
   if (channel == 'each') {
@@ -353,7 +215,7 @@ bbai <- function(wave,
       index = "bbai",
       value_l = bbai_left$value,
       value_r = bbai_right$value,
-      value_avg = round((bbai_left$value + bbai_right$value) / 2, 1),
+      value_avg = round((bbai_left$value + bbai_right$value) / 2, 2),
       n_clicks_l = bbai_left$nclicks,
       n_clicks_r = bbai_right$nclicks,
       n_clicks_avg = round((bbai_left$nclicks + bbai_right$nclicks) / 2, 1),

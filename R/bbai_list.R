@@ -35,9 +35,12 @@
 #' @import foreach
 #' @import doParallel
 #' @import parallel
+#' @importFrom tibble tibble
 #'
 #'
-#' @examples bbai_folder(path/to/folder)
+#' @examples
+#' files.list <- list_waves(path/to/folder)
+#' bbai_results <- bbai_list(files.list)
 bbai_list <- function(audio.list,
                         channel = 'each',
                         hpf = 0,
@@ -78,7 +81,7 @@ bbai_list <- function(audio.list,
   sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
-  bbai1 <- quiet(bbai(sound1, channel = 'mix'))
+  bbai1 <- quiet(bbai(sound1, channel = channel))
   tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
 
   # Assess how long it takes to parse 1 file

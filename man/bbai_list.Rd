@@ -62,5 +62,6 @@ A tibble containing the following columns:
 This function processes an audio signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
 }
 \examples{
-bbai_folder(path/to/folder)
+files.list <- list_waves(path/to/folder)
+bbai_results <- bbai_list(files.list)
 }

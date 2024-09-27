@@ -42,7 +42,7 @@
 #' @examples
 #' adi_folder("path/to/folder")
 adi_folder <- function (folder,
-                      save.csv = FALSE,
+                      save.csv = TRUE,
                       csv.name = "adi_results.csv",
                       freq.res = 50,
                       w.fun = "hanning",

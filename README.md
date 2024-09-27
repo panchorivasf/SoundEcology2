@@ -1,4 +1,4 @@
-This new version of the classic "soundecology" package includes new acoustic indices and several more options for the classic indices. 
+This new version of the classic "soundecology" package includes new acoustic indices and several additional parameters for the classic indices. 
 Major updates include:
 -Spectrogram settings using seewave's spectro() function are now fully customizable, which has several implications. 
 The first version of the package was developed when the spectro() function from the seewave package did not normalize the spectrograms by default.

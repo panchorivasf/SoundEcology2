@@ -39,11 +39,10 @@ aei <- function(wave,
                 n.bands = 10,
                 cutoff = -60,
                 norm.spec = FALSE,
-                noise.red = 2,
+                noise.red = 0,
                 rm.offset = TRUE,
                 props = TRUE,
                 prop.den = 1,
-                use.vegan = FALSE,
                 db.fs = TRUE){
 
 

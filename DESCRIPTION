@@ -22,4 +22,6 @@ Imports:
     seewave,
     tuneR,
     magrittr,
-    ineq
+    ineq,
+plotly,
+parallel

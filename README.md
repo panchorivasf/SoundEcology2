@@ -6,8 +6,8 @@ In one of the early seewave updates, this behavior changed and then the spectrog
 is problematic if you want to compare metrics based on non-focalized recordings (i.e., soundscape recordings). Additionally, the original documentation 
 states that the decibel threshold (or 'noise floor') for functions such as ADI and AEI was measured in dBFS (decibels Full Scale), which was inacurate, since 
 the decibels were relative to the maximum amplitude in the recording (normalized). In SoundEcology2 the user can select dBFS when using non-normalized spectrograms 
-(which is what you should always do if you want your comparisons across recordings to be valid). Additionally, the ADI and AEI functions now allow the user to select
-the frequency resolution ('freq.res' parameter). Originally, this was hard-coded to 10 Hz per bin, meaning that for a recording with a sampling rate of 48 kHz, the
+(which is highly recommended if the goal is to obtain valid comparisons across recordings). 
+Additionally, the ADI and AEI functions now allow the user to select the frequency resolution ('freq.res' parameter). Originally, this was hard-coded to 10 Hz per bin, meaning that for a recording with a sampling rate of 48 kHz, the
 window size will be 4800 samples, which overemphasizes the frequency resolution, blurring time features in the spectrogram. Additionally, these diversity indices now
 allow the user to choose between diffrent ways of calculating the proportions in each frequency band. The original code takes the proportion of cells above the threshold
 within the context of each frequency band. Some argue that this is not trully an application of Shannon's diversity, since the classical equation takes the proportion

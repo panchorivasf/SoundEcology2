@@ -32,7 +32,7 @@
 #' aci_list(files[1:5])
 
 aci_list <- function (audio.list,
-                      save.csv = FALSE,
+                      save.csv = TRUE,
                       csv.name = "aci_results.csv",
                       freq.res = 50,
                       w.fun = "hanning",

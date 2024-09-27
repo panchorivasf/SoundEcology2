@@ -31,7 +31,7 @@
 nbai_folder <- function(folder,
                         channel = "each",
                         hpf = 250,
-                        freq.res = 100,
+                        freq.res = 50,
                         cutoff = -60,
                         activity.cutoff = 10,
                         output.csv = "nbai_results.csv",

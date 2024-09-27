@@ -39,16 +39,16 @@
 #' fadi_folder(folder=pathB, "fadi_hydro_b.csv")
 
 fadi_folder <- function (folder,
-                         save_csv = FALSE,
+                         save_csv = TRUE,
                          csv_name = "fadi_results.csv",
-                         noise_file=NULL,
-                         NEM=2,
-                         min_freq=200,
+                         noise_fil e= NULL,
+                         NEM = 2,
+                         min_freq = 200,
                          max_freq = 10000,
                          threshold_fixed = -50,
                          freq_step = 1000,
                          gamma = 13,
-                         props=TRUE){
+                         props = FALSE){
 
   if(is.null(folder)){
     folder <- getwd()

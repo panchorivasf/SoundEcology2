@@ -19,11 +19,18 @@ Channel selection: Users can now select which channel to analyze, with an option
 New indices: In addition to the original indices (i.e., ADI, AEI, ACI, BI, and NDSI), SoundEcology2 allows to calculate Frequency Cover Indices (FCI: Low-Frequency Cover, Mid-Frequency Cover, High-Frequency Cover, and Ultra-Frequency Cover) with user-defined frequency bands. Three unpublished acoustic indices are introduced: 1) Narrow-band Activity Index (NBAI): summarizes the percentage of active cells in each frequency bin, allowing to monitor persistent sound sources such as crickets; 2) Broad-band Activity Index (BBAI): summarizes the active cells along each time bin, allowing to monitor the activity of 'noisy' insects (e.g., cicadas and some katydids) and their effect on other indices, as well as geophonic noise sources such as rain and heavy wind. 3) Trill Activity Index (TAI), similar to ACI, summarizes the variability in sound energy across frequency bins, being more sensitive to broadband stridulations such as those of bush-crickets and katydids. These indices can also be extracted as spectral indices (i.e., a vector of length = number of frequency bins), which can be used to craft False-color Spectrograms. 
 
 Three function types for each index:
+
 The basic function index() allows users to try the index with a single file.
+
 The 'list' function, index_list(), accepts a list of WAV file names in the working directory, enabling users to experiment with small batches of files.
+
 The 'folder' function, index_folder(), takes the path to a directory and analyzes all the WAV files inside the folder.
+
+
 Finally, we have added some helper functions to streamline the analysis process, including:
 
 list_waves: A function to list all the WAV files in a directory.
+
 wave_integrity: A function to check the integrity of WAV files in a directory. It produces a report with the last day of complete recordings and days with corrupted files, along with a corresponding plot.
+
 diel_index_plot: A function to visualize a day's worth of acoustic indices in an interactive, smoothed (LOESS) time series using the Plotly package. The plots can be stored as interactive HTML files or static PNGs.

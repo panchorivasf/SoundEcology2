@@ -3,7 +3,7 @@
 #' @param folder a path to the folder with audio files to import.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param win.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
 #' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to use when calculating the value, in Hertz. Default = 0.
 #' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
@@ -32,9 +32,9 @@
 #' aci_folder(path/to/folder)
 
 aci_folder <- function (folder,
-                       save.csv = FALSE,
+                       save.csv = TRUE,
                        csv.name = "aci_results.csv",
-                       win.len = 512,
+                       freq.res = 50,
                        win.fun = "hanning",
                        min.freq = NA,
                        max.freq = NA,
@@ -62,7 +62,7 @@ aci_folder <- function (folder,
   fileName <- tibble(file_name = audiolist)
   nFiles <- length(audiolist)
 
-  args_list <- list(win.len = win.len,
+  args_list <- list(freq.res = freq.res,
                     win.fun = win.fun,
                     min.freq = min.freq,
                     max.freq = max.freq,
@@ -79,7 +79,7 @@ aci_folder <- function (folder,
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   aci1 <- quiet(aci(sound1,
-                  args_list$win.len,
+                  args_list$freq.res,
                   args_list$win.fun,
                   args_list$min.freq,
                   args_list$max.freq,
@@ -129,12 +129,23 @@ aci_folder <- function (folder,
   results <- foreach(file = audiolist, .combine = rbind,
                      .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
 
-                       # Import the sounds
-                       sound <- readWave(file)
+                       # Try to read the sound file, handle errors gracefully
+                       sound <- tryCatch({
+                         readWave(file)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         return(NULL) # Skip this iteration and continue with the next file
+                       })
+
+                       # Skip processing if the sound is NULL (i.e., readWave failed)
+                       if (is.null(sound)) {
+                         return(NULL)
+                       }
+
 
                        # Calculate ACI and keep its default output columns
                        aci <- aci(sound,
-                                args_list$win.len,
+                                args_list$freq.res,
                                 args_list$win.fun,
                                 args_list$min.freq,
                                 args_list$max.freq,

@@ -9,7 +9,7 @@
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram
 #' @param max.freq maximum frequency to compute the spectrogram
 #' @param n.bands number of bands to split the spectrogram
@@ -52,7 +52,7 @@ adi_list <- function (audio.list,
                       save.csv = FALSE,
                       csv.name = "adi_results.csv",
                       freq.res = 100,
-                      win.fun = "hanning",
+                      w.fun = "hanning",
                       min.freq = 0,
                       max.freq = 10000,
                       n.bands = 10,
@@ -85,18 +85,18 @@ adi_list <- function (audio.list,
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)
 
-  args_list <- list(freq.res = freq.res,
-                    win.fun = win.fun,
-                    min.freq = min.freq,
-                    max.freq = max.freq,
-                    n.bands = n.bands,
-                    cutoff = cutoff,
-                    norm.spec = norm.spec,
-                    noise.red = noise.red,
-                    rm.offset = rm.offset,
-                    props = props,
-                    prop.den = prop.den,
-                    db.fs = db.fs)
+  # args_list <- list(freq.res = freq.res,
+  #                   w.fun = w.fun,
+  #                   min.freq = min.freq,
+  #                   max.freq = max.freq,
+  #                   n.bands = n.bands,
+  #                   cutoff = cutoff,
+  #                   norm.spec = norm.spec,
+  #                   noise.red = noise.red,
+  #                   rm.offset = rm.offset,
+  #                   props = props,
+  #                   prop.den = prop.den,
+  #                   db.fs = db.fs)
 
   # Evaluate the duration of the analysis
   # Measure processing time for a single file
@@ -105,10 +105,10 @@ adi_list <- function (audio.list,
   sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
-  adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$win.fun, args_list$min.freq,
-              args_list$max.freq, args_list$n.bands, args_list$cutoff,
-              args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
-              args_list$props, args_list$prop.den, args_list$db.fs))
+  adi1 <- quiet(adi(sound1, freq.res, w.fun, min.freq,
+              max.freq, n.bands, cutoff,
+              norm.spec, noise.red, rm.offset,
+              props, prop.den, db.fs))
 
   tibble(file_name = "filename") %>% bind_cols(adi1)
 
@@ -156,17 +156,23 @@ adi_list <- function (audio.list,
                        sound <- readWave(file)
 
                        # Calculate ADI and keep its default output columns
-                       adi <- adi(sound, freq.res = args_list$freq.res, win.fun = args_list$win.fun,
-                                  min.freq = args_list$min.freq, max.freq = args_list$max.freq,
-                                  n.bands = args_list$n.bands, cutoff = args_list$cutoff,
-                                  norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,
-                                  rm.offset = args_list$rm.offset, props = args_list$props,
-                                  prop.den = args_list$prop.den, args_list$db.fs)
+                       adi_result <- adi(sound, freq.res = freq.res, w.fun = w.fun,
+                                  min.freq = min.freq, max.freq = max.freq,
+                                  n.bands = n.bands, cutoff = cutoff,
+                                  norm.spec = norm.spec, noise.red = noise.red,
+                                  rm.offset = rm.offset, props = props,
+                                  prop.den = prop.den, db.fs)
+
+                       # Log for debugging
+                       print(paste("Processing:", file))
+                       print(paste("Left channel value:", adi_result$value_l))
+                       print(paste("Right channel value:", adi_result$value_r))
 
                        # Combine the results for each file into a single row
-                       tibble(file_name = file) %>%
-                         bind_cols(adi)
+                       result <- tibble(file_name = file) %>%
+                         bind_cols(adi_result)
 
+                       rm(sound, adi_result)
 
                      }
 

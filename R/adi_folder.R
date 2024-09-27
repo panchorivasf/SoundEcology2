@@ -8,7 +8,7 @@
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram
 #' @param max.freq maximum frequency to compute the spectrogram
 #' @param n.bands number of bands to split the spectrogram
@@ -44,10 +44,10 @@
 #' @examples
 #' adi_folder("path/to/folder")
 adi_folder <- function (folder,
-                        save.csv = FALSE,
+                        save.csv = TRUE,
                         csv.name = "adi_results.csv",
                         freq.res = 100,
-                        win.fun = "hanning",
+                        w.fun = "hanning",
                         min.freq = 0,
                         max.freq = 10000,
                         n.bands = 10,
@@ -79,19 +79,11 @@ adi_folder <- function (folder,
   fileName <- tibble(file_name = audiolist)
   nFiles <- length(audiolist)
 
+  args_list <- list(freq.res = freq.res, w.fun = w.fun, min.freq = min.freq,
+                    max.freq = max.freq, n.bands = n.bands, cutoff = cutoff,
+                    norm.spec = norm.spec, noise.red = noise.red, rm.offset = rm.offset,
+                    props = props, prop.den = prop.den, db.fs = db.fs)
 
-  args_list <- list(freq.res = freq.res,
-                    win.fun = win.fun,
-                    min.freq = min.freq,
-                    max.freq = max.freq,
-                    n.bands = n.bands,
-                    cutoff = cutoff,
-                    norm.spec = norm.spec,
-                    noise.red = noise.red,
-                    rm.offset = rm.offset,
-                    props = props,
-                    prop.den = prop.den,
-                    db.fs = db.fs)
 
 
   # Evaluate the duration of the analysis
@@ -101,7 +93,7 @@ adi_folder <- function (folder,
   sound1 <- readWave(audiolist[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
-  adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$win.fun, args_list$min.freq,
+  adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
                     args_list$max.freq, args_list$n.bands, args_list$cutoff,
                     args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
                     args_list$props, args_list$prop.den, args_list$db.fs))
@@ -148,16 +140,27 @@ adi_folder <- function (folder,
   results <- foreach(file = audiolist, .combine = rbind,
                      .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
 
-                       # Import the sounds
-                       sound <- readWave(file)
+                       # Try to read the sound file, handle errors gracefully
+                       sound <- tryCatch({
+                         readWave(file)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         return(NULL) # Skip this iteration and continue with the next file
+                       })
+
+                       # Skip processing if the sound is NULL (i.e., readWave failed)
+                       if (is.null(sound)) {
+                         return(NULL)
+                       }
+
 
                        # Calculate ADI and keep its default output columns
-                       adi <- adi(sound, freq.res = args_list$freq.res, win.fun = args_list$win.fun,
+                       adi <- adi(sound, freq.res = args_list$freq.res, w.fun = args_list$w.fun,
                                   min.freq = args_list$min.freq, max.freq = args_list$max.freq,
                                   n.bands = args_list$n.bands, cutoff = args_list$cutoff,
                                   norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,
                                   rm.offset = args_list$rm.offset, props = args_list$props,
-                                  prop.den = args_list$prop.den, args_list$db.fs)
+                                  prop.den = args_list$prop.den, db.fs = args_list$db.fs)
 
                        # Combine the results for each file into a single row
                        tibble(file_name = file) %>%

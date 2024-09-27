@@ -8,7 +8,7 @@ aei_list(
   audio.list,
   save.csv = FALSE,
   csv.name = "aei_results.csv",
-  w.len = 512,
+  freq.res = 100,
   w.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
@@ -28,8 +28,6 @@ aei_list(
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 
 \item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
-
-\item{w.len}{window length to compute the spectrogram}
 
 \item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
@@ -52,6 +50,8 @@ aei_list(
 \item{prop.den}{numeric. Indicates how the energy proportion is calculated by manipulating the denominator.}
 
 \item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+
+\item{frew.res}{the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).}
 }
 \value{
 a tibble (data frame) with the aei values for each channel (if stereo), metadata, and the parameters used for the calculation.

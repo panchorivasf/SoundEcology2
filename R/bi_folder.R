@@ -137,8 +137,18 @@ bi_folder <- function (folder,
   results <- foreach(file = audiolist, .combine = rbind,
                      .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
 
-                       # Import the sounds
-                       sound <- readWave(file)
+                       # Try to read the sound file, handle errors gracefully
+                       sound <- tryCatch({
+                         readWave(file)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         return(NULL) # Skip this iteration and continue with the next file
+                       })
+
+                       # Skip processing if the sound is NULL (i.e., readWave failed)
+                       if (is.null(sound)) {
+                         return(NULL)
+                       }
 
                        # Calculate BI and keep its default output columns
                        bi <- bi(sound,

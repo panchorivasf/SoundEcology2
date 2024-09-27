@@ -10,7 +10,9 @@ wave_integrity(
   ggplot = TRUE,
   plot.file = "wave_integrity_plot.png",
   log.file = "wave_integrity_log.txt",
-  n.cores = -1
+  n.cores = -1,
+  dump.folder = TRUE,
+  tail.folder = TRUE
 )
 }
 \arguments{
@@ -25,6 +27,10 @@ wave_integrity(
 \item{log.file}{Character. A name for the log file (text file) output.}
 
 \item{n.cores}{Numeric. Number of cores to use in parallel processing. Defults to NULL (no parallel processing).}
+
+\item{dump.folder}{Logical. If TRUE, a 'dump' folder is created in the working directory and all the DUMP files are moved to that folder.}
+
+\item{tail.folder}{Logical. If TRUE, a 'tail' folder is created in the working directory and all files belonging to dates after the last date with complete recordings are moved to that folder.}
 }
 \value{
 A tibble with summary data on file size, including the last day with complete recordings and days with corrupted files (i.e., smaller than most).

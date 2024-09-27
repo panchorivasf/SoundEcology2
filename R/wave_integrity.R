@@ -6,6 +6,8 @@
 #' @param plot.file Character. A name for the output plot. Include the extension in the string.
 #' @param log.file Character. A name for the log file (text file) output.
 #' @param n.cores Numeric. Number of cores to use in parallel processing. Defults to NULL (no parallel processing).
+#' @param dump.folder Logical. If TRUE, a 'dump' folder is created in the working directory and all the DUMP files are moved to that folder.
+#' @param tail.folder Logical. If TRUE, a 'tail' folder is created in the working directory and all files belonging to dates after the last date with complete recordings are moved to that folder.
 #'
 #' @return A tibble with summary data on file size, including the last day with complete recordings and days with corrupted files (i.e., smaller than most).
 #' @description This function parses all the WAVE files in a folder and checks their size, reporting corrupted files.
@@ -22,9 +24,11 @@ wave_integrity <- function(folder,
                            ggplot = TRUE,
                            plot.file = "wave_integrity_plot.png",
                            log.file = "wave_integrity_log.txt",
-                           n.cores = -1) {
+                           n.cores = -1,
+                           dump.folder = TRUE,
+                           tail.folder = TRUE) {
 
-  cat("Analizing the folder... please wait...\n")
+  cat("Analyzing the folder... please wait...\n")
 
   # List .wav files and extract size and modification date
   wav_files <- list.files(folder, pattern = "\\.wav$", full.names = TRUE)
@@ -33,32 +37,34 @@ wave_integrity <- function(folder,
     stop("No .wav files found in the specified folder.")
   }
 
-  # Create "dump" folder in the working directory if it doesn't exist
-  dump_folder <- file.path(getwd(), "dump")
-  if (!dir.exists(dump_folder)) {
-    dir.create(dump_folder)
-    cat("Created 'dump' folder in the working directory.\n")
+  # Create "dump" folder only if there are "dump" files to move
+  if (dump.folder) {
+    # Detect "dump" files
+    dump_files <- list.files(folder, pattern = "dump$", full.names = TRUE)
+
+    if (length(dump_files) > 0) {
+      # Create the "dump" folder in the working directory if it doesn't exist
+      dump_folder <- file.path(getwd(), "dump")
+      if (!dir.exists(dump_folder)) {
+        dir.create(dump_folder)
+        cat("Created 'dump' folder in the working directory.\n")
+      }
+
+      # Move "dump" files to the "dump" folder
+      file.rename(dump_files, file.path(dump_folder, basename(dump_files)))
+      cat(length(dump_files), "Dump files have been moved to the 'dump' folder.\n")
+    } else {
+      cat("No dump files were found.\n")
+    }
   }
 
-  # Detect all files ending with "dump"
-  dump_files <- list.files(folder, pattern = "dump$", full.names = TRUE)
-
-  # # Detect all files ending with "dump" and move them to the "dump" folder
-  # dump_files <- list.files(folder, pattern = "dump$", full.names = TRUE)
-  # if (length(dump_files) > 0) {
-  #   file.rename(dump_files, file.path(dump_folder, basename(dump_files)))
-  #   cat(length(dump_files), "files ending with 'dump' have been moved to the 'dump' folder.\n")
-  # } else {
-  #   cat("No files ending with 'dump' were found.\n")
-  # }
-
-  # Set up parallel processing based on the number of cores
+  # Set up parallel processing
   if (is.null(n.cores)) {
-    num_cores <- 1  # No parallel processing
+    num_cores <- 1
   } else if (n.cores == -1) {
-    num_cores <- parallel::detectCores() - 1  # Use all but one core
+    num_cores <- parallel::detectCores() - 1
   } else {
-    num_cores <- n.cores  # User-defined number of cores
+    num_cores <- n.cores
   }
 
   if (num_cores > 1) {
@@ -69,27 +75,10 @@ wave_integrity <- function(folder,
     cat("Using single core (no parallel processing)\n")
   }
 
-  # Parallel processing to move "dump" files
-  if (length(dump_files) > 0) {
-    cat("Moving files ending with 'dump'...\n")
-    if (num_cores > 1) {
-      foreach::foreach(file = dump_files) %dopar% {
-        file.rename(file, file.path(dump_folder, basename(file)))
-      }
-    } else {
-      lapply(dump_files, function(file) {
-        file.rename(file, file.path(dump_folder, basename(file)))
-      })
-    }
-    cat(length(dump_files), "Dump files have been moved to the 'dump' folder.\n")
-  } else {
-    cat("No dump files were found.\n")
-  }
-
-  # Run in parallel (or not, based on num_cores)
+  # Parallel processing for gathering file info
   if (num_cores > 1) {
     wav_info <- foreach::foreach(file = wav_files, .packages = c("tuneR", "dplyr")) %dopar% {
-      size <- file.info(file)$size / (1024*1024)  # size in MB
+      size <- file.info(file)$size / (1024 * 1024)  # size in MB
       date <- as.POSIXct(file.info(file)$mtime)
       list(file = basename(file), size = size, date = date)
     }
@@ -108,39 +97,59 @@ wave_integrity <- function(folder,
     group_by(date) %>%
     summarize(mean_size = round(mean(size)), .groups = 'drop')
 
-  # Calculate the first day's mean size
-  first_day_mean_size <- round(summary_data$mean_size[1])
+  # Calculate the rounded median size of all wav files
+  median_size <- round(median(wav_info$size, na.rm = TRUE))
 
-  # Detect the last complete date where the mean size is equal to the first day's mean size
-  last_complete_date <- summary_data %>%
-    filter(mean_size == first_day_mean_size) %>%
-    summarize(last_date = max(date)) %>%
-    pull(last_date)
-
-  # Detect dates with corrupted files (outliers)
+  # Identify corrupted dates where mean size is less than the median size
   corrupted_dates <- summary_data %>%
-    filter(mean_size < first_day_mean_size) %>%
+    filter(mean_size < median_size) %>%
     pull(date)
 
-  # Print diagnostics to the console
-  cat("Last complete date: ", format(last_complete_date, "%Y-%m-%d"), "\n")
-  cat("Dates with corrupted files: \n")
-  print(as.character(corrupted_dates))
-
-  # Write the same information to the log file
+  # Write log file with summary information
   writeLines(c(
-    paste("Last complete date: ", format(last_complete_date, "%Y-%m-%d")),
-    "Dates with corrupted files: ",
+    paste("Median file size: ", round(median_size, 2), " MB"),
+    "Dates with corrupted files:",
     paste(as.character(corrupted_dates), collapse = "\n")
   ), con = log.file)
 
-  # Plot based on ggplot or base R
+  # Print diagnostics to the console
+  cat("Median file size: ", round(median_size, 2), " MB\n")
+  cat("Dates with corrupted files: \n")
+  print(as.character(corrupted_dates))
+
+  # Create "tail" folder and move small files if tail.folder is TRUE
+  if (tail.folder) {
+    tail_folder <- file.path(getwd(), "tail")
+    if (!dir.exists(tail_folder)) {
+      dir.create(tail_folder)
+      cat("Created 'tail' folder in the working directory.\n")
+    }
+
+    # Move files smaller than the rounded median size and within corrupted dates
+    small_files <- wav_files[wav_info$size < median_size & as.Date(wav_info$date) %in% corrupted_dates]
+
+    if (length(small_files) > 0) {
+      if (num_cores > 1) {
+        foreach::foreach(file = small_files) %dopar% {
+          file.rename(file, file.path(tail_folder, basename(file)))
+        }
+      } else {
+        lapply(small_files, function(file) {
+          file.rename(file, file.path(tail_folder, basename(file)))
+        })
+      }
+      cat(length(small_files), "files from corrupted dates have been moved to the 'tail' folder.\n")
+    } else {
+      cat("No corrupted fileswere found.\n")
+    }
+  }
+
+  # Plot the results
   if (ggplot) {
-    # GGplot2
     p <- ggplot(summary_data, aes(x = date, y = mean_size)) +
-      scale_x_date(date_breaks = "1 day", date_labels = "%Y-%m-%d") +  # Ensure daily ticks and labels
+      scale_x_date(date_breaks = "1 day", date_labels = "%Y-%m-%d") +
       labs(x = "Date", y = "Mean Size (MB)", title = "WAV files integrity") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
     if (type == "lines") {
       p <- p + geom_line()
@@ -150,39 +159,36 @@ wave_integrity <- function(folder,
       p <- p + geom_point()
     }
 
-    # Add outliers as red points
-    p <- p + geom_point(data = summary_data[summary_data$mean_size < first_day_mean_size, ],
+    # Highlight corrupted files in red
+    p <- p + geom_point(data = summary_data[summary_data$mean_size < median_size, ],
                         aes(x = date, y = mean_size), color = 'red', size = 3)
 
     print(p)
 
-    # Save the plot as a PNG
+    # Save the plot
     ggsave(plot.file, plot = p, width = 8, height = 6)
     cat("Plot saved to:", plot.file, "\n")
-
   } else {
     # Base R plot
-    png(filename = plot.file, width = 800, height = 600)  # Open PNG device
-
+    png(filename = plot.file, width = 800, height = 600)
     plot(summary_data$date, summary_data$mean_size, type = "n", xlab = "Date", ylab = "Mean Size (MB)",
          main = "WAV file size over time", xaxt = "n")
 
     if (type == "lines") {
       lines(summary_data$date, summary_data$mean_size)
     } else if (type == "bars") {
-      barplot(summary_data$mean_size, names.arg = summary_data$date, xlab = "Date", ylab = "Mean Size (KB)")
+      barplot(summary_data$mean_size, names.arg = summary_data$date, xlab = "Date", ylab = "Mean Size (MB)")
     } else if (type == "points") {
       points(summary_data$date, summary_data$mean_size, pch = 19)
     }
 
-    # Customize x-axis to show daily ticks and labels
-    axis(1, at = summary_data$date, labels = format(summary_data$date, "%Y-%m-%d"), las = 2)  # Rotate labels
+    axis(1, at = summary_data$date, labels = format(summary_data$date, "%Y-%m-%d"), las = 2)
 
-    # Add outliers in red
-    points(summary_data$date[summary_data$mean_size < first_day_mean_size],
-           summary_data$mean_size[summary_data$mean_size < first_day_mean_size], col = "red", pch = 19)
+    # Highlight corrupted files in red
+    points(summary_data$date[summary_data$mean_size < median_size],
+           summary_data$mean_size[summary_data$mean_size < median_size], col = "red", pch = 19)
 
-    dev.off()  # Close PNG device
+    dev.off()
     cat("Plot saved to:", plot.file, "\n")
   }
 
@@ -193,5 +199,9 @@ wave_integrity <- function(folder,
 
   invisible(summary_data)
 }
+
+
+
+
 
 

@@ -1,11 +1,11 @@
 #' Calculate BBAI for all the Files in a Folder
 #'
-#' This function processes an audio signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
+#' This function processes an sound signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
 #'
 #' @param folder Character. The path to a folder with the wave files to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
-#' @param rm.offset Logical. Should the DC offset be removed from the audio signal? Defaults to `TRUE`.
+#' @param rm.offset Logical. Should the DC offset be removed from the sound signal? Defaults to `TRUE`.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
 #' @param cutoff Numeric. The amplitude threshold (in dBFS) for removing low-amplitude values in the spectrogram. Default is `-50`.
 #' @param click.height Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is `10`.
@@ -123,13 +123,24 @@ bbai_folder <- function(folder,
 
     filename <- basename(file)  # Get file name without path
 
-    # Read audio file
-    audio <- readWave(file)
+    # Try to read the sound file, handle errors gracefully
+    sound <- tryCatch({
+      readWave(file)
+    }, error = function(e) {
+      message(paste("Error reading file:", file, "Skipping to the next file."))
+      return(NULL) # Skip this iteration and continue with the next file
+    })
+
+    # Skip processing if the sound is NULL (i.e., readWave failed)
+    if (is.null(sound)) {
+      return(NULL)
+    }
+
 
     # Initialize an empty tibble for the results
     result_list <- list()
 
-    bbai <- bbai(audio,
+    bbai <- bbai(sound,
                  channel = channel,
                  hpf = hpf,
                  rm.offset = rm.offset,

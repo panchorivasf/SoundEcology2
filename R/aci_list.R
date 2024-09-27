@@ -3,7 +3,7 @@
 #' @param audio.list a list of audio files to import.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
 #' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to use when calculating the value, in Hertz. Default = 0.
 #' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
@@ -34,8 +34,8 @@
 aci_list <- function (audio.list,
                       save.csv = FALSE,
                       csv.name = "aci_results.csv",
-                      win.len = 512,
-                      win.fun = "hanning",
+                      freq.res = 50,
+                      w.fun = "hanning",
                       min.freq = NA,
                       max.freq = NA,
                       j = NA,
@@ -58,7 +58,7 @@ aci_list <- function (audio.list,
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)
 
-  args_list <- list(w.len = w.len,
+  args_list <- list(freq.res = freq.res,
                     w.fun = w.fun,
                     min.freq = min.freq,
                     max.freq = max.freq,
@@ -75,7 +75,7 @@ aci_list <- function (audio.list,
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   aci1 <- quiet(aci(sound1,
-                    args_list$w.len,
+                    args_list$freq.res,
                     args_list$w.fun,
                     args_list$min.freq,
                     args_list$max.freq,
@@ -130,7 +130,7 @@ aci_list <- function (audio.list,
 
                        # Calculate ACI and keep its default output columns
                        aci <- aci(sound,
-                                  args_list$w.len,
+                                  args_list$freq.res,
                                   args_list$w.fun,
                                   args_list$min.freq,
                                   args_list$max.freq,

@@ -6,23 +6,23 @@
 \usage{
 aei(
   wave,
-  w.len = 512,
+  freq.res = 100,
   w.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
   n.bands = 10,
-  cutoff = 5,
+  cutoff = -60,
   norm.spec = FALSE,
   noise.red = 2,
   rm.offset = TRUE,
   props = TRUE,
-  prop.den = 1
+  prop.den = 1,
+  use.vegan = FALSE,
+  db.fs = TRUE
 )
 }
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
-
-\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
 
 \item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
@@ -32,7 +32,7 @@ aei(
 
 \item{n.bands}{number of bands to split the spectrogram.}
 
-\item{cutoff}{dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above).}
+\item{cutoff}{dB threshold to calculate energy proportions.}
 
 \item{norm.spec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).}
 
@@ -43,6 +43,10 @@ aei(
 \item{props}{logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.}
 
 \item{prop.den}{numeric; indicates how the energy proportion is calculated.}
+
+\item{db.fs}{logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.}
+
+\item{frew.res}{the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).}
 }
 \value{
 A tibble (data frame) with the AEI values for each channel (if stereo), metadata, and the parameters used for the calculation.
@@ -50,7 +54,7 @@ A tibble (data frame) with the AEI values for each channel (if stereo), metadata
 \description{
 Acoustic Evenness Index from Villanueva-Rivera \emph{et al.} 2011.
 The AEI is calculated by dividing the spectrogram into frequency bands (default 10),
-taking the proportion of energy in each band above an energy threshold (default -50 dBFS),
+taking the proportion of energy in each band above an energy threshold,
 and then calculating the Gini Coefficient from those proportions.
 The new version allows the user to choose between different ways to compute
 the proportions before calculating the Gini, among other new parameter options (see Details)

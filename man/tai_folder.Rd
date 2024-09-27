@@ -42,7 +42,7 @@ tai_folder(
 A tibble summarizing TAI statistics, including values for low and mid-frequency noise.
 }
 \description{
-This function calculates the trill index of an audio wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
+This function calculates the trill index of an sound wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
 }
 \examples{
 path <- "path/to/folder"

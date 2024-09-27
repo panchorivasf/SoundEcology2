@@ -3,22 +3,25 @@
 #' @description
 #' Acoustic Evenness Index from Villanueva-Rivera \emph{et al.} 2011.
 #' The AEI is calculated by dividing the spectrogram into frequency bands (default 10),
-#' taking the proportion of energy in each band above an energy threshold (default -50 dBFS),
+#' taking the proportion of energy in each band above an energy threshold,
 #' and then calculating the Gini Coefficient from those proportions.
 #' The new version allows the user to choose between different ways to compute
 #' the proportions before calculating the Gini, among other new parameter options (see Details)
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
-#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param frew.res the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).
 #' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram.
 #' @param max.freq maximum frequency to compute the spectrogram.
 #' @param n.bands number of bands to split the spectrogram.
-#' @param cutoff dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above).
+#' @param cutoff dB threshold to calculate energy proportions.
 #' @param norm.spec logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).
 #' @param noise.red numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.
 #' @param rm.offset logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
 #' @param props logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.
 #' @param prop.den numeric; indicates how the energy proportion is calculated.
+#' @param db.fs logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.
+#' @param db.fs logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.
+
 #'
 #' @return A tibble (data frame) with the AEI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
@@ -29,17 +32,19 @@
 #' @import dplyr
 #' @examples aei(tropicalsound)
 aei <- function(wave,
-                w.len = 512,
+                freq.res = 100,
                 w.fun = "hanning",
                 min.freq = 0,
                 max.freq = 10000,
                 n.bands = 10,
-                cutoff = 5,
+                cutoff = -60,
                 norm.spec = FALSE,
                 noise.red = 2,
                 rm.offset = TRUE,
                 props = TRUE,
-                prop.den = 1){
+                prop.den = 1,
+                use.vegan = FALSE,
+                db.fs = TRUE){
 
 
 
@@ -146,7 +151,10 @@ aei <- function(wave,
   # freq_per_row = 10
   # w.len = samplingrate/freq_per_row
   # Calculate frequency resolution (i.e., frequency bin width)
-  freq_per_row = samplingrate/w.len
+  freq_per_row = freq.res
+  w.len = samplingrate/freq.res
+
+  # freq_per_row = samplingrate/w.len
 
   # Adding 1 if w.len is an odd number (new behavior in seewave)
   # fix by JSueur
@@ -160,13 +168,13 @@ aei <- function(wave,
 
     left<-channel(wave, which = c("left"))
     right<-channel(wave, which = c("right"))
-    rm(wave)
+    # rm(wave)
 
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rm.offsetset(left)
-      right <- rm.offsetset(right)
+      left <- seewave::rmoffset(left, output = "Wave")
+      right <- seewave::rmoffset(right, output = "Wave")
     }
 
     if(noise.red == 1){
@@ -179,24 +187,37 @@ aei <- function(wave,
     # #matrix of values
     # specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE)$amp
     # specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE)$amp
+
     # Generate normalized spectrogram if norm.spec = TRUE
     if(norm.spec == TRUE){
 
       cat("Using normalized spectrograms.\n\n")
 
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len,
-                              wn = w.fun, noise.reduction = noise.red,
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              wn = w.fun,
+                              noisereduction = noise.red,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len,
-                               wn = w.fun, noise.reduction = noise.red,
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               wn = w.fun,
+                               noisereduction = noise.red,
                                plot = FALSE)$amp
       }else if (noise.red == 0) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len,
-                              wn = w.fun, noise.reduction = NULL,
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              wn = w.fun,
+                              noisereduction = NULL,
                               plot = FALSE)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len,
-                               wn = w.fun, noise.reduction = NULL,
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               wn = w.fun,
+                               noisereduction = NULL,
                                plot = FALSE)$amp
       }
 
@@ -210,23 +231,68 @@ aei <- function(wave,
 
       # if(!is.null(noise.red)){
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power",
-                              noise.reduction = noise.red)$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
-                               norm=FALSE,dB=NULL,unit="power",
-                               noise.reduction = noise.red)$amp
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
+                              norm=FALSE,
+                              dB=NULL,
+                              noisereduction = noise.red,
+                              correction = "amplitude")$amp
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               plot = FALSE,
+                               norm=FALSE,
+                               dB=NULL,
+                               noisereduction = noise.red,
+                               correction = "amplitude")$amp
       }else if(noise.red == 0){
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power")$amp
-        specA_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
-                               norm=FALSE,dB=NULL,unit="power")$amp
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
+                              norm = FALSE,
+                              dB = NULL,
+                              correction = "amplitude")$amp
+        specA_right <- spectro(right,
+                               f = samplingrate,
+                               wl = w.len,
+                               plot = FALSE,
+                               norm = FALSE,
+                               dB = NULL,
+                               correction = "amplitude")$amp
       }
 
 
-      # Transform to decibels
-      specA_left <- 10*log10(specA_left^2)
-      specA_right <- 10*log10(specA_right^2)
+      if(db.fs==TRUE){
+
+        # Calculate amp_max based on bit depth
+        amp_max <- if (wave@bit == 16) {
+          32768
+        } else if (wave@bit == 24) {
+          8388607
+        } else if (wave@bit == 32) {
+          2147483647
+        } else {
+          stop("Unsupported bit depth")
+        }
+
+        # Convert amplitude to dBFS
+        specA_left <- 20 * log10(abs(specA_left) / amp_max)
+        specA_right <- 20 * log10(abs(specA_right) / amp_max)
+
+
+
+      }else{
+
+        # Transform to decibels
+        specA_left <- 10*log10(specA_left^2)
+        specA_right <- 10*log10(specA_right^2)
+
+
+      }
+
 
       rm(left, right)
 
@@ -254,7 +320,7 @@ aei <- function(wave,
     }
 
 
-    left_vals=Score
+    left_vals=Score + 0.000001
 
     #RIGHT CHANNEL
     Score <- rep(NA, length(Freq))
@@ -263,7 +329,7 @@ aei <- function(wave,
       Score[j] = getscore(specA_right, Freq[j], (Freq[j] + freq_step), cutoff, freq_per_row)
     }
 
-    right_vals = Score
+    right_vals = Score + 0.000001
 
     # 		cat(" ==============================================\n")
     # 		cat(paste(" Results (with a dB threshold of ", cutoff, ")\n\n", sep=""))
@@ -361,7 +427,7 @@ aei <- function(wave,
     aeiOutputStereo <- aeiOutputStereo %>%
       add_column(w.len = w.len,
                  w.fun = w.fun,
-                 dbth = cutoff,
+                 cutoff = cutoff,
                  minf = min.freq,
                  maxf = max.freq,
                  n.bands = n.bands,
@@ -418,12 +484,12 @@ aei <- function(wave,
 
 
     left<-channel(wave, which = c("left"))
-    rm(wave)
+    # rm(wave)
 
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rm.offsetset(left)
+      left <- seewave::rmoffset(left, output = "Wave")
     }
 
 
@@ -439,10 +505,16 @@ aei <- function(wave,
       cat("Using normalized spectrograms.\n\n")
 
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
                               noise.reduction = noise.red)$amp
       }else if (noise.red == 3) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE)$amp
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE)$amp
       }
       rm(left)
 
@@ -450,12 +522,16 @@ aei <- function(wave,
       # Without normalizing the spectrogram
       cat("Using raw amplitude values (no spectrogram normalization)...\n\n")
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power",
+        specA_left <- spectro(left,
+                              f = samplingrate,
+                              wl = w.len,
+                              plot = FALSE,
+                              norm = FALSE,
+                              dB=NULL,
                               noise.reduction = noise.red)$amp
       }else if (noise.red == 3) {
         specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                              norm=FALSE,dB=NULL,unit="power",
+                              norm=FALSE,dB=NULL,
                               noise.reduction = noise.red)$amp
       }
       # Transform to decibels
@@ -525,18 +601,18 @@ aei <- function(wave,
 
     # Add metadata columns
     aeiOutputMono <- aeiOutputMono %>%
-      add_column(w.len = w.len,
-                 w.fun = w.fun,
-                 dbth = cutoff,
-                 minf = min.freq,
-                 maxf = max.freq,
-                 n.bands = n.bands,
+      add_column(w_len = w.len,
+                 w_fun = w.fun,
+                 cutoff = cutoff,
+                 min_f = min.freq,
+                 max_f = max.freq,
+                 n_bands = n.bands,
                  norm = norm.spec,
-                 noise.red = noise,
-                 rm.offset = rm.offset,
-                 prop.den = prop.denom,
+                 noise_red = noise,
+                 rm_offset = rm.offset,
+                 prop_den = prop.denom,
                  samp = samplingrate,
-                 freqres = freq_per_row,
+                 freq_res = freq_per_row,
                  nyq = nyquist_freq,
                  duration = duration,
                  channels = "mono")
@@ -573,8 +649,7 @@ aei <- function(wave,
 
     # return(aeiOutputMono)
 
-
+    return(aeiOutputMono)
 
   }
-  return(aeiOutputMono)
 }

@@ -108,14 +108,25 @@ nbai_folder <- function(folder,
 
     filename <- basename(file)  # Get file name without path
 
-    # Read audio file
-    audio <- readWave(file)
+    # Try to read the sound file, handle errors gracefully
+    sound <- tryCatch({
+      readWave(file)
+    }, error = function(e) {
+      message(paste("Error reading file:", file, "Skipping to the next file."))
+      return(NULL) # Skip this iteration and continue with the next file
+    })
+
+    # Skip processing if the sound is NULL (i.e., readWave failed)
+    if (is.null(sound)) {
+      return(NULL)
+    }
+
 
     # Initialize an empty tibble for the results
     result_list <- list()
 
     # Process selected channel
-    nbai <- nbai(audio,
+    nbai <- nbai(sound,
                  channel = channel,
                  hpf = hpf,
                  freq.res = freq.res,

@@ -73,11 +73,11 @@ A tibble containing the frequency cover analysis results for each file.
 }
 \description{
 This function performs a frequency cover indices (FCI) on all WAV files within a specified folder.
-It processes each audio file in parallel (if specified) and saves the results in a CSV file.
+It processes each sound file in parallel (if specified) and saves the results in a CSV file.
 }
 \examples{
 \dontrun{
-# Run frequency cover analysis on all WAV files in the folder "audio_files"
-fci_folder("audio_files", output.csv = "results.csv", channel = "left", n.cores = 4)
+# Run frequency cover analysis on all WAV files in the folder "sound_files"
+fci_folder("sound_files", output.csv = "results.csv", channel = "left", n.cores = 4)
 }
 }

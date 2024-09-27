@@ -6,9 +6,9 @@
 \usage{
 aci_folder(
   folder,
-  save.csv = FALSE,
+  save.csv = TRUE,
   csv.name = "aci_results.csv",
-  win.len = 512,
+  freq.res = 50,
   win.fun = "hanning",
   min.freq = NA,
   max.freq = NA,
@@ -25,7 +25,7 @@ aci_folder(
 
 \item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{win.len}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
 
 \item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 

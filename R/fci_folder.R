@@ -1,7 +1,7 @@
 #' Frequency Cover Indices on Multiple WAV Files in a Folder
 #'
 #' This function performs a frequency cover indices (FCI) on all WAV files within a specified folder.
-#' It processes each audio file in parallel (if specified) and saves the results in a CSV file.
+#' It processes each sound file in parallel (if specified) and saves the results in a CSV file.
 #'
 #' @param folder The folder containing the WAV files to analyze.
 #' @param output.csv The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
@@ -29,8 +29,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Run frequency cover analysis on all WAV files in the folder "audio_files"
-#' fci_folder("audio_files", output.csv = "results.csv", channel = "left", n.cores = 4)
+#' # Run frequency cover analysis on all WAV files in the folder "sound_files"
+#' fci_folder("sound_files", output.csv = "results.csv", channel = "left", n.cores = 4)
 #' }
 
 fci_folder <- function(folder,
@@ -126,13 +126,24 @@ fci_folder <- function(folder,
 
     filename <- basename(file)  # Get file name without path
 
-    # Read audio file
-    audio <- readWave(file)
+    # Try to read the sound file, handle errors gracefully
+    sound <- tryCatch({
+      readWave(file)
+    }, error = function(e) {
+      message(paste("Error reading file:", file, "Skipping to the next file."))
+      return(NULL) # Skip this iteration and continue with the next file
+    })
+
+    # Skip processing if the sound is NULL (i.e., readWave failed)
+    if (is.null(sound)) {
+      return(NULL)
+    }
+
 
     # Initialize an empty tibble for the results
     result_list <- list()
 
-    results <- fci(wave = audio,
+    results <- fci(wave = sound,
                   channel = channel,
                   rm.offset = rm.offset,
                   hpf = hpf,

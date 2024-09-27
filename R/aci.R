@@ -1,7 +1,7 @@
 #' Acoustic Complexity Index
 #'
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
-#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
 #' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to use when calculating the value, in Hertz. Default = 0.
 #' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
@@ -33,7 +33,8 @@
 #'
 #' @examples aci(tropicalsound)
 aci <- function(wave,
-                w.len = 512,
+                freq.res = 50,
+                # w.len = 512,
                 w.fun = "hanning",
                 min.freq = NA,
                 max.freq = NA,
@@ -68,10 +69,10 @@ aci <- function(wave,
 
 
 
-  if (is.numeric(as.numeric(w.len))){
-    w.len <- as.numeric(w.len)
+  if (is.numeric(as.numeric(freq.res))){
+    freq.res <- as.numeric(freq.res)
   } else{
-    stop(" w.len is not a number.")
+    stop(" freq.res is not a number.")
   }
 
 
@@ -106,11 +107,14 @@ aci <- function(wave,
 
   #Get Nyquist frequency in Hz
   nyquist_freq <- (samplingrate/2)
+
   if (max.freq>nyquist_freq) {
     cat(paste("\n WARNING: The maximum acoustic frequency that this file can use is ", nyquist_freq, "Hz. But the script was set to measure up to ", max.freq, "Hz. The value of max.freq was changed to ", nyquist_freq, ".\n\n", sep = ""))
     max.freq <- nyquist_freq
     #break
   }
+
+  w.len <- samplingrate/freq.res
 
   # #window length for the spectro and spec functions
   # w.len = fft_w
@@ -120,7 +124,7 @@ aci <- function(wave,
   if(w.len%%2 == 1) {w.len <- w.len+1}
 
   # Calculate frequency resolution (i.e., frequency bin width)
-  freq_per_row = samplingrate/w.len
+  freq_per_row = freq.res
 
 
 
@@ -135,8 +139,8 @@ aci <- function(wave,
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rm.offsetset(left)
-      right <- rm.offsetset(right)
+      left <- seewave::rmoffset(left, output = "Wave")
+      right <- seewave::rmoffset(right, output = "Wave")
     }
 
 
@@ -147,12 +151,24 @@ aci <- function(wave,
     }
 
     if(noise.red == 1 || noise.red == 2) {
-    spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                         norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun,
-                         noise.reduction = noise.red)
+    spec_left <- seewave::spectro(left,
+                         f = samplingrate,
+                         wl = w.len,
+                         plot = FALSE,
+                         norm = TRUE,
+                         dB = NULL,
+                         scale = FALSE,
+                         wn = w.fun,
+                         noisereduction = noise.red)
     }else if (noise.red == 0) {
-      spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                           norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun)
+      spec_left <- seewave::spectro(left,
+                           f = samplingrate,
+                           wl = w.len,
+                           plot = FALSE,
+                           norm = TRUE,
+                           dB = NULL,
+                           scale = FALSE,
+                           wn = w.fun)
     }
 
 
@@ -186,7 +202,7 @@ aci <- function(wave,
     spec_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
                           norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun,
                           noise.reduction = noise.red)
-    }else if (noise.red == 3) {
+    }else if (noise.red == 0) {
       spec_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
                             norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun)
     }
@@ -336,8 +352,7 @@ aci <- function(wave,
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rm.offsetset(left)
-      # right <- rm.offsetset(right)
+      left <- seewave::rmoffset(left, output = "Wave")
     }
 
     if(noise.red == 1){
@@ -376,7 +391,7 @@ aci <- function(wave,
     #LEFT CHANNEL
     specA_rows <- dim(specA_left)[1]
     specA_cols <- dim(specA_left)[2]
-    #
+
     # 		freq_per_row <- specA_rows/nyquist_freq
     #
     # 		max_row <- round(max.freq * freq_per_row)
@@ -449,7 +464,8 @@ aci <- function(wave,
 
      # Add metadata columns
     aciOutputMono <- aciOutputMono %>%
-      add_column(w.len = w.len,
+      add_column(freq.res = freq.res,
+                 w.len = w.len,
                  w.fun = w.fun,
                  j = j,
                  minf = min.freq,

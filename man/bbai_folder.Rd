@@ -26,7 +26,7 @@ bbai_folder(
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
 
-\item{rm.offset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
+\item{rm.offset}{Logical. Should the DC offset be removed from the sound signal? Defaults to \code{TRUE}.}
 
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 
@@ -59,7 +59,7 @@ A tibble containing the following columns:
 }
 }
 \description{
-This function processes an audio signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
+This function processes an sound signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
 }
 \examples{
 bbai_folder(path/to/folder)

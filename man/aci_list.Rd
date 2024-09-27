@@ -8,8 +8,8 @@ aci_list(
   audio.list,
   save.csv = FALSE,
   csv.name = "aci_results.csv",
-  win.len = 512,
-  win.fun = "hanning",
+  freq.res = 50,
+  w.fun = "hanning",
   min.freq = NA,
   max.freq = NA,
   j = NA,
@@ -25,6 +25,10 @@ aci_list(
 
 \item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
+\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
+
+\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+
 \item{min.freq}{minimum frequency to use when calculating the value, in Hertz. Default = 0.}
 
 \item{max.freq}{maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).}
@@ -34,10 +38,6 @@ aci_list(
 \item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
 
 \item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
-
-\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
-
-\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 }
 \value{
 A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and the parameters used for the calculation.

@@ -6,7 +6,7 @@
 \usage{
 aci(
   wave,
-  w.len = 512,
+  freq.res = 50,
   w.fun = "hanning",
   min.freq = NA,
   max.freq = NA,
@@ -18,7 +18,7 @@ aci(
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
 
-\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
 
 \item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 

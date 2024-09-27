@@ -7,7 +7,7 @@
 #' @param audio.list a list with the audio files to import.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param w.len window length to compute the spectrogram
+#' @param frew.res the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).
 #' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram
 #' @param max.freq maximum frequency to compute the spectrogram
@@ -47,7 +47,7 @@
 aei_list <- function (audio.list,
                       save.csv = FALSE,
                       csv.name = "aei_results.csv",
-                      w.len = 512,
+                      freq.res = 100,
                       w.fun = "hanning",
                       min.freq = 0,
                       max.freq = 10000,
@@ -79,7 +79,7 @@ aei_list <- function (audio.list,
   nFiles <- length(audio.list)
 
 
-  args_list <- list(w.len = w.len, w.fun = w.fun, min.freq = min.freq,
+  args_list <- list(freq.res = freq.res, w.fun = w.fun, min.freq = min.freq,
                     max.freq = max.freq, n.bands = n.bands, cutoff = cutoff,
                     norm.spec = norm.spec, noise.red = noise.red, rm.offset = rm.offset,
                     props = props, prop.den = prop.den)
@@ -92,7 +92,7 @@ aei_list <- function (audio.list,
   sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
-  aei1 <- quiet(aei(sound1, args_list$w.len, args_list$w.fun, args_list$min.freq,
+  aei1 <- quiet(aei(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
                     args_list$max.freq, args_list$n.bands, args_list$cutoff,
                     args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
                     args_list$props, args_list$prop.den))
@@ -144,7 +144,7 @@ aei_list <- function (audio.list,
                        sound <- readWave(file)
 
                        # Calculate AEI and keep its default output columns
-                       aei <- aei(sound, w.len = args_list$w.len, w.fun = args_list$w.fun,
+                       aei <- aei(sound, freq.res = args_list$freq.res, w.fun = args_list$w.fun,
                                   min.freq = args_list$min.freq, max.freq = args_list$max.freq,
                                   n.bands = args_list$n.bands, cutoff = args_list$cutoff,
                                   norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,

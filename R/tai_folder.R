@@ -1,8 +1,8 @@
 #' Calculate Trill Activity Index for all the Files in a Folder
 #'
-#' This function calculates the trill index of an audio wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
+#' This function calculates the trill index of an sound wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
 #'
-#' @param folder Character. The path to the folder containing the WAV files to analyze. 
+#' @param folder Character. The path to the folder containing the WAV files to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param wave A wave object to be analyzed.
 #' @param channel Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".
@@ -20,7 +20,7 @@
 #' @importFrom dplyr bind_cols
 #' @importFrom lubridate seconds
 #'
-#' @examples 
+#' @examples
 #' path <- "path/to/folder"
 #' tai_results <- tai_folder(path)
 tai_folder <- function(folder,
@@ -35,10 +35,10 @@ tai_folder <- function(folder,
                      verbose = TRUE,
                      output.csv = "tai_results.csv",
                      n.cores = -1) {
-  
-  
+
+
   cat("Evaluating the job...\n")
-  
+
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -48,34 +48,34 @@ tai_folder <- function(folder,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-  
-  setwd(folder)
-  audio.list <- list.files(path=folder, pattern = ".wav|.WAV")
 
-  filename <- tibble(filename = audio.list)
-  nFiles <- length(audio.list)
-  
-  
+  setwd(folder)
+  sound.list <- list.files(path=folder, pattern = ".wav|.WAV")
+
+  filename <- tibble(filename = sound.list)
+  nFiles <- length(sound.list)
+
+
   # Evaluate the duration of the analysis
   # Measure processing time for a single file
   startTime <- Sys.time()
-  
-  sound1 <- readWave(audio.list[1])
+
+  sound1 <- readWave(sound.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
-  
+
   tai1 <- quiet(tai(sound1, channel = channel))
-  
-  tibble::tibble(file_name = "filename") %>% 
+
+  tibble::tibble(file_name = "filename") %>%
     dplyr::bind_cols(tai1)
-  
+
   # Assess how long it takes to parse 1 file
   timePerFile <-  Sys.time() - startTime
   # Add overhead per file
   timePerFile <- timePerFile + as.numeric(lubridate::seconds(2.2))
-  
+
   rm(sound1)
   rm(tai1)
-  
+
   # Determine number of cores to use
   if(is.null(n.cores)){
     num_cores <- 1
@@ -84,15 +84,15 @@ tai_folder <- function(folder,
   }else{
     num_cores <- n.cores
   }
-  
+
   # Release unused cores
   if(nFiles < num_cores){
     num_cores <- nFiles
   }
-  
+
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
-  
+
   # Estimate total time accounting for parallel processing
   estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
   # Add overhead time
@@ -100,24 +100,34 @@ tai_folder <- function(folder,
   # Calculate the end time
   expectedCompletionTime <- Sys.time() + adjustedTotalTime
   # Set up parallel processing
-  
+
   cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
   cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-  
-  
+
+
   # Define parallel computation
-  results <- foreach(file = audio.list, .packages = c("soundecology2", "tuneR", "seewave", "tibble")) %dopar% {
-    
+  results <- foreach(file = sound.list, .packages = c("soundecology2", "tuneR", "seewave", "tibble")) %dopar% {
+
     filename <- basename(file)  # Get file name without path
-    
-    # Read audio file
-    audio <- readWave(file)
-    
+
+    # Try to read the sound file, handle errors gracefully
+    sound <- tryCatch({
+      readWave(file)
+    }, error = function(e) {
+      message(paste("Error reading file:", file, "Skipping to the next file."))
+      return(NULL) # Skip this iteration and continue with the next file
+    })
+
+    # Skip processing if the sound is NULL (i.e., readWave failed)
+    if (is.null(sound)) {
+      return(NULL)
+    }
+
     # Initialize an empty tibble for the results
     result_list <- list()
-    
-    tai <- tai(audio,
+
+    tai <- tai(sound,
                channel = channel,
                hpf = hpf,
                rm.offset = rm.offset,
@@ -127,27 +137,27 @@ tai_folder <- function(folder,
                plot = FALSE,
                plot.title = NULL,
                verbose = FALSE)$summary
-    
+
     result_list <- list(
       tibble(file_name = filename, channel = channel, tai)
     )
-    
-    
+
+
     return(do.call(rbind, result_list))
   }
-  
+
   # Combine all the results into a single tibble
   combined_results <- do.call(rbind, results)
-  
+
   combined_results <- addMetadata(combined_results)
-  
+
   # Export results to CSV
   write.csv(combined_results, file = output.csv, row.names = FALSE)
-  
+
   # Stop parallel cluster
   stopCluster(cl)
-  
+
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
-  
+
   return(combined_results)
 }

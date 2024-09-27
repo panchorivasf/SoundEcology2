@@ -7,9 +7,9 @@ is problematic if you want to compare metrics based on non-focalized recordings 
 states that the decibel threshold (or 'noise floor') for functions such as ADI and AEI was measured in dBFS (decibels Full Scale), which was inacurate, since 
 the decibels were relative to the maximum amplitude in the recording (normalized). In SoundEcology2 the user can select dBFS when using non-normalized spectrograms 
 (which is highly recommended if the goal is to obtain valid comparisons across recordings). 
-Additionally, the ADI and AEI functions now allow the user to select the frequency resolution ('freq.res' parameter). Originally, this was hard-coded to 10 Hz per bin, meaning that for a recording with a sampling rate of 48 kHz, the
-window size will be 4800 samples, which overemphasizes the frequency resolution, blurring time features in the spectrogram. Additionally, these diversity indices now
-allow the user to choose between diffrent ways of calculating the proportions in each frequency band. The original code takes the proportion of cells above the threshold
+Additionally, the ADI and AEI functions now allow the user to select the frequency resolution ('freq.res' parameter). Originally, this was hard-coded to 10 Hz per bin, 
+meaning that for a recording with a sampling rate of 48 kHz, the window size will be 4800 samples, which overemphasizes the frequency resolution, blurring time features in the spectrogram. 
+These diversity indices now allow the user to choose between diffrent ways of calculating the proportions in each frequency band. The original code takes the proportion of cells above the threshold
 within the context of each frequency band. Some argue that this is not trully an application of Shannon's diversity, since the classical equation takes the proportion
 of individuals in the whole population, including all the species in the community. Therefore, we have added two new options for calculating proportion of active cells 
 in the spectrogram matrix: Option '2' calculates the proportion over the whole range of frequencies selected by the user for the analysis, which would be closer to a 

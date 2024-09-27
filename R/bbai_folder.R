@@ -1,11 +1,11 @@
 #' Calculate BBAI for all the Files in a Folder
 #'
-#' This function processes an audio signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
+#' This function processes an sound signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
 #'
 #' @param folder Character. The path to a folder with the wave files to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
-#' @param rmoffset Logical. Should the DC offset be removed from the audio signal? Defaults to `TRUE`.
+#' @param rm.offset Logical. Should the DC offset be removed from the sound signal? Defaults to `TRUE`.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
 #' @param cutoff Numeric. The amplitude threshold (in dBFS) for removing low-amplitude values in the spectrogram. Default is `-50`.
 #' @param click.height Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is `10`.
@@ -14,6 +14,7 @@
 #' @param plot Logical. Should a spectrogram with highlighted clicks be plotted? Default is `TRUE`.
 #' @param dark.plot Logical. Should the plot use a dark theme (black background)? Default is `FALSE`.
 #' @param plot.title Character. The title for the plot, if `plot` is `TRUE`. Default is `NULL`.
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
 
 #' @return A tibble containing the following columns:
@@ -40,7 +41,7 @@
 bbai_folder <- function(folder,
                         channel = 'each',
                         hpf = 0,
-                        rmoffset = TRUE,
+                        rm.offset = TRUE,
                         freq.res = 100,
                         cutoff = -60,
                         click.length = 10,
@@ -48,7 +49,7 @@ bbai_folder <- function(folder,
                         gap.allowance = 2,
                         verbose = FALSE,
                         output.csv = "bbai_results.csv",
-                        ncores = NULL) {
+                        n.cores = -1) {
 
 
   cat("Evaluating the job...\n")
@@ -77,7 +78,7 @@ bbai_folder <- function(folder,
   sound1 <- readWave(files[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
-  bbai1 <- quiet(bbai(sound1, channel = 'mix'))
+  bbai1 <- quiet(bbai(sound1, channel = channel))
   tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
 
   # Assess how long it takes to parse 1 file
@@ -89,12 +90,12 @@ bbai_folder <- function(folder,
   rm(bbai1)
 
 
-  if(is.null(ncores)){
+  if(is.null(n.cores)){
     num_cores <- 1
-  }else if(ncores == -1){
+  }else if(n.cores == -1){
     num_cores <- parallel::detectCores() - 1
   }else{
-    num_cores <- ncores
+    num_cores <- n.cores
   }
 
   if(nFiles < num_cores){
@@ -122,49 +123,39 @@ bbai_folder <- function(folder,
 
     filename <- basename(file)  # Get file name without path
 
-    # Read audio file
-    audio <- readWave(file)
+    # Try to read the sound file, handle errors gracefully
+    sound <- tryCatch({
+      readWave(file)
+    }, error = function(e) {
+      message(paste("Error reading file:", file, "Skipping to the next file."))
+      return(NULL) # Skip this iteration and continue with the next file
+    })
+
+    # Skip processing if the sound is NULL (i.e., readWave failed)
+    if (is.null(sound)) {
+      return(NULL)
+    }
+
 
     # Initialize an empty tibble for the results
     result_list <- list()
 
-    # # Handle different channel selections
-    # if (channel == "each") {
-    #   # Process each channel separately
-    #   bbai_left <- bbai(audio, plot.title = filename, channel = "left")$summary
-    #   bbai_right <- bbai(audio, plot.title = filename, channel = "right")$summary
-    #
-    #   bbai <- bbai_left %>%
-    #     dplyr::select(-c(value))
-    #
-    #   # Combine the results into one row with 'value_l' and 'value_r' columns
-    #   result_list <- list(tibble(
-    #     file_name = filename,
-    #     value_l = bbai_left$value,
-    #     value_r = bbai_right$value,
-    #     value_avg = round((bbai_left$value + bbai_right$value) / 2, 3),
-    #     nbai
-    #   ))
+    bbai <- bbai(sound,
+                 channel = channel,
+                 hpf = hpf,
+                 rm.offset = rm.offset,
+                 freq.res = freq.res,
+                 cutoff = cutoff,
+                 click.length = click.length,
+                 difference = difference,
+                 gap.allowance = gap.allowance,
+                 verbose = FALSE
+    )
 
+    result_list <- list(
+      tibble(file_name = filename, channel = channel, bbai)
+    )
 
-    # } else {
-      # Process selected channel ("left", "right", or "mix")
-      bbai <- bbai(audio,
-                   channel = channel,
-                   hpf = hpf,
-                   rmoffset = rmoffset,
-                   freq.res = freq.res,
-                   cutoff = cutoff,
-                   click.length = click.length,
-                   difference = difference,
-                   gap.allowance = gap.allowance,
-                   verbose = FALSE
-                   )
-
-      result_list <- list(
-        tibble(file_name = filename, channel = channel, bbai)
-      )
-    # }
 
     return(do.call(rbind, result_list))
   }

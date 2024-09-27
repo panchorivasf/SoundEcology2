@@ -8,7 +8,7 @@ fci_list(
   audio.list,
   output.csv = "fci_results.csv",
   channel = "left",
-  rmoffset = TRUE,
+  rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
   freq.res = 100,
@@ -24,7 +24,7 @@ fci_list(
   hf.max = 18000,
   uf.min = 18000,
   uf.max = 24000,
-  ncores = NULL
+  n.cores = -1
 )
 }
 \arguments{
@@ -34,7 +34,7 @@ fci_list(
 
 \item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.}
 
-\item{rmoffset}{Logical. Whether to remove the DC offset from the signal. Default is TRUE.}
+\item{rm.offset}{Logical. Whether to remove the DC offset from the signal. Default is TRUE.}
 
 \item{hpf}{High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.}
 
@@ -66,7 +66,7 @@ fci_list(
 
 \item{uf.max}{The maximum frequency (in Hz) for the ultra-high-frequency band. Default is 24000.}
 
-\item{ncores}{The number of cores to use for parallel processing. Use \code{ncores = -1} to use all but one core. Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 }
 \value{
 A tibble containing the frequency cover analysis results for each file, one observation per index (4 per file).
@@ -78,6 +78,6 @@ It processes each audio file in parallel (if specified) and saves the results in
 \examples{
 \dontrun{
 # Run frequency cover analysis on all WAV files in the list "audio_list"
-fci_list("audio_list", output.csv = "results.csv", channel = "left", ncores = 4)
+fci_list("audio_list", output.csv = "results.csv", channel = "left", n.cores = 4)
 }
 }

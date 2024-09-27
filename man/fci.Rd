@@ -7,7 +7,7 @@
 fci(
   wave,
   channel = "left",
-  rmoffset = TRUE,
+  rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
   freq.res = 100,

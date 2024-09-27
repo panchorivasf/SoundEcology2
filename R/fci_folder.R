@@ -1,12 +1,12 @@
 #' Frequency Cover Indices on Multiple WAV Files in a Folder
 #'
 #' This function performs a frequency cover indices (FCI) on all WAV files within a specified folder.
-#' It processes each audio file in parallel (if specified) and saves the results in a CSV file.
+#' It processes each sound file in parallel (if specified) and saves the results in a CSV file.
 #'
 #' @param folder The folder containing the WAV files to analyze.
 #' @param output.csv The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
 #' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.
-#' @param rmoffset Logical. Whether to remove the DC offset from the signal. Default is TRUE.
+#' @param rm.offset Logical. Whether to remove the DC offset from the signal. Default is TRUE.
 #' @param hpf High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.
 #' @param cutoff The amplitude threshold (in dB) below which frequencies will be considered inactive. Default is -60.
 #' @param freq.res Frequency resolution of the spectrogram in Hz. Default is 100.
@@ -22,21 +22,21 @@
 #' @param hf.max The maximum frequency (in Hz) for the high-frequency band. Default is 18000.
 #' @param uf.min The minimum frequency (in Hz) for the ultra-high-frequency band. Default is 18000.
 #' @param uf.max The maximum frequency (in Hz) for the ultra-high-frequency band. Default is 24000.
-#' @param ncores The number of cores to use for parallel processing. Use `ncores = -1` to use all but one core. Default is NULL (single-core processing).
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #'
 #' @return A tibble containing the frequency cover analysis results for each file.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' # Run frequency cover analysis on all WAV files in the folder "audio_files"
-#' fci_folder("audio_files", output.csv = "results.csv", channel = "left", ncores = 4)
+#' # Run frequency cover analysis on all WAV files in the folder "sound_files"
+#' fci_folder("sound_files", output.csv = "results.csv", channel = "left", n.cores = 4)
 #' }
 
 fci_folder <- function(folder,
                       output.csv = "fci_results.csv",
                       channel = 'each',
-                      rmoffset = TRUE,
+                      rm.offset = TRUE,
                       hpf = 0,
                       cutoff = -60,
                       freq.res = 100,
@@ -52,7 +52,7 @@ fci_folder <- function(folder,
                       hf.max = 18000,
                       uf.min = 18000,
                       uf.max = 24000,
-                      ncores = -1) {
+                      n.cores = -1) {
 
 
   cat("Evaluating the job...\n")
@@ -93,12 +93,12 @@ fci_folder <- function(folder,
   rm(fci1)
 
 
-  if(is.null(ncores)){
+  if(is.null(n.cores)){
     num_cores <- 1
-  }else if(ncores == -1){
+  }else if(n.cores == -1){
     num_cores <- parallel::detectCores() - 1  # Detect available cores
   }else{
-    num_cores <- ncores
+    num_cores <- n.cores
   }
 
   if(nFiles < num_cores){
@@ -126,15 +126,26 @@ fci_folder <- function(folder,
 
     filename <- basename(file)  # Get file name without path
 
-    # Read audio file
-    audio <- readWave(file)
+    # Try to read the sound file, handle errors gracefully
+    sound <- tryCatch({
+      readWave(file)
+    }, error = function(e) {
+      message(paste("Error reading file:", file, "Skipping to the next file."))
+      return(NULL) # Skip this iteration and continue with the next file
+    })
+
+    # Skip processing if the sound is NULL (i.e., readWave failed)
+    if (is.null(sound)) {
+      return(NULL)
+    }
+
 
     # Initialize an empty tibble for the results
     result_list <- list()
 
-    results <- fci(wave = audio,
+    results <- fci(wave = sound,
                   channel = channel,
-                  rmoffset = rmoffset,
+                  rm.offset = rm.offset,
                   hpf = hpf,
                   cutoff = cutoff,
                   freq.res = freq.res,

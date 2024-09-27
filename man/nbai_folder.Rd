@@ -12,7 +12,7 @@ nbai_folder(
   cutoff = -60,
   activity.cutoff = 10,
   output.csv = "nbai_results.csv",
-  ncores = -1
+  n.cores = -1
 )
 }
 \arguments{
@@ -27,6 +27,8 @@ nbai_folder(
 \item{cutoff}{Numeric. Cutoff threshold defining the sounds that will be analyzed, in dBFS.}
 
 \item{activity.cutoff}{Numeric. Cutoff percent activity. Only the frequency bands active equal or above this percentage will be considered as "active" in the active band statistics.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 
 \item{plot.binary.spec}{Logical. Whether to plot the binary spectrogram used for the analysis. Allowed only when Wave is mono or when one channel is selected from a stereo file.}
 

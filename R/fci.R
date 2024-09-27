@@ -35,7 +35,7 @@
 #' }
 fci <- function(wave,
                channel = 'left',
-               rmoffset = TRUE,
+               rm.offset = TRUE,
                hpf = 0,
                cutoff = -60,
                freq.res = 100,
@@ -82,7 +82,7 @@ fci <- function(wave,
 
   calculate_index <- function(wave,
                               channel,
-                              rmoffset = rmoffset,
+                              rm.offset = rm.offset,
                               hpf = 0,
                               cutoff = cutoff,
                               freq.res = freq.res,
@@ -102,8 +102,8 @@ fci <- function(wave,
 
 
     # Remove DC offset
-    if (rmoffset) {
-      wave <- rmoffset(wave, output = "Wave")
+    if (rm.offset) {
+      wave <- seewave::rmoffset(wave, output = "Wave")
     }
 
 
@@ -287,7 +287,7 @@ fci <- function(wave,
 
     fc_left <- calculate_index(wave.left,
                                channel = 'left',
-                               rmoffset = rmoffset,
+                               rm.offset = rm.offset,
                                hpf = 0,
                                cutoff = cutoff,
                                freq.res = freq.res,
@@ -306,7 +306,7 @@ fci <- function(wave,
                                verbose = verbose)
     fc_right <- calculate_index(wave.right,
                                 channel = 'left',
-                                rmoffset = rmoffset,
+                                rm.offset = rm.offset,
                                 hpf = 0,
                                 cutoff = cutoff,
                                 freq.res = freq.res,
@@ -378,7 +378,7 @@ fci <- function(wave,
     # Calulate NBAI
     fc_global <- calculate_index(wave,
                                  channel = channel,
-                                 rmoffset = rmoffset,
+                                 rm.offset = rm.offset,
                                  hpf = 0,
                                  cutoff = cutoff,
                                  freq.res = freq.res,

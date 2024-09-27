@@ -5,10 +5,10 @@
 \title{Calculate BBAI for all the Files in a List}
 \usage{
 bbai_list(
-  audiolist,
+  audio.list,
   channel = "each",
   hpf = 0,
-  rmoffset = TRUE,
+  rm.offset = TRUE,
   freq.res = 100,
   cutoff = -60,
   click.length = 10,
@@ -16,17 +16,17 @@ bbai_list(
   gap.allowance = 2,
   verbose = FALSE,
   output.csv = "bbai_results.csv",
-  ncores = NULL
+  n.cores = NULL
 )
 }
 \arguments{
-\item{audiolist}{a list of audio files to analyze}
+\item{audio.list}{a list of audio files to analyze}
 
 \item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.}
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
 
-\item{rmoffset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
+\item{rm.offset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
 
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 
@@ -37,6 +37,8 @@ bbai_list(
 \item{gap.allowance}{Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click. Default is \code{2}. Gaps larger than this value will split clicks.}
 
 \item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 
 \item{click.height}{Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is \code{10}.}
 
@@ -60,5 +62,6 @@ A tibble containing the following columns:
 This function processes an audio signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
 }
 \examples{
-bbai_folder(path/to/folder)
+files.list <- list_waves(path/to/folder)
+bbai_results <- bbai_list(files.list)
 }

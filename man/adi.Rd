@@ -6,8 +6,8 @@
 \usage{
 adi(
   wave,
-  freq.res = 100,
-  win.fun = "hanning",
+  freq.res = 50,
+  w.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
   n.bands = 10,
@@ -15,8 +15,9 @@ adi(
   norm.spec = FALSE,
   noise.red = 0,
   rm.offset = TRUE,
-  props = TRUE,
+  props = FALSE,
   prop.den = 1,
+  use.vegan = FALSE,
   db.fs = TRUE
 )
 }
@@ -25,7 +26,7 @@ adi(
 
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 
-\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to compute the spectrogram.}
 
@@ -44,6 +45,8 @@ adi(
 \item{props}{logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.}
 
 \item{prop.den}{numeric; indicates how the energy proportion is calculated.}
+
+\item{use.vegan}{logical; if TRUE, the function uses the \emph{diversity} function from the \emph{vegan} package to calculate Shannon's Diversity.}
 
 \item{db.fs}{logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.}
 }

@@ -5,32 +5,35 @@
 \title{Normalized Difference Soundscape Index - list imput}
 \usage{
 ndsi_list(
-  audiolist,
-  save_csv = FALSE,
-  csv_name = "ndsi_results.csv",
-  fft_w = 1024,
-  anthro_min = 1000,
-  anthro_max = 2000,
-  bio_min = 2000,
-  bio_max = 11000
+  audio.list,
+  save.csv = FALSE,
+  csv.name = "ndsi_results.csv",
+  w.len = 1024,
+  anthro.min = 1000,
+  anthro.max = 2000,
+  bio.min = 2000,
+  bio.max = 11000,
+  n.cores = -1
 )
 }
 \arguments{
-\item{audiolist}{a list of audio files from the working directory.}
+\item{audio.list}{a list of audio files from the working directory.}
 
-\item{save_csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a csv in the working directory.}
 
-\item{csv_name}{character vector. When 'save_csv' is TRUE, optionally provide a file name.}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{fft_w}{FFT window size.}
+\item{w.len}{FFT window size.}
 
-\item{anthro_min}{minimum value of the range of frequencies of the anthrophony.}
+\item{anthro.min}{minimum value of the range of frequencies of the anthrophony.}
 
-\item{anthro_max}{maximum value of the range of frequencies of the anthrophony.}
+\item{anthro.max}{maximum value of the range of frequencies of the anthrophony.}
 
-\item{bio_min}{minimum value of the range of frequencies of the biophony.}
+\item{bio.min}{minimum value of the range of frequencies of the biophony.}
 
-\item{bio_max}{maximum value of the range of frequencies of the biophony.}
+\item{bio.max}{maximum value of the range of frequencies of the biophony.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 }
 \value{
 a wide format tibble with NDSI values per channel (if stereo), parameters used and audio metadata
@@ -49,6 +52,6 @@ The working directory should be set to the folder containing the files.
 Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
 }
 \examples{
-files <- list.files(pattern=".wav|.WAV")
+files <- list_waves(path/to/folder)
 ndsi_list(files[1:5])
 }

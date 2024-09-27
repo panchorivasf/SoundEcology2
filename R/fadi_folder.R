@@ -50,6 +50,9 @@ fadi_folder <- function (folder,
                          gamma = 13,
                          props=TRUE){
 
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   #  Quiet function from SimDesign package to run functions without printing
   quiet <- function(..., messages=FALSE, cat=FALSE){

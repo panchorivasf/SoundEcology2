@@ -78,48 +78,12 @@ adi_list <- function (audio.list,
 
 
 
-  cat("Evaluating the job...\n\n")
-
 
 
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)
 
-  # args_list <- list(freq.res = freq.res,
-  #                   w.fun = w.fun,
-  #                   min.freq = min.freq,
-  #                   max.freq = max.freq,
-  #                   n.bands = n.bands,
-  #                   cutoff = cutoff,
-  #                   norm.spec = norm.spec,
-  #                   noise.red = noise.red,
-  #                   rm.offset = rm.offset,
-  #                   props = props,
-  #                   prop.den = prop.den,
-  #                   db.fs = db.fs)
-
-  # Evaluate the duration of the analysis
-  # Measure processing time for a single file
-  startTime <- Sys.time()
-
-  sound1 <- readWave(audio.list[1])
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-
-  adi1 <- quiet(adi(sound1, freq.res, w.fun, min.freq,
-              max.freq, n.bands, cutoff,
-              norm.spec, noise.red, rm.offset,
-              props, prop.den, db.fs))
-
-  tibble(file_name = "filename") %>% bind_cols(adi1)
-
-  # Assess how long it takes to parse 1 file
-  timePerFile <-  Sys.time() - startTime
-  # Add overhead per file
-  timePerFile <- timePerFile + as.numeric(seconds(2.2))
-
-  rm(sound1)
-  rm(adi1)
-
+  
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
@@ -127,26 +91,71 @@ adi_list <- function (audio.list,
   }else{
     num_cores <- n.cores
   }
-
+  
   if(nFiles < num_cores){
     num_cores <- nFiles
   }
-
-
-  # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
-  # Add overhead time
-  adjustedTotalTime <- estimatedTotalTime
-  # Calculate the end time
-  expectedCompletionTime <- Sys.time() + adjustedTotalTime
+  
   # Setup parallel back-end
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
-
-  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-  cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+  
+  args_list <- list(freq.res = freq.res,
+                    w.fun = w.fun,
+                    min.freq = min.freq,
+                    max.freq = max.freq,
+                    n.bands = n.bands,
+                    cutoff = cutoff,
+                    norm.spec = norm.spec,
+                    noise.red = noise.red,
+                    rm.offset = rm.offset,
+                    props = props,
+                    prop.den = prop.den,
+                    db.fs = db.fs)
+  
+  # Evaluate the duration of the analysis
+  # Measure processing time for a single file
+  startTime <- Sys.time()
+  
+  if(nFiles>10){
+    cat("Evaluating the job...\n\n")
+    
+    
+    sound1 <- readWave(audio.list[1])
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    
+    adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
+                      args_list$max.freq, args_list$n.bands, args_list$cutoff,
+                      args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
+                      args_list$props, args_list$prop.den, args_list$db.fs))
+    
+    tibble(file_name = "filename") %>% bind_cols(adi1)
+    
+    # Assess how long it takes to parse 1 file
+    timePerFile <-  Sys.time() - startTime
+    # Add overhead per file
+    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    
+    rm(sound1)
+    rm(adi1)
+    
+    
+    
+    # Estimate total time accounting for parallel processing
+    estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
+    # Add overhead time
+    adjustedTotalTime <- estimatedTotalTime
+    # Calculate the end time
+    expectedCompletionTime <- Sys.time() + adjustedTotalTime
+    
+    
+    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    
+  }
+  
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-
+  
 
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
@@ -156,12 +165,12 @@ adi_list <- function (audio.list,
                        sound <- readWave(file)
 
                        # Calculate ADI and keep its default output columns
-                       adi_result <- adi(sound, freq.res = freq.res, w.fun = w.fun,
-                                  min.freq = min.freq, max.freq = max.freq,
-                                  n.bands = n.bands, cutoff = cutoff,
-                                  norm.spec = norm.spec, noise.red = noise.red,
-                                  rm.offset = rm.offset, props = props,
-                                  prop.den = prop.den, db.fs)
+                       adi_result <- adi(sound, freq.res = args_list$freq.res, w.fun = args_list$w.fun,
+                                         min.freq = args_list$min.freq, max.freq = args_list$max.freq,
+                                         n.bands = args_list$n.bands, cutoff = args_list$cutoff,
+                                         norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,
+                                         rm.offset = args_list$rm.offset, props = args_list$props,
+                                         prop.den = args_list$prop.den, db.fs = args_list$db.fs)
 
                        # Log for debugging
                        print(paste("Processing:", file))
@@ -171,8 +180,6 @@ adi_list <- function (audio.list,
                        # Combine the results for each file into a single row
                        result <- tibble(file_name = file) %>%
                          bind_cols(adi_result)
-
-                       rm(sound, adi_result)
 
                      }
 

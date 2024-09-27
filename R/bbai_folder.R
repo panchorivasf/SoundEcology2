@@ -50,6 +50,10 @@ bbai_folder <- function(folder,
                         verbose = FALSE,
                         output.csv = "bbai_results.csv",
                         n.cores = -1) {
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
 
   cat("Evaluating the job...\n")

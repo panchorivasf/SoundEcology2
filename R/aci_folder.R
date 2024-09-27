@@ -42,6 +42,10 @@ aci_folder <- function (folder,
                        noise.red = 2,
                        rm.offset = TRUE,
                        n.cores = -1){
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){

@@ -39,6 +39,10 @@ ndsi_folder <- function (folder,
                        bio.min = 2000,
                        bio.max = 11000,
                        n.cores = -1){
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
 
   #  Quiet function from SimDesign package to run functions without printing

@@ -11,6 +11,7 @@
 #' @param plot.binary.spec Logical. Whether to plot the binary spectrogram used for the analysis. Allowed only when Wave is mono or when one channel is selected from a stereo file.
 #' @param dark.plot Logical. If true (default) a the binary spectrogram will have a black background.
 #' @param plot.activity Logical. If true, a barplot depicting the percent activity in each frequency bin will be returned. Default is FALSE.
+#' @param output.csv = Character. Name for the csv output.
 #' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #'
 #' @return A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI) summary statistics, and 3) a tibble with NBI spectral, which number of rows equals the number of frequency bins in the analysis.
@@ -29,6 +30,13 @@
 
 nbai_list <- function(audio.list,
                       channel = "each",
+                      hpf = 0,
+                      freq.res = 50,
+                      cutoff = -60,
+                      activity.cutoff = 10, 
+                      plot.binary.spec = FALSE,
+                      dark.plot = FALSE,
+                      plot.activity = FALSE,
                       output.csv = "nbai_results.csv",
                       n.cores = -1) {
 

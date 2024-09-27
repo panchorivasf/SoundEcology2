@@ -26,4 +26,17 @@ Imports:
     plotly,
     parallel,
     oce,
-    patchwork
+    patchwork,
+    dplyr,
+    lubridate,
+    pracma,
+    reshape2,
+    tibble,
+    tidyr,
+    tidyverse,
+    vegan,
+    viridis,
+    stats,
+    utils,
+    writexl
+

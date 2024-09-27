@@ -19,7 +19,6 @@
 #' @param rm.offset logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
 #' @param props logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.
 #' @param prop.den numeric; indicates how the energy proportion is calculated.
-#' @param use.vegan logical; if TRUE, the function uses the \emph{diversity} function from the \emph{vegan} package to calculate Shannon's Diversity.
 #' @param db.fs logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.
 #'
 #' @return A tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
@@ -41,7 +40,7 @@
 #' adi(tropicalsound)
 
 adi <- function(wave,
-                freq.res = 50,
+                freq.res = 100,
                 w.fun = "hanning",
                 min.freq = 0,
                 max.freq = 10000,
@@ -50,15 +49,18 @@ adi <- function(wave,
                 norm.spec = FALSE,
                 noise.red = 0,
                 rm.offset = TRUE,
-                props = FALSE,
+                props = TRUE,
                 prop.den = 1,
-                use.vegan = FALSE,
                 db.fs = TRUE){
 
 
 
   # Store the frequency step (band "height") # NEW 09/25/2023 Francisco Rivas
   freq_step <- (max.freq - min.freq)/n.bands
+
+
+  # Store the decibel threshold as numeric
+  cutoff <- as.numeric(cutoff)
 
   # Test arguments
   # Check if the maximum frequency, decibel threshold,
@@ -85,27 +87,22 @@ adi <- function(wave,
   # Function that gets the proportion of values higher than the
   # db threshold in a specific frequency band. The frequencies are in Hz
   getscore <- function(spectrum, minf, maxf, db, freq_row){
-    # miny<-round((minf)/freq_row) # the minimum frequency of the frequency band
-    # maxy<-round((maxf)/freq_row) # the maximum frequency of the frequency band
-    miny <- floor(minf / freq_row) # more efficient
-    maxy <- ceiling(maxf / freq_row) # more efficient
+    miny<-round((minf)/freq_row) # the minimum frequency of the frequency band
+    maxy<-round((maxf)/freq_row) # the maximum frequency of the frequency band
 
     subA = spectrum[miny:maxy,] # a subset f of the amplitude matrix (i.e. a single frequency band)
 
 
+    minspec <- round(0/freq_row) # lower end of the spectrogram defined by min.freq
+    maxspec <- round(max.freq/freq_row) # upper end of the spectrogram defined by max.freq
+    speclims <- spectrum[minspec:maxspec,] # the spectrogram with range defined by min.freq and max.freq
 
     # Calculate the proportion of cells in f that are higher than the dB threshold
     if(prop.den == 1){ #original ADI proportion calculation (within frequency band)
 
-      # index1 <- length(subA[subA>db]) / length(subA)
-      index1 <- mean(subA > db)
-
+      index1 <- length(subA[subA>db]) / length(subA)
 
     }else if(prop.den == 2){
-      minspec <- round(0/freq_row) # lower end of the spectrogram defined by min.freq
-      maxspec <- ceiling(max.freq/freq_row) # upper end of the spectrogram defined by max.freq
-      speclims <- spectrum[minspec:maxspec,] # the spectrogram with range defined by min.freq and max.freq
-
       # Alternative 2:'true Shannon', over the user-defined spectrogram range
       index1 <- length(subA[subA>db]) / length(speclims[speclims>db])
 
@@ -117,6 +114,20 @@ adi <- function(wave,
     return(index1)
   }
 
+
+  # # Original soundecology function for reference
+  # getscore <- function(spectrum, minf, maxf, db, freq_row){
+  #   miny<-round((minf)/freq_row)
+  #   maxy<-round((maxf)/freq_row)
+  #
+  #   subA = spectrum[miny:maxy,]
+  #
+  #   index1 <- length(subA[subA>db]) / length(subA)
+  #
+  #   return(index1)
+  # }
+  #
+
   # Save the denominator used in the proportion calculation
   if(prop.den == 1){
     propdenom <- "within band"
@@ -125,6 +136,7 @@ adi <- function(wave,
   }else if(prop.den == 3){
     propdenom <- "nyquist"
   }
+
 
   #Get sampling rate
   samplingrate <- wave@samp.rate
@@ -136,19 +148,26 @@ adi <- function(wave,
 
   # Add information about noise reduction procedure
   if(noise.red == 1){
+    # cat("Applying noise reduction filter to each row...\n")
     noise <- "rows"
   } else if (noise.red == 2){
+    # cat("Applying noise reduction filter to each column...\n")
     noise <- "columns"
   } else {
     noise <- "none"
   }
 
 
-  # NOTE: In the original ADI from "soundecology", the frequency bin width was hard-coded
-  # to 10 Hz, which is equivalent of a window length of 4,800 points for a recording with
-  # a sampling rate of 48 kHz. This creates a blurred spectrogram, distorting the real
-  # distribution of energy in time.
+  # In the original ADI from "soundecology", the frequency bin width was fixed to 10 Hz,
+  # which is equivalent of a window length of 4,800 samples for a recording with
+  # a sampling rate of 48 kHz. This creates a blurred spectrogram, distorting the
+  # real distribution of energy in time.
 
+  # window length for the spectro and spec functions (legacy)
+  # to keep each row every 10Hz  (legacy)
+  # Frequencies and seconds covered by each (legacy)
+  # freq_per_row = 10 (legacy)
+  # wlen = samplingrate/freq_per_row (legacy)
 
   wlen = samplingrate/freq.res
 
@@ -157,19 +176,7 @@ adi <- function(wave,
   if(wlen%%2 == 1) {wlen <- wlen+1}
 
   # Calculate frequency resolution (i.e., frequency bin width)
-  freq_per_row = freq.res
-
-  # Calculate amp_max based on bit depth
-  amp_max <- if (wave@bit == 16) {
-    32768
-  } else if (wave@bit == 24) {
-    8388607
-  } else if (wave@bit == 32) {
-    2147483647
-  } else {
-    stop("Unsupported bit depth")
-  }
-
+  freq_per_row = samplingrate/wlen
 
   #Stereo file
   if (wave@stereo == TRUE) {
@@ -189,15 +196,25 @@ adi <- function(wave,
 
     left<-channel(wave, which = c("left"))
     right<-channel(wave, which = c("right"))
-
-    rm(wave)
+    # rm(wave)
 
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- seewave::rmoffset(left, output = "Wave")
-      right <- seewave::rmoffset(right, output = "Wave")
+      left <- rmoffset(left, output = "Wave")
+      right <- rmoffset(right, output = "Wave")
     }
+
+
+    # if(noise.red == 1){
+    #   cat("Applying noise reduction filter to each row...\n")
+    #   noise <- "rows"
+    # } else if (noise.red == 2){
+    #   cat("Applying noise reduction filter to each column...\n")
+    #   noise <- "columns"
+    # } else {
+    #   noise <- "none"
+    # }
 
 
     # Generate normalized spectrogram if norm.spec = TRUE
@@ -206,19 +223,14 @@ adi <- function(wave,
       cat("Using normalized spectrograms.\n\n")
 
       if(noise.red == 1 || noise.red == 2) {
-        specA_left <- seewave::spectro(left,
-                                       wl = wlen,
+        specA_left <- seewave::spectro(left, wl = wlen,
                                        wn = w.fun,
                                        noisereduction = noise.red,
                                        plot = FALSE)$amp
-        specA_right <- seewave::spectro(right,
-                                        wl = wlen,
+        specA_right <- seewave::spectro(right, wl = wlen,
                                         wn = w.fun,
                                         noisereduction = noise.red,
                                         plot = FALSE)$amp
-        rm(left, right)
-
-
       }else if (noise.red == 0) {
 
         # Use the original parameters for window length and function
@@ -230,12 +242,10 @@ adi <- function(wave,
                                         wl = wlen,
                                         wn = w.fun,
                                         plot = FALSE)$amp
-
-        rm(left, right)
-
       }
 
 
+      rm(left, right)
       cat("Left range: ", range(specA_left), "\n")
       cat("Right range: ", range(specA_right), "\n")
 
@@ -244,6 +254,7 @@ adi <- function(wave,
       # Without normalizing the spectrogram. Procedure extracted from Xu et al
       cat("No spectrogram normalization...\n\n")
 
+      # if(!is.null(noise.red)){
       if(noise.red == 1 || noise.red == 2) {
         specA_left <- seewave::spectro(left,
                                        wl = wlen,
@@ -259,11 +270,6 @@ adi <- function(wave,
                                         noisereduction = noise.red,
                                         correction = 'amplitude',
                                         plot = FALSE)$amp
-
-
-        rm(left, right)
-
-
       }else if(noise.red == 0){
         specA_left <- seewave::spectro(left,
                                        wl = wlen,
@@ -277,15 +283,22 @@ adi <- function(wave,
                                         dB=NULL,
                                         correction = 'amplitude',
                                         plot = FALSE)$amp
-
-        rm(left, right)
-
       }
 
-      if(db.fs==TRUE){ # Added by Francisco Rivas, September 2024.
+      if(db.fs==TRUE){
 
+        # Calculate amp_max based on bit depth
+        amp_max <- if (wave@bit == 16) {
+          32768
+        } else if (wave@bit == 24) {
+          8388607
+        } else if (wave@bit == 32) {
+          2147483647
+        } else {
+          stop("Unsupported bit depth")
+        }
 
-        # Transform raw amplitude to dBFS
+        # Convert amplitude to dBFS
         specA_left <- 20 * log10(abs(specA_left) / amp_max)
         specA_right <- 20 * log10(abs(specA_right) / amp_max)
 
@@ -300,6 +313,8 @@ adi <- function(wave,
 
       }
 
+      rm(left)
+      rm(right)
 
       cat("Left dB range: ", range(specA_left), "\n")
       cat("Right dB range: ", range(specA_right), "\n")
@@ -314,24 +329,22 @@ adi <- function(wave,
       max.freq <- nyquist_freq
     }
 
-    # Set the frequency bands
+    # Set the frequency bands (Fran's comment)
     # Freq <- seq(from = min.freq, to = max.freq - freq_step, by = freq_step)
+
     Freq <- seq(from = 0, to = max.freq - freq_step, by = freq_step)
 
 
 
     #LEFT CHANNEL
+    # Create an 'empty' (NA-filled) vector to store the Score (Fran's comment)
+    Score <- rep(NA, length(Freq))
 
-    # Score for the left channel
-    Score <- sapply(Freq, function(f) {
-      getscore(specA_left, f, (f + freq_step), cutoff, freq_per_row)
-    })
-
-    rm(specA_left)
-
-    # Calculate Score1
-    Score1 <- sum(Score * log(Score + 1e-7))
-
+    # Calculate the proportion-of-energy score (i.e., the proportion of cells which value is higher than the dB threshold),
+    # looping over each frequency band (Fran's comment)
+    for (j in 1:length(Freq)) {
+      Score[j] = getscore(specA_left, Freq[j], (Freq[j] + freq_step), cutoff, freq_per_row)
+    }
 
     # Store the score vector as 'left_vals' (as a copy) (Fran's comment)
     left_vals = Score
@@ -339,7 +352,7 @@ adi <- function(wave,
 
 
 
-    if(use.vegan){
+    if(prop.den == 1){
 
       Score_left <- vegan::diversity(Score, index = "shannon")
 
@@ -349,24 +362,34 @@ adi <- function(wave,
       Score_left <- -sum(Score * log(Score + 0.000001))
 
 
+      # # Create a new empty numeric object (Fran's comment)
+      # Score1 = 0
+      #
+      #
+      # # Loop over the score vector and calculate the Shannon's Entropy
+      # for (i in 1:length(Freq)) {
+      #   Score1 = Score1 + (-Score[i] * log(Score[i]+ 0.000001))
+      #
+      # }
+      #
+      # Score_left = Score1 / length(Freq)
 
     }
 
 
-    # Score for the left channel
-    Score <- sapply(Freq, function(f) {
-      getscore(specA_right, f, (f + freq_step), cutoff, freq_per_row)
-    })
 
-    rm(specA_right)
+    #RIGHT CHANNEL
 
-    # Calculate Score1
-    Score1 <- sum(Score * log(Score + 1e-7))
+    Score <- rep(NA, length(Freq))
+
+    for (j in 1:length(Freq)) {
+      Score[j] = getscore(specA_right, Freq[j], (Freq[j] + freq_step), cutoff, freq_per_row)
+    }
 
     right_vals = Score
 
 
-    if(use.vegan){
+    if(prop.den == 1){
 
       Score_right <- vegan::diversity(Score, index = "shannon")
 
@@ -375,6 +398,15 @@ adi <- function(wave,
 
       # Use a vectorized version to improve efficiency
       Score_right <- -sum(Score * log(Score+ 0.000001))
+
+      # # Original code:
+      # Score1 = 0
+      # for (i in 1:length(Freq)) {
+      #   Score1 = Score1 + (-Score[i] * log(Score[i]+ 0.000001))
+      # }
+      #
+      # Score_right = Score1 / length(Freq)
+
 
     }
 
@@ -395,7 +427,6 @@ adi <- function(wave,
 
     left_adi_return = round(Score_left, 3)
     right_adi_return = round(Score_right, 3)
-
 
 
     adiOutputStereo <- tibble(index = "adi",
@@ -441,6 +472,9 @@ adi <- function(wave,
 
       cat("Reporting ADI for 2 channels, metadata and energy proportions per frequency band. \n")
 
+      # adiOutputStereo <- adiOutputStereo %>%
+      #   add_column(index = "adi", .before = "value_l")
+
       return(adiOutputStereo)
 
     } else {
@@ -452,25 +486,42 @@ adi <- function(wave,
     return(adiOutputStereo)
 
 
-  } else {
+  } else
+
+  {
     # MONO
     cat("Calculating ADI on a mono file... \n")
 
     # Add information about noise reduction procedure
     if(noise.red == 1){
       cat("Applying noise reduction filter to each row...\n")
+      # noise <- "rows"
     } else if (noise.red == 2){
       cat("Applying noise reduction filter to each column...\n")
+      # noise <- "columns"
     } else {
+      # noise <- "none"
     }
 
     left<-channel(wave, which = c("left"))
+    # rm(wave)
 
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- seewave::rmoffset(left, output = "Wave")
+      left <- rmoffset(left, output = "Wave")
     }
+
+    # # Add information about noise reduction procedure
+    # if(noise.red == 1){
+    #   cat("Applying noise reduction filter (subtract median amplitude) to each row...\n")
+    #   noise <- "rows"
+    # } else if(noise.red == 2){
+    #   cat("Applying a noise reduction filter (subtract median amplitude) to each column...\n")
+    #   noise <- "columns"
+    # } else if(noise.red == 0) {
+    #   noise <- "none"
+    # }
 
 
     # Generate normalized spectrogram if norm.spec = TRUE
@@ -503,38 +554,34 @@ adi <- function(wave,
                                        dB=NULL,
                                        noisereduction = noise.red,
                                        plot = FALSE)$amp
-        rm(left)
-
       }else if (noise.red == 0) {
         specA_left <- seewave::spectro(left,
                                        wl = wlen,
                                        norm = FALSE,
                                        dB = NULL,
                                        plot = FALSE)$amp
-        rm(left)
-
       }
 
-      # # Transform to decibels
-      # if(db.fs==TRUE){
-      #   # Calculate amp_max based on bit depth
-      #   amp_max <- if (wave@bit == 16) {
-      #     32768
-      #   } else if (wave@bit == 24) {
-      #     8388607
-      #   } else if (wave@bit == 32) {
-      #     2147483647
-      #   } else {
-      #     stop("Unsupported bit depth")
-      #   }
+      # Transform to decibels
+      if(db.fs==TRUE){
+        # Calculate amp_max based on bit depth
+        amp_max <- if (wave@bit == 16) {
+          32768
+        } else if (wave@bit == 24) {
+          8388607
+        } else if (wave@bit == 32) {
+          2147483647
+        } else {
+          stop("Unsupported bit depth")
+        }
 
         # Convert amplitude to dBFS
         specA_left <- 20 * log10(abs(specA_left) / amp_max)
 
-      # }else{
+      }else{
         # Transform to decibels
         specA_left <- 10*log10(specA_left^2)
-      # }
+      }
 
       rm(left)
       cat("dB range: ", range(specA_left), "\n")
@@ -555,8 +602,6 @@ adi <- function(wave,
       Score[j] = getscore(specA_left, Freq[j], (Freq[j] + freq_step), cutoff, freq_per_row)
     }
 
-    rm(specA_left)
-
     left_vals = Score
 
     if(prop.den == 1){
@@ -568,22 +613,50 @@ adi <- function(wave,
 
       Score_left <- -sum(Score * log(Score + 0.000001))
 
+
+      # Score1 = 0
+      # for (i in 1:length(Freq)) {
+      #   Score1 = Score1 + (-Score[i] * log(Score[i]+0.00001))
+      # }
+      #
+      # Score_left = Score1 / length(Freq)
+
     }
 
+
+
     left_adi_return = round(Score_left, 3)
+
+
+
     left_bandvals_return <- rep(NA, length(Freq))
+    # right_bandvals_return <- rep(NA, length(Freq))
     left_bandrange_return <- rep(NA, length(Freq))
+    # right_bandrange_return <- rep(NA, length(Freq))
 
 
     for (j in seq(length(Freq), 1, by = -1)) {
       left_bandvals_return[j] = round(left_vals[j], 6)
+      # right_bandvals_return[j] = round(right_vals[j], 6)
       left_bandrange_return[j] = paste((Freq[j]/1000), "-", ((Freq[j]/1000) + (freq_step/1000)), sep = "")
+      # right_bandrange_return[j] = paste((Freq[j]/1000), "-", ((Freq[j]/1000) + (freq_step/1000)), sep = "")
     }
 
     left_adi_return = round(Score_left, 3)
+    # right_adi_return = round(Score_right, 3)
 
     adiOutputMono <- tibble(index = "adi",
                             value = left_adi_return)
+
+
+    # # Add information about noise reduction procedure
+    # if(noise.red == 1){
+    #   noise <- "rows"
+    # } else if(noise.red == 2){
+    #   noise <- "columns"
+    # } else if(noise.red == 3) {
+    #   noise <- "none"
+    # }
 
 
     # Add metadata columns
@@ -604,6 +677,9 @@ adi <- function(wave,
                  dur = duration,
                  channels = "mono")
 
+    # adiOutputMono <- adiOutputMono %>%
+    #   add_column(index = "adi", .before = "value")
+
 
     if(props == TRUE){
       # Add data on proportions for each frequency band per channel:
@@ -618,12 +694,16 @@ adi <- function(wave,
 
       cat("Reporting ADI for 1 channel, metadata and energy proportions per frequency band. \n")
 
+      # return(adiOutputMono)
 
     }else {
 
       cat("Reporting ADI for 1 channel and metadata.\n")
+      # return(adiOutputMono)
 
     }
+    # adiOutputMono <- adiOutputMono %>%
+    #   add_column(index = "adi", .before = "value")
 
     return(adiOutputMono)
 

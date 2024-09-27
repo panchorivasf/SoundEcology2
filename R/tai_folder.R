@@ -35,6 +35,10 @@ tai_folder <- function(folder,
                      verbose = TRUE,
                      output.csv = "tai_results.csv",
                      n.cores = -1) {
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
 
   cat("Evaluating the job...\n")

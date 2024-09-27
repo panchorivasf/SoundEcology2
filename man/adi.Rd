@@ -6,7 +6,7 @@
 \usage{
 adi(
   wave,
-  freq.res = 50,
+  freq.res = 100,
   w.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
@@ -15,9 +15,8 @@ adi(
   norm.spec = FALSE,
   noise.red = 0,
   rm.offset = TRUE,
-  props = FALSE,
+  props = TRUE,
   prop.den = 1,
-  use.vegan = FALSE,
   db.fs = TRUE
 )
 }
@@ -45,8 +44,6 @@ adi(
 \item{props}{logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.}
 
 \item{prop.den}{numeric; indicates how the energy proportion is calculated.}
-
-\item{use.vegan}{logical; if TRUE, the function uses the \emph{diversity} function from the \emph{vegan} package to calculate Shannon's Diversity.}
 
 \item{db.fs}{logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.}
 }

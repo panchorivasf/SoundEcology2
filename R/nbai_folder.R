@@ -36,6 +36,10 @@ nbai_folder <- function(folder,
                         activity.cutoff = 10,
                         output.csv = "nbai_results.csv",
                         n.cores = -1) {
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   cat("Evaluating the job...\n")
 

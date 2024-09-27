@@ -19,10 +19,17 @@
 #' @param props logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.
 #' @param prop.den numeric. Indicates how the energy proportion is calculated.
 #' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
-
 #'
 #' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
+#' @import doParallel
+#' @import foreach
+#' @import parallel
+#' @import tuneR
+#' @import tidyverse
+#' @import seewave
+#' @import lubridate
+#' 
 #' @details
 #' Options for propden:
 #' 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
@@ -32,37 +39,30 @@
 #' Optimized to facilitate working with a list of audio files before importing them into R.
 #' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
 #'
-#' @import doParallel
-#' @import foreach
-#' @import parallel
-#' @import tuneR
-#' @import tidyverse
-#' @import seewave
-#' @import lubridate
-
-#'
 #' @examples
 #' adi_folder("path/to/folder")
 adi_folder <- function (folder,
-                        save.csv = TRUE,
-                        csv.name = "adi_results.csv",
-                        freq.res = 100,
-                        w.fun = "hanning",
-                        min.freq = 0,
-                        max.freq = 10000,
-                        n.bands = 10,
-                        cutoff = -60,
-                        norm.spec = FALSE,
-                        noise.red = 0,
-                        rm.offset = TRUE,
-                        props = FALSE,
-                        prop.den = 1,
-                        db.fs = TRUE,
-                        n.cores = -1){
-
-
-  cat("Evaluating the job...\n\n")
-
+                      save.csv = FALSE,
+                      csv.name = "adi_results.csv",
+                      freq.res = 100,
+                      w.fun = "hanning",
+                      min.freq = 0,
+                      max.freq = 10000,
+                      n.bands = 10,
+                      cutoff = -60,
+                      norm.spec = FALSE,
+                      noise.red = 0,
+                      rm.offset = TRUE,
+                      props = FALSE,
+                      prop.den = 1,
+                      db.fs = TRUE,
+                      n.cores = -1){
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  
+  
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -72,42 +72,13 @@ adi_folder <- function (folder,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-
+  
   setwd(folder)
-  audiolist <- list.files(path=folder, pattern = ".wav|.WAV")
-
-  fileName <- tibble(file_name = audiolist)
-  nFiles <- length(audiolist)
-
-  args_list <- list(freq.res = freq.res, w.fun = w.fun, min.freq = min.freq,
-                    max.freq = max.freq, n.bands = n.bands, cutoff = cutoff,
-                    norm.spec = norm.spec, noise.red = noise.red, rm.offset = rm.offset,
-                    props = props, prop.den = prop.den, db.fs = db.fs)
-
-
-
-  # Evaluate the duration of the analysis
-  # Measure processing time for a single file
-  startTime <- Sys.time()
-
-  sound1 <- readWave(audiolist[1])
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-
-  adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
-                    args_list$max.freq, args_list$n.bands, args_list$cutoff,
-                    args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
-                    args_list$props, args_list$prop.den, args_list$db.fs))
-
-  tibble(file_name = "filename") %>% bind_cols(adi1)
-
-  # Assess how long it takes to parse 1 file
-  timePerFile <-  Sys.time() - startTime
-  # Add overhead per file
-  timePerFile <- timePerFile + as.numeric(seconds(2.2))
-
-  rm(sound1)
-  rm(adi1)
-
+  audio.list <- list.files(path=folder, pattern = ".wav|.WAV")
+  
+  fileName <- tibble(file_name = audio.list)
+  nFiles <- length(audio.list)
+  
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
@@ -115,73 +86,111 @@ adi_folder <- function (folder,
   }else{
     num_cores <- n.cores
   }
-
+  
   if(nFiles < num_cores){
     num_cores <- nFiles
   }
-
-
-  # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
-  # Add overhead time
-  adjustedTotalTime <- estimatedTotalTime
-  # Calculate the end time
-  expectedCompletionTime <- Sys.time() + adjustedTotalTime
+  
   # Setup parallel back-end
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
+  
+  args_list <- list(freq.res = freq.res,
+                    w.fun = w.fun,
+                    min.freq = min.freq,
+                    max.freq = max.freq,
+                    n.bands = n.bands,
+                    cutoff = cutoff,
+                    norm.spec = norm.spec,
+                    noise.red = noise.red,
+                    rm.offset = rm.offset,
+                    props = props,
+                    prop.den = prop.den,
+                    db.fs = db.fs)
+  
+  # Evaluate the duration of the analysis
+  # Measure processing time for a single file
+  startTime <- Sys.time()
+  
+  if(nFiles>10){
+    cat("Evaluating the job...\n\n")
+    
+    
+    sound1 <- readWave(audio.list[1])
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    
+    adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
+                      args_list$max.freq, args_list$n.bands, args_list$cutoff,
+                      args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
+                      args_list$props, args_list$prop.den, args_list$db.fs))
+    
+    tibble(file_name = "filename") %>% bind_cols(adi1)
+    
+    # Assess how long it takes to parse 1 file
+    timePerFile <-  Sys.time() - startTime
+    # Add overhead per file
+    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    
+    rm(sound1)
+    rm(adi1)
+    
+    
+    
+    # Estimate total time accounting for parallel processing
+    estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
+    # Add overhead time
+    adjustedTotalTime <- estimatedTotalTime
+    # Calculate the end time
+    expectedCompletionTime <- Sys.time() + adjustedTotalTime
+    
+    
+    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    
+  }
 
-  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-  cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-
-
+  
+  
   # Start loop
-  results <- foreach(file = audiolist, .combine = rbind,
+  results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
-
-                       # Try to read the sound file, handle errors gracefully
-                       sound <- tryCatch({
-                         readWave(file)
-                       }, error = function(e) {
-                         message(paste("Error reading file:", file, "Skipping to the next file."))
-                         return(NULL) # Skip this iteration and continue with the next file
-                       })
-
-                       # Skip processing if the sound is NULL (i.e., readWave failed)
-                       if (is.null(sound)) {
-                         return(NULL)
-                       }
-
-
+                       
+                       # Import the sounds
+                       sound <- readWave(file)
+                       
                        # Calculate ADI and keep its default output columns
-                       adi <- adi(sound, freq.res = args_list$freq.res, w.fun = args_list$w.fun,
-                                  min.freq = args_list$min.freq, max.freq = args_list$max.freq,
-                                  n.bands = args_list$n.bands, cutoff = args_list$cutoff,
-                                  norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,
-                                  rm.offset = args_list$rm.offset, props = args_list$props,
-                                  prop.den = args_list$prop.den, db.fs = args_list$db.fs)
-
+                       adi_result <- adi(sound, freq.res = args_list$freq.res, w.fun = args_list$w.fun,
+                                         min.freq = args_list$min.freq, max.freq = args_list$max.freq,
+                                         n.bands = args_list$n.bands, cutoff = args_list$cutoff,
+                                         norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,
+                                         rm.offset = args_list$rm.offset, props = args_list$props,
+                                         prop.den = args_list$prop.den, db.fs = args_list$db.fs)
+                       
+                       # Log for debugging
+                       print(paste("Processing:", file))
+                       print(paste("Left channel value:", adi_result$value_l))
+                       print(paste("Right channel value:", adi_result$value_r))
+                       
                        # Combine the results for each file into a single row
-                       tibble(file_name = file) %>%
-                         bind_cols(adi)
-
-
+                       result <- tibble(file_name = file) %>%
+                         bind_cols(adi_result)
+                       
                      }
-
-
+  
+  
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
-
-
+  
+  
   stopCluster(cl)
-
+  
   if(save.csv == TRUE){
     write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
-
+  
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
-
+  
   return(resultsWithMetadata)
-
+  
 }

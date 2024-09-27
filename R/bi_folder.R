@@ -50,6 +50,9 @@ bi_folder <- function (folder,
                        rm.offset = TRUE,
                        n.cores = -1){
 
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   #  Quiet function from SimDesign package to run functions without printing
   quiet <- function(..., messages=FALSE, cat=FALSE){

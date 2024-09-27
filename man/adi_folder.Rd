@@ -6,7 +6,7 @@
 \usage{
 adi_folder(
   folder,
-  save.csv = TRUE,
+  save.csv = FALSE,
   csv.name = "adi_results.csv",
   freq.res = 100,
   w.fun = "hanning",

@@ -51,7 +51,7 @@
 adi_list <- function (audio.list,
                       save.csv = FALSE,
                       csv.name = "adi_results.csv",
-                      freq.res = 100,
+                      freq.res = 50,
                       w.fun = "hanning",
                       min.freq = 0,
                       max.freq = 10000,

@@ -45,7 +45,7 @@
 #' fadi_list(files[1:5])
 
 fadi_list <- function (audiolist,
-                         save_csv = FALSE,
+                         save_csv = TRUE,
                          csv_name = "fadi_results.csv",
                          noise_file=NULL,
                          NEM=2,

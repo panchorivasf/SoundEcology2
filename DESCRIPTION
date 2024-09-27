@@ -23,5 +23,5 @@ Imports:
     tuneR,
     magrittr,
     ineq,
-plotly,
-parallel
+    plotly,
+    parallel

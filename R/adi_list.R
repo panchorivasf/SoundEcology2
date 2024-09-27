@@ -49,7 +49,7 @@
 #' adi_list(files[1:5])
 
 adi_list <- function (audio.list,
-                      save.csv = FALSE,
+                      save.csv = TRUE,
                       csv.name = "adi_results.csv",
                       freq.res = 50,
                       w.fun = "hanning",

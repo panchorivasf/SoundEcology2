@@ -45,14 +45,14 @@ bbai_list <- function(audio.list,
                         channel = 'each',
                         hpf = 0,
                         rm.offset = TRUE,
-                        freq.res = 100,
+                        freq.res = 50,
                         cutoff = -60,
                         click.length = 10,
                         difference = 10,
                         gap.allowance = 2,
                         verbose = FALSE,
                         output.csv = "bbai_results.csv",
-                        n.cores = NULL) {
+                        n.cores = -1) {
 
 
   cat("Evaluating the job...\n")

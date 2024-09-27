@@ -34,7 +34,6 @@
 #' @examples aci(tropicalsound)
 aci <- function(wave,
                 freq.res = 50,
-                # w.len = 512,
                 w.fun = "hanning",
                 min.freq = NA,
                 max.freq = NA,

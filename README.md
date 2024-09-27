@@ -35,3 +35,12 @@ list_waves: A function to list all the WAV files in a directory.
 wave_integrity: A function to check the integrity of WAV files in a directory. It produces a report with the last day of complete recordings and days with corrupted files, along with a corresponding plot.
 
 diel_index_plot: A function to visualize a day's worth of acoustic indices in an interactive, smoothed (LOESS) time series using the Plotly package. The plots can be stored as interactive HTML files or static PNGs.
+
+
+How to install:
+
+If remotes is not installed, use: install.packages('remotes').
+
+library(remotes)
+
+remotes::install_github("panchorivasf/SoundEcology2", dependencies = TRUE)

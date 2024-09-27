@@ -25,4 +25,5 @@ Imports:
     ineq,
     plotly,
     parallel,
-    oce
+    oce,
+    patchwork

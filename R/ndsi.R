@@ -3,7 +3,7 @@
 #' Normalized Difference Soundscape Index (NDSI) from REAL and Kasten, et al. 2012. The NDSI seeks to "estimate the level of anthropogenic disturbance on the soundscape by computing the ratio of human-generated (anthrophony) to biological (biophony) acoustic components found in field collected sound samples" (Kasten, et al. 2012).
 #'
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
-#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
+#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
 #' @param anthro.min minimum value of the range of frequencies of the anthrophony.
 #' @param anthro.max maximum value of the range of frequencies of the anthrophony.
 #' @param bio.min minimum value of the range of frequencies of the biophony.
@@ -20,17 +20,17 @@
 #'
 #' @examples ndsi(tropicalsound)
 ndsi <- function(wave,
-                w.len = 1024,
+                freq.res = 50,
                 anthro.min = 1000,
                 anthro.max = 2000,
                 bio.min = 2000,
                 bio.max = 11000){
 
   #test arguments
-  if (is.numeric(as.numeric(w.len))){
-    w.len <- as.numeric(w.len)
+  if (is.numeric(as.numeric(freq.res))){
+    freq.res <- as.numeric(freq.res)
   } else{
-    stop(" w.len is not a number.")
+    stop(" freq.res is not a number.")
   }
 
   if (is.numeric(as.numeric(anthro.min))){
@@ -56,14 +56,23 @@ ndsi <- function(wave,
   } else{
     stop(" bio.max is not a number.")
   }
+  
+  #Get sampling rate
+  samplingrate <- wave@samp.rate
+  duration <- length(wave@left)/wave@samp.rate
+  
+  # Assess window length
+  w.len <- samplingrate/freq.res
+  
+
+  # Adding 1 if w.len is an odd number (new behavior in seewave)
+  # fix by JSueur
+  if(w.len%%2 == 1) {w.len <- w.len+1}
 
 
   #Some general values
   hz_interval = anthro.max - anthro.min
 
-  #Get sampling rate
-  samplingrate <- wave@samp.rate
-  duration <- length(wave@left)/wave@samp.rate
 
   #Get Nyquist frequency in Hz
   nyquist_freq <- (samplingrate/2)
@@ -249,6 +258,7 @@ ndsi <- function(wave,
                                anthro.max = anthro.max,
                                bio.min = bio.min,
                                bio.max = bio.max,
+                               freq.res = freq.res,
                                w.len = w.len,
                                samprate = samplingrate,
                                freqres = freq_per_row,
@@ -357,6 +367,7 @@ ndsi <- function(wave,
                              anthro.max = anthro.max,
                              bio.min = bio.min,
                              bio.max = bio.max,
+                             freq.res = freq.res,
                              w.len = w.len,
                              samprate = samplingrate,
                              freqres = freq_per_row,

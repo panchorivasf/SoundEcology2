@@ -6,7 +6,7 @@
 \usage{
 ndsi(
   wave,
-  w.len = 1024,
+  freq.res = 50,
   anthro.min = 1000,
   anthro.max = 2000,
   bio.min = 2000,
@@ -16,7 +16,7 @@ ndsi(
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
 
-\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
 
 \item{anthro.min}{minimum value of the range of frequencies of the anthrophony.}
 

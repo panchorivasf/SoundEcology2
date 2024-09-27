@@ -24,4 +24,5 @@ Imports:
     magrittr,
     ineq,
     plotly,
-    parallel
+    parallel,
+    oce

@@ -97,8 +97,8 @@ bi <- function(wave,
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- rm.offsetset(left)
-      right <- rm.offsetset(right)
+      left <- rmoffset(left)
+      right <- rmoffset(right)
     }
 
     if(noise.red == 1){

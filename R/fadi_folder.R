@@ -41,7 +41,7 @@
 fadi_folder <- function (folder,
                          save_csv = TRUE,
                          csv_name = "fadi_results.csv",
-                         noise_fil e= NULL,
+                         noise_file = NULL,
                          NEM = 2,
                          min_freq = 200,
                          max_freq = 10000,

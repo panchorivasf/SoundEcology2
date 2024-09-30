@@ -7,7 +7,7 @@ Major updates include:
 ## Spectrogram settings: 
 Using the seewave package's spectro() function, the spectrogram settings are now fully customizable. The first version of the package was developed when the spectro() function from the seewave package did not normalize spectrograms by default. In one of the early seewave updates, this behavior changed, and spectrograms began to be normalized by the maximum value within the recording, which is problematic when comparing metrics based on non-focal recordings (i.e., soundscape recordings). SoundEcology2 uses non-normalized spectrograms by default. 
 
-## dB scale: 
+### dB scale: 
 The original documentation stated that the decibel threshold (or 'noise floor') for functions such as ADI and AEI was measured in dBFS (decibels Full Scale), which was inaccurate, as the decibels were actually relative to the maximum amplitude in the recording (normalized). Additionally, if one wants to use non-normalized values in a dB scale, the range will include both negative and positive values, whwich is counterintuitive when one wants to select a dB cutoff threshold. SoundEcology2, uses dBFS by defaultm, which is calculated based on the bit depth of the recordings.
 
 ## Frequency resolution: 

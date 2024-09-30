@@ -35,7 +35,7 @@
 
 fci_list <- function(audio.list,
                       output.csv = "fci_results.csv",
-                      channel = 'left',
+                      channel = 'each',
                       rm.offset = TRUE,
                       hpf = 0,
                       cutoff = -60,

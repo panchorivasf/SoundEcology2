@@ -30,7 +30,8 @@
 plot_diel_indices <- function(data, 
                               sensor_id = NULL, 
                               plot.title = "Circadian Indices", 
-                              loess = TRUE, span = 0.3, 
+                              loess = TRUE, 
+                              span = 0.3, 
                               scaling = "none") {
   
   # Ensure the datetime column is properly parsed as POSIXct
@@ -120,7 +121,7 @@ plot_diel_indices <- function(data,
                   name = idx, line = list(width = 3),
                   showlegend = TRUE,
                   hovertemplate = paste('Time: %{x}<br>',
-                                        'Value: %{y:.2f}<extra></extra>'))
+                                        idx,': %{y:.2f}<extra></extra>'))
     } else {
       # Plot raw lines
       plot <- plot %>%
@@ -136,7 +137,7 @@ plot_diel_indices <- function(data,
   # Customize layout
   plot <- plot %>%
     layout(title = plot.title,
-           xaxis = list(title = "Hour of the Day", tickangle = 45),
+           xaxis = list(title = "Hour of the Day", tickangle = 90),
            yaxis = list(title = "Scaled Indices (0-1)"))
   
   return(plot)

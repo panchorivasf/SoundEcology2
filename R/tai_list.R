@@ -107,7 +107,7 @@ tai_list <- function(audio.list,
   
   
   # Define parallel computation
-  results <- foreach(file = audio.list, .packages = c("soundecology2", "tuneR", "seewave", "tibble")) %dopar% {
+  results <- foreach(file = audio.list, .packages = c("tuneR", "seewave", "tibble")) %dopar% {
     
     filename <- basename(file)  # Get file name without path
     

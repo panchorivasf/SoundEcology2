@@ -28,10 +28,10 @@
 #' }
 
 plot_diel_indices <- function(data, 
-                               sensor_id = NULL, 
-                               plot.title = "Circadian Indices", 
-                               loess = TRUE, span = 0.3, 
-                               scaling = "none") {
+                              sensor_id = NULL, 
+                              plot.title = "Circadian Indices", 
+                              loess = TRUE, span = 0.3, 
+                              scaling = "none") {
   
   # Ensure the datetime column is properly parsed as POSIXct
   data <- data %>%
@@ -118,14 +118,18 @@ plot_diel_indices <- function(data,
         add_trace(data = data_idx, x = ~hour, y = smoothed_values, 
                   type = 'scatter', mode = 'lines', 
                   name = idx, line = list(width = 3),
-                  showlegend = TRUE)
+                  showlegend = TRUE,
+                  hovertemplate = paste('Time: %{x}<br>',
+                                        'Value: %{y:.2f}<extra></extra>'))
     } else {
       # Plot raw lines
       plot <- plot %>%
         add_trace(data = data_idx, x = ~hour, y = ~value_avg, 
                   type = 'scatter', mode = 'lines', 
                   name = idx, line = list(width = 2),
-                  showlegend = TRUE)
+                  showlegend = TRUE,
+                  hovertemplate = paste('Time: %{x}<br>',
+                                        'Value: %{y:.2f}<extra></extra>'))
     }
   }
   
@@ -137,4 +141,3 @@ plot_diel_indices <- function(data,
   
   return(plot)
 }
-

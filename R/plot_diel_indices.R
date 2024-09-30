@@ -6,6 +6,7 @@
 #' various transformations to the data for better comparison.
 #'
 #' @param data A data frame containing `datetime`, `index`, and `value_avg` columns.
+#' @param sensor.id Character. Sensor identifier as expressed in the 'sensor_id' column. If not NULL, only the data for the requester sensor will be plotted.
 #' @param plot.title A character string specifying the title of the plot. Defaults to "Diel Index Patterns".
 #' @param loess A logical value indicating whether to apply LOESS smoothing to the lines. Defaults to `TRUE`.
 #' @param span A numeric value indicating the smoothing parameter for LOESS. Defaults to 0.3.
@@ -26,13 +27,16 @@
 #'   plot_diel_indices(data, loess = TRUE, scaling = "log")
 #' }
 
-plot_diel_indices <- function(data, plot.title = "Index Diel Plot", 
-                              loess = TRUE, span = 0.3, 
-                              scaling = "none") {
+plot_diel_indices <- function(data, 
+                               sensor_id = NULL, 
+                               plot.title = "Circadian Indices", 
+                               loess = TRUE, span = 0.3, 
+                               scaling = "none") {
   
   # Ensure the datetime column is properly parsed as POSIXct
   data <- data %>%
-    mutate(datetime = as.POSIXct(datetime, format = "%Y-%m-%d %H:%M:%S"))
+    mutate(datetime = as.POSIXct(datetime, format = "%Y-%m-%d %H:%M:%S"),
+           hour = format(datetime, "%H")) # Extract hour for grouping
   
   # Check for missing or infinite values in the `value_avg` column
   if (any(is.na(data$value_avg))) {
@@ -73,13 +77,30 @@ plot_diel_indices <- function(data, plot.title = "Index Diel Plot",
       ungroup()
   }
   
-  # Group by index and check for any groups with no valid data
-  data_grouped <- data %>%
-    group_by(index) %>%
-    filter(!is.na(value_avg) & !is.infinite(value_avg))  # Remove invalid entries within each group
+  # If a specific sensor_id is provided, filter for that sensor
+  if (!is.null(sensor_id)) {
+    data <- data %>%
+      filter(sensor_id == sensor_id)
+    
+    if (nrow(data) == 0) {
+      stop("No data found for the specified sensor_id.")
+    }
+    
+    # Group by hour and index only for the selected sensor
+    data_grouped <- data %>%
+      group_by(hour, index) %>%
+      summarise(value_avg = mean(value_avg, na.rm = TRUE)) %>%
+      ungroup()
+  } else {
+    # Group by hour and index across all sensors
+    data_grouped <- data %>%
+      group_by(hour, index) %>%
+      summarise(value_avg = mean(value_avg, na.rm = TRUE)) %>%
+      ungroup()
+  }
   
   # Create color palette that can handle more than 8 colors
-  unique_indices <- length(unique(data$index))
+  unique_indices <- length(unique(data_grouped$index))
   colors <- viridis(unique_indices, option = "D")
   
   # Initialize plotly object
@@ -91,17 +112,17 @@ plot_diel_indices <- function(data, plot.title = "Index Diel Plot",
     
     if (loess) {
       # Apply LOESS smoothing
-      loess_model <- loess(value_avg ~ as.numeric(datetime), data = data_idx, span = span)
+      loess_model <- loess(value_avg ~ as.numeric(hour), data = data_idx, span = span)
       smoothed_values <- predict(loess_model)
       plot <- plot %>%
-        add_trace(data = data_idx, x = ~datetime, y = smoothed_values, 
+        add_trace(data = data_idx, x = ~hour, y = smoothed_values, 
                   type = 'scatter', mode = 'lines', 
                   name = idx, line = list(width = 3),
                   showlegend = TRUE)
     } else {
       # Plot raw lines
       plot <- plot %>%
-        add_trace(data = data_idx, x = ~datetime, y = ~value_avg, 
+        add_trace(data = data_idx, x = ~hour, y = ~value_avg, 
                   type = 'scatter', mode = 'lines', 
                   name = idx, line = list(width = 2),
                   showlegend = TRUE)
@@ -111,8 +132,9 @@ plot_diel_indices <- function(data, plot.title = "Index Diel Plot",
   # Customize layout
   plot <- plot %>%
     layout(title = plot.title,
-           xaxis = list(title = "Time of the Day", tickangle = 45, tickformat = "%H:%M"),
+           xaxis = list(title = "Hour of the Day", tickangle = 45),
            yaxis = list(title = "Scaled Indices (0-1)"))
   
   return(plot)
 }
+

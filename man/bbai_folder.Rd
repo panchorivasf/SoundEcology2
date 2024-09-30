@@ -9,7 +9,7 @@ bbai_folder(
   channel = "each",
   hpf = 0,
   rm.offset = TRUE,
-  freq.res = 100,
+  freq.res = 50,
   cutoff = -60,
   click.length = 10,
   difference = 10,

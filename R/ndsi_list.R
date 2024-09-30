@@ -13,6 +13,7 @@
 #' @param anthro.max maximum value of the range of frequencies of the anthrophony.
 #' @param bio.min minimum value of the range of frequencies of the biophony.
 #' @param bio.max maximum value of the range of frequencies of the biophony.
+#' @param rm.offset logical. Whether to remove the DC offset.
 #' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #'
 #' @return a wide format tibble with NDSI values per channel (if stereo), parameters used and audio metadata
@@ -43,6 +44,7 @@ ndsi_list <- function (audio.list,
                       anthro.max = 2000,
                       bio.min = 2000,
                       bio.max = 11000,
+                      rm.offset = TRUE,
                       n.cores = -1){
 
 
@@ -67,7 +69,8 @@ ndsi_list <- function (audio.list,
                     anthro.min = anthro.min,
                     anthro.max = anthro.max,
                     bio.min = bio.min,
-                    bio.max = bio.max)
+                    bio.max = bio.max,
+                    rm.offset = rm.offset)
 
   # Evaluate the duration of the analysis
   # Measure processing time for a single file
@@ -80,7 +83,8 @@ ndsi_list <- function (audio.list,
               args_list$anthro.min,
               args_list$anthro.max,
               args_list$bio.min,
-              args_list$bio.max))
+              args_list$bio.max,
+              args_list$rm.offset))
 
   tibble(file_name = "filename") %>% bind_cols(ndsi1)
 
@@ -132,7 +136,8 @@ ndsi_list <- function (audio.list,
                                     args_list$anthro.min,
                                     args_list$anthro.max,
                                     args_list$bio.min,
-                                    args_list$bio.max)
+                                    args_list$bio.max,
+                                    args_list$rm.offset)
 
                        # Combine the results for each file into a single row
                        tibble(file_name = file) %>%

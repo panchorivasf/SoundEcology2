@@ -6,7 +6,7 @@
 \usage{
 adi(
   wave,
-  freq.res = 100,
+  freq.res = 50,
   w.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,

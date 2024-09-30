@@ -8,11 +8,12 @@ ndsi_list(
   audio.list,
   save.csv = FALSE,
   csv.name = "ndsi_results.csv",
-  freq.res = 1024,
+  freq.res = 50,
   anthro.min = 1000,
   anthro.max = 2000,
   bio.min = 2000,
   bio.max = 11000,
+  rm.offset = TRUE,
   n.cores = -1
 )
 }
@@ -32,6 +33,8 @@ ndsi_list(
 \item{bio.min}{minimum value of the range of frequencies of the biophony.}
 
 \item{bio.max}{maximum value of the range of frequencies of the biophony.}
+
+\item{rm.offset}{logical. Whether to remove the DC offset.}
 
 \item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 }

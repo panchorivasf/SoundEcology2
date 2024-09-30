@@ -6,7 +6,8 @@
 \usage{
 plot_diel_indices(
   data,
-  plot.title = "Index Diel Plot",
+  sensor_id = NULL,
+  plot.title = "Circadian Indices",
   loess = TRUE,
   span = 0.3,
   scaling = "none"
@@ -23,6 +24,8 @@ plot_diel_indices(
 
 \item{scaling}{A character string specifying the type of scaling/transformation to apply.
 Options are "none" (default), "minmax", "maxabs", "zscore", "log", and "robust".}
+
+\item{sensor.id}{Character. Sensor identifier as expressed in the 'sensor_id' column. If not NULL, only the data for the requester sensor will be plotted.}
 }
 \value{
 A \code{plotly} object showing a time series of scaled indices for each index group.

@@ -6,7 +6,7 @@
 \usage{
 fadi_folder(
   folder,
-  save_csv = FALSE,
+  save_csv = TRUE,
   csv_name = "fadi_results.csv",
   noise_file = NULL,
   NEM = 2,
@@ -15,7 +15,7 @@ fadi_folder(
   threshold_fixed = -50,
   freq_step = 1000,
   gamma = 13,
-  props = TRUE
+  props = FALSE
 )
 }
 \arguments{

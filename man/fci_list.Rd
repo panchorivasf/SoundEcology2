@@ -7,11 +7,11 @@
 fci_list(
   audio.list,
   output.csv = "fci_results.csv",
-  channel = "left",
+  channel = "each",
   rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
-  freq.res = 100,
+  freq.res = 50,
   plot = FALSE,
   ggplot = FALSE,
   plot.title = "Frequency Cover Analysis",

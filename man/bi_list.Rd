@@ -6,7 +6,7 @@
 \usage{
 bi_list(
   audio.list,
-  save.csv = FALSE,
+  save.csv = TRUE,
   csv.name = "bi_results.csv",
   w.len = 512,
   w.fun = "hanning",
@@ -15,7 +15,7 @@ bi_list(
   norm.spec = FALSE,
   noise.red = 0,
   rm.offset = TRUE,
-  n.cores = 1
+  n.cores = -1
 )
 }
 \arguments{

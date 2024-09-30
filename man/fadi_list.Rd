@@ -6,7 +6,7 @@
 \usage{
 fadi_list(
   audiolist,
-  save_csv = FALSE,
+  save_csv = TRUE,
   csv_name = "fadi_results.csv",
   noise_file = NULL,
   NEM = 2,

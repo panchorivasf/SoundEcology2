@@ -8,6 +8,7 @@
 #' @param anthro.max maximum value of the range of frequencies of the anthrophony.
 #' @param bio.min minimum value of the range of frequencies of the biophony.
 #' @param bio.max maximum value of the range of frequencies of the biophony.
+#' @param rm.offset logical. Whether to remove the DC offset.
 #'
 #' @return a wide format tibble with NDSI values per channel (if stereo), parameters used and audio metadata
 #' @export
@@ -24,7 +25,8 @@ ndsi <- function(wave,
                 anthro.min = 1000,
                 anthro.max = 2000,
                 bio.min = 2000,
-                bio.max = 11000){
+                bio.max = 11000,
+                rm.offset = TRUE){
 
   #test arguments
   if (is.numeric(as.numeric(freq.res))){
@@ -100,6 +102,14 @@ ndsi <- function(wave,
 
     left <- channel(wave, which = c("left"))
     right <- channel(wave, which = c("right"))
+    
+    # Remove DC offset
+    if(rm.offset == TRUE){
+      cat("Removing DC offset...\n")
+      left <- rmoffset(left, output = "Wave")
+      right <- rmoffset(right, output = "Wave")
+    }
+    
     rm(wave)
 
     cat("\n Calculating NDSI on a stereo file... \n")

@@ -10,7 +10,8 @@ ndsi(
   anthro.min = 1000,
   anthro.max = 2000,
   bio.min = 2000,
-  bio.max = 11000
+  bio.max = 11000,
+  rm.offset = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ ndsi(
 \item{bio.min}{minimum value of the range of frequencies of the biophony.}
 
 \item{bio.max}{maximum value of the range of frequencies of the biophony.}
+
+\item{rm.offset}{logical. Whether to remove the DC offset.}
 }
 \value{
 a wide format tibble with NDSI values per channel (if stereo), parameters used and audio metadata

@@ -6,7 +6,7 @@
 \usage{
 aci_list(
   audio.list,
-  save.csv = FALSE,
+  save.csv = TRUE,
   csv.name = "aci_results.csv",
   freq.res = 50,
   w.fun = "hanning",

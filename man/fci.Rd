@@ -10,7 +10,7 @@ fci(
   rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
-  freq.res = 100,
+  freq.res = 50,
   plot = FALSE,
   ggplot = FALSE,
   plot.title = "Frequency Cover Analysis",

@@ -6,7 +6,7 @@
 \usage{
 bi_folder(
   folder,
-  save.csv = FALSE,
+  save.csv = TRUE,
   csv.name = "bi_results.csv",
   w.len = 512,
   w.fun = "hanning",

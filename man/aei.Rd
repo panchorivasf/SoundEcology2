@@ -6,18 +6,17 @@
 \usage{
 aei(
   wave,
-  freq.res = 100,
+  freq.res = 50,
   w.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
   n.bands = 10,
   cutoff = -60,
   norm.spec = FALSE,
-  noise.red = 2,
+  noise.red = 0,
   rm.offset = TRUE,
   props = TRUE,
   prop.den = 1,
-  use.vegan = FALSE,
   db.fs = TRUE
 )
 }

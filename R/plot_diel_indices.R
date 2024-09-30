@@ -129,7 +129,7 @@ plot_diel_indices <- function(data,
                   name = idx, line = list(width = 2),
                   showlegend = TRUE,
                   hovertemplate = paste('Time: %{x}<br>',
-                                        'Value: %{y:.2f}<extra></extra>'))
+                                        idx,': %{y:.2f}<extra></extra>'))
     }
   }
   

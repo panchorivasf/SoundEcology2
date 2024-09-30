@@ -32,7 +32,7 @@ import_indices <- function(folder = NULL, pattern = "_results.csv") {
   }
   
   # Define the columns to be selected
-  selected_columns <- c("file_name", "sensor_id", "datetime", "date", "hour",
+  selected_columns <- c("sensor_id", "datetime", "date", "hour",
                         "index", "value_l", "value_r", "value_avg")
   
   # Read each CSV, select specific columns, and store them in a list
@@ -41,9 +41,6 @@ import_indices <- function(folder = NULL, pattern = "_results.csv") {
     
     # Ensure only the selected columns are kept and return the trimmed data frame
     df <- df[, selected_columns, drop = FALSE]
-    
-    # Add the file name as a new column to keep track of origin if needed
-    df$file_name <- basename(file)
     
     return(df)
   })

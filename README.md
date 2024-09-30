@@ -55,7 +55,7 @@ diel_index_plot: A function to visualize a day's worth of acoustic indices in an
 
 ## How to install:
 
-- If remotes is not installed, use: install.packages('remotes').
+- *If remotes is not installed, use:* install.packages('remotes').
 
 - library(remotes)
 

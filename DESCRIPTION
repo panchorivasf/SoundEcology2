@@ -10,7 +10,7 @@ Authors@R: c(
            person("Luis", "Villanueva-Rivera", role = "aut"),
            person("Bryan", "Pijanowski", email = "bpijanow@purdue.edu", role = "aut"))
 Description: Computes acoustic indices on audio recordings.
-License: `use_gpl3_license()`
+License: CC BY-NC 4.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1

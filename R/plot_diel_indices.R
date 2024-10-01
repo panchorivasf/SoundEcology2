@@ -112,27 +112,30 @@ plot_diel_indices <- function(data,
     data_idx <- data_grouped %>% filter(index == idx)
     
     if (loess) {
-      # Apply LOESS smoothing
+      # Apply LOESS smoothing with interpolation to match the original 'hour' values
       loess_model <- loess(value_avg ~ as.numeric(hour), data = data_idx, span = span)
-      smoothed_values <- predict(loess_model)
+      
+      smoothed_values <- predict(loess_model, newdata = as.numeric(data_idx$hour))
+      
       plot <- plot %>%
         add_trace(data = data_idx, x = ~hour, y = smoothed_values, 
                   type = 'scatter', mode = 'lines', 
-                  name = idx, line = list(width = 3),
+                  name = idx, line = list(width = 3, shape = 'spline'),
                   showlegend = TRUE,
                   hovertemplate = paste('Time: %{x}<br>',
-                                        idx,': %{y:.2f}<extra></extra>'))
+                                        'Value: %{y:.2f}<extra></extra>'))
     } else {
       # Plot raw lines
       plot <- plot %>%
         add_trace(data = data_idx, x = ~hour, y = ~value_avg, 
                   type = 'scatter', mode = 'lines', 
-                  name = idx, line = list(width = 2),
+                  name = idx, line = list(width = 2,shape = 'spline'),
                   showlegend = TRUE,
                   hovertemplate = paste('Time: %{x}<br>',
                                         idx,': %{y:.2f}<extra></extra>'))
     }
   }
+  
   
   # Customize layout
   plot <- plot %>%

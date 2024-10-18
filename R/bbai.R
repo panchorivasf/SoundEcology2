@@ -11,7 +11,7 @@
 #' @param click.height Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is `10`.
 #' @param difference Numeric. The maximum difference in amplitude between adjacent frequency bins to be considered part of a single 'click'. Default is `20`.
 #' @param gap.allowance Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click. Default is `2`. Gaps larger than this value will split clicks.
-#' @param plot Logical. Should a spectrogram with highlighted clicks be plotted? Default is `TRUE`.
+#' @param spectrogram Logical. Should a spectrogram with highlighted clicks be plotted? Default is `TRUE`.
 #' @param dark.plot Logical. Should the plot use a dark theme (black background)? Default is `FALSE`.
 #' @param plot.title Character. The title for the plot, if `plot` is `TRUE`. Default is `NULL`.
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
@@ -30,7 +30,7 @@
 #'
 #' @examples bbai(wave)
 bbai <- function(wave,
-                 channel = 'each',
+                 channel = 'left',
                  hpf = 0,
                  rm.offset = TRUE,
                  freq.res = 50,
@@ -38,12 +38,12 @@ bbai <- function(wave,
                  click.length = 10,
                  difference = 10,
                  gap.allowance = 2,
-                 plot = FALSE,
+                 spectrogram = FALSE,
                  dark.plot = FALSE,
                  plot.title = NULL,
                  verbose = TRUE) {
-
-
+  
+  
   # Check if the wave is stereo
   if (wave@stereo) {
     if (channel == 'each') {
@@ -59,59 +59,74 @@ bbai <- function(wave,
       stop("Invalid channel selected.")
     }
   }
-
-
+  
+  if(!wave@stereo){
+    if (channel %in% c('each', 'mix', 'right')) {
+      cat('This is a mono recording. Calculating BBAI over the 1 channel.')
+      channel = 'left'
+    }
+  }
+  
+  
   total_duration <- seewave::duration(wave)
   samp_rate <- wave@samp.rate
-
-
-  calculate_index <- function(wave,
-                              channel,
-                              rm.offset,
-                              hpf,
-                              freq.res,
-                              cutoff){
-
+  
+  bbai_mono <- function(wave,
+                        channel,
+                        rm.offset,
+                        hpf,
+                        freq.res,
+                        cutoff,
+                        click.length,
+                        difference,
+                        gap.allowance,
+                        spectrogram,
+                        dark.plot,
+                        plot.title){
+    
+    total_duration <- seewave::duration(wave)
+    samp_rate <- wave@samp.rate
+    
     # Remove DC offset
     if (rm.offset) {
       wave <- seewave::rmoffset(wave, output = "Wave")
     }
-
+    
     # Apply high-pass filter
     if (hpf > 0) {
       wave <- seewave::fir(wave, wl = 1024, from = hpf, to = NULL, bandpass = TRUE, output = "Wave")
     } else if (hpf < 0) {
       stop("HPF should be either 0 or a positive number (in Hertz) \n")
     }
-
+    
     matrix <- spectrogram_cutoff(wave,
                                  freq.res = freq.res,
                                  cutoff = cutoff)
-
+    
     # Initialize the number of time frames with clicks and list for click heights
     click_time_frames <- 0
     click_heights <- c()
     centroids <- c()
-
+    
     n_freq_bins <- nrow(matrix)
     n_time_frames <- ncol(matrix)
-
+    
     # Create a logical matrix to store click detection
     click_matrix <- matrix(FALSE, nrow = n_freq_bins, ncol = n_time_frames)
-
+    
     freq_values <- seq(0, wave@samp.rate / 2, length.out = n_freq_bins) / 1000
-
+    
     for (i in 1:n_time_frames) {
       diff_vec <- diff(matrix[, i], na.rm = TRUE)
-
+      
       if (all(is.na(diff_vec))) next
-
+      
       is_small_diff <- abs(diff_vec) < difference
       is_small_diff[is.na(is_small_diff)] <- FALSE
-
+      
       gap_counter <- 0
       contiguous_blocks <- logical(length(is_small_diff) + 1)
-
+      
       for (j in seq_along(is_small_diff)) {
         if (is_small_diff[j]) {
           contiguous_blocks[j] <- TRUE
@@ -125,22 +140,22 @@ bbai <- function(wave,
           }
         }
       }
-
+      
       rle_result <- rle(contiguous_blocks)
       lengths <- rle_result$lengths
       values <- rle_result$values
-
+      
       pos <- 1
-
+      
       for (k in seq_along(lengths)) {
         len <- lengths[k]
         val <- values[k]
-
+        
         if (val && len > click.length) {
           click_matrix[pos:(pos + len - 1), i] <- TRUE
           click_time_frames <- click_time_frames + 1
           click_heights <- c(click_heights, len)
-
+          
           click_frequencies <- freq_values[pos:(pos + len - 1)]
           click_amplitudes <- matrix[pos:(pos + len - 1), i]
           centroid <- sum(click_frequencies * click_amplitudes, na.rm = TRUE) / sum(click_amplitudes, na.rm = TRUE)
@@ -149,36 +164,43 @@ bbai <- function(wave,
         pos <- pos + len
       }
     }
-
+    
     # Compute the statistics for the click heights
-    click_sum <- ifelse(length(click_heights) > 1, sum(click_heights), 0)
-    click_mean <- ifelse(length(click_heights) > 1, round(mean(click_heights), 1), 0)
-    click_variance <- ifelse(length(click_heights) > 1, round(var(click_heights), 1), 0)
-    click_sd <- ifelse(length(click_heights) > 1, round(sd(click_heights), 1), 0)
-
+    click_sum <- ifelse(length(click_heights) > 0, sum(click_heights), 0)
+    click_mean <- ifelse(length(click_heights) > 0, round(mean(click_heights), 1), 0)
+    click_variance <- ifelse(length(click_heights) > 0, round(var(click_heights), 1), 0)
+    click_sd <- ifelse(length(click_heights) > 0, round(sd(click_heights), 1), 0)
+    
     # Analyze centroid frequencies
     mean_centroid <- ifelse(length(centroids) > 1, round(mean(centroids), 1), 0)
     sd_centroid <- ifelse(length(centroids) > 1, round(sd(centroids), 1), 0)
     var_centroid <- ifelse(length(centroids) > 1, round(var(centroids), 1), 0)
-
+    
     # Identify click clusters by checking gaps between click frames
     click_times <- which(apply(click_matrix, 2, any))
     mean_all_click_dist <- ifelse(length(click_times) > 1, round(mean(diff(click_times))), 0)
-
+    
     # Calculate the total number of cells in the spectrogram
     total_cells <- n_freq_bins * n_time_frames
-
+    
     # Step 3: Calculate the proportion of clicks
     broadband_activity <- round((click_sum / total_cells) * 100, 1)
-
+    
+    click_frames_prop <- round(click_time_frames / n_time_frames, 1)
+    
+    click_rate <- round(click_time_frames / total_duration, 1)
+    
     n_clicks <- length(click_heights)
-
+    
     cat("Broadband Activity: ", broadband_activity, "\n")
-
+    
     summary <- tibble(
       index = "bbai",
+      channel = channel,
       value = broadband_activity,
       nclicks = n_clicks,
+      prop.clicks = click_frames_prop,
+      click.rate = click_rate,
       mean.length = click_mean,
       var.length = click_variance,
       sd.length = click_sd,
@@ -187,30 +209,104 @@ bbai <- function(wave,
       var.centroid = var_centroid,
       mean.click.dist = mean_all_click_dist
     )
-
-    return(summary)
+    
+    
+    if(spectrogram){
+      
+      time_values <- seq(0, total_duration, length.out = n_time_frames)
+      freq_values <- seq(0, samp_rate / 2, length.out = n_freq_bins) / 1000  # Frequency in kHz
+      
+      # Create a combined matrix to overlay clicks in red
+      combined_matrix <- matrix
+      combined_matrix[click_matrix] <- 0  # Set click positions to 0 dB for clarity
+      
+      # Convert matrix to a dataframe for plotting
+      plot_data <- as.data.frame(combined_matrix)
+      colnames(plot_data) <- time_values
+      plot_data <- cbind(Frequency = freq_values, plot_data)
+      
+      # Reshape for ggplot
+      plot_data <- reshape2::melt(plot_data, id.vars = "Frequency", variable.name = "Time", value.name = "dB")
+      plot_data$Time <- as.numeric(as.character(plot_data$Time))
+      
+      # Mark clicks as a separate layer in the data
+      plot_data$Click <- as.vector(click_matrix)
+      
+      # Set color gradient function for dB values, with transparent `na.value`
+      color_func <- scales::col_numeric(palette = c(if (dark.plot) "black" else "white", "#2c7bb6","#00a6ca","#00ccbc","#90eb9d",
+                                                    "#ffff8c", "#f9d057", "#f29e2e","#e76818","#d7191c"),
+                                        domain = c(cutoff, 0), na.color = "transparent")
+      
+      plot_data$Color <- color_func(plot_data$dB)
+      
+      
+      # Create the base plot
+      p <- ggplot(plot_data, aes(x = Time, y = Frequency)) +
+        geom_tile(aes(fill = Color), color = NA) +
+        scale_fill_identity(na.value = "transparent") +  # Make NA values transparent
+        labs(x = "Time (s)", y = "Frequency (kHz)", title = plot.title) +
+        theme_bw() +
+        theme(legend.position = "none")
+      
+      # Highlight clicks in red
+      p <- p + geom_tile(data = subset(plot_data, Click == TRUE), fill = "red", color = NA) +
+        scale_x_continuous(expand = c(0,0)) +
+        scale_y_continuous(expand = c(0,0))
+      
+      
+      if (dark.plot) {
+        p <- p + theme(
+          plot.background = element_rect(fill = "black", color = NA),
+          panel.background = element_rect(fill = "black", color = NA),
+          axis.text = element_text(color = "white"),
+          axis.title = element_text(color = "white"),
+          axis.line = element_line(color = "white"),
+          axis.ticks = element_line(color = "white"),
+          panel.grid.major = element_line(color = scales::alpha("white", 0.2), linetype = "solid", linewidth = 0.3),
+          panel.grid.minor = element_line(color = scales::alpha("white", 0.2), linetype = "solid", linewidth = 0.05),
+          plot.title = element_text(color = "white", face = "bold", size = 14)
+        )
+      }
+      print(p)
+      
+      return(list(summary = summary, spectrogram = p))
+      
+    } else {
+      
+      return(summary)
+    }
   }
-
+  
   # Calculate the index based on the stereo condition
-  if (channel == 'each') {
-    if(!wave@stereo){
-      stop("Can't select 'each' channel for a mono file.\n")
-    }
-
-    if (plot) {
-      stop("Plotting is not allowed when calculating BBAI over both channels.\n")
-    }
-
-
+  if (wave@stereo && channel == 'each') {
+    
     if (verbose) cat("Calculating Broadband Activity Index on 2 channels... \n")
-
-    bbai_left <- calculate_index(wave.left, rm.offset = rm.offset,
-                                 hpf = hpf, freq.res = freq.res,
-                                 cutoff = cutoff)
-    bbai_right <- calculate_index(wave.right, rm.offset = rm.offset,
-                                  hpf = hpf, freq.res = freq.res,
-                                  cutoff = cutoff)
-
+    
+    bbai_left <- bbai_mono(wave.left, 
+                           # channel = 'left',
+                           rm.offset = rm.offset,
+                           hpf = hpf,
+                           freq.res = freq.res,
+                           cutoff = cutoff,
+                           click.length = click.length,
+                           difference = difference,
+                           gap.allowance = gap.allowance,
+                           spectrogram = spectrogram,
+                           dark.plot = dark.plot,
+                           plot.title = plot.title)
+    bbai_right <- bbai_mono(wave.right, 
+                            # channel = 'left',
+                            rm.offset = rm.offset,
+                            hpf = hpf,
+                            freq.res = freq.res,
+                            cutoff = cutoff,
+                            click.length = click.length,
+                            difference = difference,
+                            gap.allowance = gap.allowance,
+                            spectrogram = spectrogram,
+                            dark.plot = dark.plot,
+                            plot.title = plot.title)
+    
     bbai_global <- tibble::tibble(
       index = "bbai",
       value_l = bbai_left$value,
@@ -241,47 +337,68 @@ bbai <- function(wave,
       mean_click_dist_r = bbai_right$mean.click.dist,
       mean_click_dist_avg = round((bbai_left$mean.click.dist + bbai_right$mean.click.dist) / 2, 1)
     )
-
+    
     if(verbose){
       print(bbai_global)
     }
-
-
-    invisible(bbai_global)
-
-
-
-
+    
+    if(spectrogram){
+      
+      invisible(list(summary = bbai_global, 
+                     spectrogram_l = bbai_left$spectrogram,
+                     spectrogram_r = bbai_right$spectrogram))
+      
+    } else {
+      
+      invisible(bbai_global)
+      
+    }
+    
+    
   } else {
-
+    # Only one channel
+    
     if (verbose) {
       if(channel == 'left'){
         cat("Calculating Broadband Activity Index on the left channel... \n")
-
+        
       }else if(channel == 'right'){
         cat("Calculating Broadband Activity Index on the right channel... \n")
-
+        
       }else if(channel == 'mix'){
         cat("Calculating Broadband Activity Index on a mix of the two channels... \n")
       }
     }
-
+    
     # Calulate NBAI
-    bbai_global <- calculate_index(wave,
-                                   rm.offset = rm.offset,
-                                   channel = channel,
-                                   hpf = hpf,
-                                   freq.res = freq.res,
-                                   cutoff = cutoff)
-
+    bbai_global <- bbai_mono(wave,
+                             channel = channel,
+                             rm.offset = rm.offset,
+                             hpf = hpf,
+                             freq.res = freq.res,
+                             cutoff = cutoff,
+                             click.length = click.length,
+                             difference = difference,
+                             gap.allowance = gap.allowance,
+                             spectrogram = spectrogram,
+                             dark.plot = dark.plot,
+                             plot.title = plot.title)
+    
     if(verbose){
       print(bbai_global)
-
+      
     }
-
-    invisible(bbai_global)
-
-
+    
+    if(spectrogram){
+      invisible(list(summary = bbai_global$summary, spectrogram = bbai_global$spectrogram))
+      
+    } else {
+      
+      invisible(bbai_global)
+    }
+    
+    
+    
   }
-
+  
 }

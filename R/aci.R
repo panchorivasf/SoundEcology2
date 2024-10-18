@@ -31,7 +31,9 @@
 #' @import seewave
 #' @import tibble
 #'
-#' @examples aci(tropicalsound)
+#' @examples 
+#' \dontrun{
+#' aci(tropicalsound)}
 aci <- function(wave,
                 freq.res = 50,
                 w.fun = "hanning",

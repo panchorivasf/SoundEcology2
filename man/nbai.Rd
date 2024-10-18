@@ -6,23 +6,21 @@
 \usage{
 nbai(
   wave,
-  channel = "each",
+  channel = "left",
   hpf = 250,
   freq.res = 50,
   cutoff = -60,
   activity.cutoff = 10,
-  plot.binary.spec = FALSE,
+  spectrogram = FALSE,
   dark.plot = TRUE,
-  plot.activity = FALSE,
   plot.title = deparse(substitute(wave)),
-  save.spectral = FALSE,
   verbose = FALSE
 )
 }
 \arguments{
 \item{wave}{A Wave object}
 
-\item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.}
+\item{channel}{Character. Options are "left", "right", "mix", or "each". The "mix" option creates a temporary mono file from a mix of both channels before calculating the index. Default is "left".}
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
 
@@ -32,13 +30,9 @@ nbai(
 
 \item{activity.cutoff}{Numeric. Cutoff percent activity. Only the frequency bands active equal or above this percentage will be considered as "active" in the active band statistics.}
 
-\item{plot.binary.spec}{Logical. Whether to plot the binary spectrogram used for the analysis. Allowed only when Wave is mono or when one channel is selected from a stereo file.}
+\item{spectrogram}{Logical. Whether to plot the binary spectrogram used for the analysis. Allowed only when Wave is mono or when one channel is selected from a stereo file.}
 
 \item{dark.plot}{Logical. If true (default) a the binary spectrogram will have a black background.}
-
-\item{plot.activity}{Logical. If true, a barplot depicting the percent activity in each frequency bin will be returned. Default is FALSE.}
-
-\item{save.spectral}{Logical. If true the function returns a list with the NBAI summary statistics, the spectral vector, and the spectrogram.}
 
 \item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
 }

@@ -53,5 +53,6 @@ Reference: N. Pieretti, A. Farina, D. Morri. 2011. A new methodology to infer
 the singing activity of an avian community: The Acoustic Complexity Index (ACI). Ecological Indicators 11: 868-873.
 }
 \examples{
-aci(tropicalsound)
+\dontrun{
+aci(tropicalsound)}
 }

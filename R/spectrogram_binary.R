@@ -49,7 +49,7 @@ spectrogram_binary <- function(wave,
     }
   }
 
-  # Calculate window length according to the sampling rate for a fixed frequency resolution of 46.9 Hz/bin
+  # Calculate window length according to the sampling rate for a fixed frequency resolution 
   wl = wave@samp.rate / freq.res
 
   # Force it to be even

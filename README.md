@@ -1,15 +1,15 @@
-IMPORTANT: PACKAGE IN DEVELOPMENT STAGE. DO NOT USE.
+IMPORTANT: THIS PACKAGE IS STILL IN DEVELOPMENT STAGE!
 
-This new version of the classic **"soundecology"** package includes new acoustic indices and several additional parameters for the classic indices.
+This new version of the classic ***soundecology*** package includes new acoustic indices and several additional parameters for the classic indices.
 Major updates include:
 
 ### Spectrogram settings: 
 
-Using the seewave package's spectro() function, the spectrogram settings are now fully customizable. The first version of the package was developed when the spectro() function from the seewave package did not normalize spectrograms by default. In one of the early seewave updates, this behavior changed, and spectrograms began to be normalized by the maximum value within the recording, which is problematic when comparing metrics based on non-focal recordings (i.e., soundscape recordings). SoundEcology2 uses non-normalized spectrograms by default. 
+Using the ***seewave*** package's `spectro()` function, the spectrogram settings are now fully customizable. The first version of the package was developed when the `spectro()` function from the seewave package did not normalize spectrograms by default. In one of the early seewave updates, this behavior changed, and spectrograms began to be normalized by the maximum value within the recording, which is problematic when comparing metrics based on non-focal recordings (i.e., soundscape recordings). SoundEcology2 uses non-normalized spectrograms by default. 
 
 ### dB scale: 
 
-The original documentation stated that the decibel threshold (or 'noise floor') for functions such as ADI and AEI was measured in dBFS (decibels Full Scale), which was inaccurate, as the decibels were actually relative to the maximum amplitude in the recording (normalized). Additionally, if one wants to use non-normalized values in a dB scale, the range will include both negative and positive values, whwich is counterintuitive when one wants to select a dB cutoff threshold. SoundEcology2, uses dBFS by defaultm, which is calculated based on the bit depth of the recordings.
+The original documentation stated that the decibel threshold (or 'noise floor') for functions such as ADI and AEI was measured in dBFS (decibels Full Scale), which was inaccurate, since the decibels were actually relative to the maximum amplitude in the recording (normalized). Consequently, SoundEcology2, uses dBFS by default, which is calculated based on the bit depth of the recordings.
 
 
 ### Frequency resolution: 
@@ -47,18 +47,23 @@ In addition to the original indices (i.e., ADI, AEI, ACI, BI, and NDSI), SoundEc
     - The 'folder' function, index_folder(), takes the path to a directory and analyzes all the WAV files inside the folder.
 
 --- 
-Finally, we have added some helper functions to streamline the analysis process, including:
+Finally, we have added some helper functions to facilitate common tasks, including:
 
-list_waves: A function to list all the WAV files in a directory.
+`list_waves`: A function to list all the WAV files in a directory.
 
-wave_integrity: A function to check the integrity of WAV files in a directory. It produces a report with the last day of complete recordings and days with corrupted files, along with a corresponding plot.
+`wave_integrity`: A function to check the integrity of WAV files in a directory. It produces a report with the last day of complete recordings and days with corrupted files, along with a corresponding plot.
 
-diel_index_plot: A function to visualize a day's worth of acoustic indices in an interactive, smoothed (LOESS) time series using the Plotly package. The plots can be stored as interactive HTML files or static PNGs.
+`diel_index_plot`: A function to visualize a day's worth of acoustic indices in an interactive, smoothed (LOESS) time series using the Plotly package. The plots can be stored as interactive HTML files or static PNGs.
 
 ## How to install:
 
-- *If remotes is not installed, use:* install.packages('remotes').
+- If remotes is not installed, use: 
+```r
+install.packages('remotes')
+```
 
-- library(remotes)
+```r
+library(remotes)
 
-- remotes::install_github("panchorivasf/SoundEcology2", dependencies = TRUE)
+remotes::install_github("panchorivasf/SoundEcology2", dependencies = TRUE)
+```

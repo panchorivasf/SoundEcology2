@@ -274,7 +274,7 @@ bi <- function(wave,
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
-      left <- seewave::rmoffsetset(left, output = "Wave")
+      left <- seewave::rmoffset(left, output = "Wave")
     }
 
     # # Add information about noise reduction procedure

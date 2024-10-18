@@ -6,7 +6,7 @@
 \usage{
 bbai(
   wave,
-  channel = "each",
+  channel = "left",
   hpf = 0,
   rm.offset = TRUE,
   freq.res = 50,
@@ -14,7 +14,7 @@ bbai(
   click.length = 10,
   difference = 10,
   gap.allowance = 2,
-  plot = FALSE,
+  spectrogram = FALSE,
   dark.plot = FALSE,
   plot.title = NULL,
   verbose = TRUE
@@ -37,7 +37,7 @@ bbai(
 
 \item{gap.allowance}{Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click. Default is \code{2}. Gaps larger than this value will split clicks.}
 
-\item{plot}{Logical. Should a spectrogram with highlighted clicks be plotted? Default is \code{TRUE}.}
+\item{spectrogram}{Logical. Should a spectrogram with highlighted clicks be plotted? Default is \code{TRUE}.}
 
 \item{dark.plot}{Logical. Should the plot use a dark theme (black background)? Default is \code{FALSE}.}
 

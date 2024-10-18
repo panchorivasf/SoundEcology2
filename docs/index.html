@@ -56,16 +56,17 @@
       </header><div class="row">
   <div class="contents col-md-9">
 
-<p>This new version of the classic <strong>“soundecology”</strong> package includes new acoustic indices and several additional parameters for the classic indices. Major updates include:</p>
+<p>IMPORTANT: THIS PACKAGE IS STILL IN DEVELOPMENT STAGE!</p>
+<p>This new version of the classic <strong><em>soundecology</em></strong> package includes new acoustic indices and several additional parameters for the classic indices. Major updates include:</p>
 <div class="section level3">
 <h3 id="spectrogram-settings">Spectrogram settings:<a class="anchor" aria-label="anchor" href="#spectrogram-settings"></a>
 </h3>
-<p>Using the seewave package’s spectro() function, the spectrogram settings are now fully customizable. The first version of the package was developed when the spectro() function from the seewave package did not normalize spectrograms by default. In one of the early seewave updates, this behavior changed, and spectrograms began to be normalized by the maximum value within the recording, which is problematic when comparing metrics based on non-focal recordings (i.e., soundscape recordings). SoundEcology2 uses non-normalized spectrograms by default.</p>
+<p>Using the <strong><em>seewave</em></strong> package’s <code>spectro()</code> function, the spectrogram settings are now fully customizable. The first version of the package was developed when the <code>spectro()</code> function from the seewave package did not normalize spectrograms by default. In one of the early seewave updates, this behavior changed, and spectrograms began to be normalized by the maximum value within the recording, which is problematic when comparing metrics based on non-focal recordings (i.e., soundscape recordings). SoundEcology2 uses non-normalized spectrograms by default.</p>
 </div>
 <div class="section level3">
 <h3 id="db-scale">dB scale:<a class="anchor" aria-label="anchor" href="#db-scale"></a>
 </h3>
-<p>The original documentation stated that the decibel threshold (or ‘noise floor’) for functions such as ADI and AEI was measured in dBFS (decibels Full Scale), which was inaccurate, as the decibels were actually relative to the maximum amplitude in the recording (normalized). Additionally, if one wants to use non-normalized values in a dB scale, the range will include both negative and positive values, whwich is counterintuitive when one wants to select a dB cutoff threshold. SoundEcology2, uses dBFS by defaultm, which is calculated based on the bit depth of the recordings.</p>
+<p>The original documentation stated that the decibel threshold (or ‘noise floor’) for functions such as ADI and AEI was measured in dBFS (decibels Full Scale), which was inaccurate, since the decibels were actually relative to the maximum amplitude in the recording (normalized). Consequently, SoundEcology2, uses dBFS by default, which is calculated based on the bit depth of the recordings.</p>
 </div>
 <div class="section level3">
 <h3 id="frequency-resolution">Frequency resolution:<a class="anchor" aria-label="anchor" href="#frequency-resolution"></a>
@@ -103,19 +104,23 @@
 </li>
 </ul>
 <hr>
-<p>Finally, we have added some helper functions to streamline the analysis process, including:</p>
-<p>list_waves: A function to list all the WAV files in a directory.</p>
-<p>wave_integrity: A function to check the integrity of WAV files in a directory. It produces a report with the last day of complete recordings and days with corrupted files, along with a corresponding plot.</p>
-<p>diel_index_plot: A function to visualize a day’s worth of acoustic indices in an interactive, smoothed (LOESS) time series using the Plotly package. The plots can be stored as interactive HTML files or static PNGs.</p>
+<p>Finally, we have added some helper functions to facilitate common tasks, including:</p>
+<p><code>list_waves</code>: A function to list all the WAV files in a directory.</p>
+<p><code>wave_integrity</code>: A function to check the integrity of WAV files in a directory. It produces a report with the last day of complete recordings and days with corrupted files, along with a corresponding plot.</p>
+<p><code>diel_index_plot</code>: A function to visualize a day’s worth of acoustic indices in an interactive, smoothed (LOESS) time series using the Plotly package. The plots can be stored as interactive HTML files or static PNGs.</p>
 </div>
 <div class="section level2">
 <h2 id="how-to-install">How to install:<a class="anchor" aria-label="anchor" href="#how-to-install"></a>
 </h2>
 <ul>
-<li><p><em>If remotes is not installed, use:</em> install.packages(‘remotes’).</p></li>
-<li><p>library(remotes)</p></li>
-<li><p>remotes::install_github(“panchorivasf/SoundEcology2”, dependencies = TRUE)</p></li>
+<li>If remotes is not installed, use:</li>
 </ul>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'remotes'</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"panchorivasf/SoundEcology2"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 
   </div>
@@ -124,7 +129,7 @@
     <div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li>`use_gpl3_license()`</li>
+<li><a href="https://creativecommons.org/licenses/by-nc/4.0" class="external-link">CC BY-NC 4.0</a></li>
 </ul>
 </div>
 
@@ -139,7 +144,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Francisco Rivas <br><small class="roles"> Maintainer </small> <a href="https://orcid.org/0000-0002-1256-2225" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>Francisco Rivas <br><small class="roles"> Maintainer, author </small> <a href="https://orcid.org/0000-0002-1256-2225" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 <li>Luis Villanueva-Rivera <br><small class="roles"> Author </small>  </li>
 <li>Bryan Pijanowski <br><small class="roles"> Author </small>  </li>
 </ul>
@@ -158,7 +163,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>

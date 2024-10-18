@@ -509,7 +509,7 @@ aei <- function(wave,
                               wl = w.len,
                               plot = FALSE,
                               noise.reduction = noise.red)$amp
-      }else if (noise.red == 3) {
+      }else if (noise.red == 0) {
         specA_left <- spectro(left,
                               f = samplingrate,
                               wl = w.len,
@@ -528,7 +528,7 @@ aei <- function(wave,
                               norm = FALSE,
                               dB=NULL,
                               noise.reduction = noise.red)$amp
-      }else if (noise.red == 3) {
+      }else if (noise.red == 0) {
         specA_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                               norm=FALSE,dB=NULL,
                               noise.reduction = noise.red)$amp

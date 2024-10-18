@@ -56,7 +56,8 @@ adi_folder <- function (folder,
                       props = FALSE,
                       prop.den = 1,
                       db.fs = TRUE,
-                      n.cores = -1){
+                      n.cores = -1,
+                      recursive = FALSE){
   
   if(is.null(folder)){
     folder <- getwd()
@@ -74,7 +75,13 @@ adi_folder <- function (folder,
   }
   
   setwd(folder)
-  audio.list <- list.files(path=folder, pattern = ".wav|.WAV")
+  
+  if(recursive){
+    audio.list <- list.files(path=folder, pattern = ".wav|.WAV", recursive = TRUE, full.names = TRUE)
+  } else {
+    audio.list <- list.files(path=folder, pattern = ".wav|.WAV")
+    
+  }
   
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)

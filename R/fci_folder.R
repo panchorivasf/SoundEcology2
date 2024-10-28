@@ -182,6 +182,7 @@ fci_folder <- function(folder,
   combined_results <- addMetadata(combined_results)
 
   # Export results to CSV
+  combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
   write.csv(combined_results, file = output.csv, row.names = FALSE)
 
   # Stop parallel cluster

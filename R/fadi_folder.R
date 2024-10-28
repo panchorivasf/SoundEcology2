@@ -160,6 +160,7 @@ fadi_folder <- function (folder,
 
 
   if(save_csv == TRUE){
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     write.csv(resultsWithMetadata, csv_name, row.names = FALSE)
   }
 

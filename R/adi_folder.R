@@ -188,6 +188,8 @@ adi_folder <- function (folder = NULL,
   stopCluster(cl)
   
   if(save.csv == TRUE){
+    # Convert POSIXct column to character format to retain zeros
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
   

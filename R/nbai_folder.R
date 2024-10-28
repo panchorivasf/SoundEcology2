@@ -151,7 +151,7 @@ nbai_folder <- function(folder,
   combined_results <- do.call(rbind, results)
 
   combined_results <- addMetadata(combined_results)
-
+  combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
   # Export results to CSV
   write.csv(combined_results, file = output.csv, row.names = FALSE)
 

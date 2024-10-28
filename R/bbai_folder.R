@@ -38,8 +38,8 @@
 #'
 #'
 #' @examples bbai_folder(path/to/folder)
-bbai_folder <- function(folder,
-                        channel = 'each',
+bbai_folder <- function(folder = NULL,
+                        channel = "each",
                         hpf = 0,
                         rm.offset = TRUE,
                         freq.res = 50,

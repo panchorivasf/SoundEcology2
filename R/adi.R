@@ -115,19 +115,6 @@ adi <- function(wave,
   }
 
 
-  # # Original soundecology function for reference
-  # getscore <- function(spectrum, minf, maxf, db, freq_row){
-  #   miny<-round((minf)/freq_row)
-  #   maxy<-round((maxf)/freq_row)
-  #
-  #   subA = spectrum[miny:maxy,]
-  #
-  #   index1 <- length(subA[subA>db]) / length(subA)
-  #
-  #   return(index1)
-  # }
-  #
-
   # Save the denominator used in the proportion calculation
   if(prop.den == 1){
     propdenom <- "within band"
@@ -186,17 +173,12 @@ adi <- function(wave,
     # Add information about noise reduction procedure
     if(noise.red == 1){
       cat("Applying noise reduction filter to each row...\n")
-      # noise <- "rows"
     } else if (noise.red == 2){
       cat("Applying noise reduction filter to each column...\n")
-      # noise <- "columns"
-    } else {
-      # noise <- "none"
-    }
+    } 
 
     left<-channel(wave, which = c("left"))
     right<-channel(wave, which = c("right"))
-    # rm(wave)
 
     # Remove DC offset
     if(rm.offset == TRUE){
@@ -204,18 +186,6 @@ adi <- function(wave,
       left <- rmoffset(left, output = "Wave")
       right <- rmoffset(right, output = "Wave")
     }
-
-
-    # if(noise.red == 1){
-    #   cat("Applying noise reduction filter to each row...\n")
-    #   noise <- "rows"
-    # } else if (noise.red == 2){
-    #   cat("Applying noise reduction filter to each column...\n")
-    #   noise <- "columns"
-    # } else {
-    #   noise <- "none"
-    # }
-
 
     # Generate normalized spectrogram if norm.spec = TRUE
     if(norm.spec == TRUE){
@@ -361,19 +331,6 @@ adi <- function(wave,
 
       Score_left <- -sum(Score * log(Score + 0.000001))
 
-
-      # # Create a new empty numeric object (Fran's comment)
-      # Score1 = 0
-      #
-      #
-      # # Loop over the score vector and calculate the Shannon's Entropy
-      # for (i in 1:length(Freq)) {
-      #   Score1 = Score1 + (-Score[i] * log(Score[i]+ 0.000001))
-      #
-      # }
-      #
-      # Score_left = Score1 / length(Freq)
-
     }
 
 
@@ -398,15 +355,6 @@ adi <- function(wave,
 
       # Use a vectorized version to improve efficiency
       Score_right <- -sum(Score * log(Score+ 0.000001))
-
-      # # Original code:
-      # Score1 = 0
-      # for (i in 1:length(Freq)) {
-      #   Score1 = Score1 + (-Score[i] * log(Score[i]+ 0.000001))
-      # }
-      #
-      # Score_right = Score1 / length(Freq)
-
 
     }
 
@@ -472,9 +420,6 @@ adi <- function(wave,
 
       cat("Reporting ADI for 2 channels, metadata and energy proportions per frequency band. \n")
 
-      # adiOutputStereo <- adiOutputStereo %>%
-      #   add_column(index = "adi", .before = "value_l")
-
       return(adiOutputStereo)
 
     } else {
@@ -492,37 +437,19 @@ adi <- function(wave,
     # MONO
     cat("Calculating ADI on a mono file... \n")
 
-    # Add information about noise reduction procedure
     if(noise.red == 1){
       cat("Applying noise reduction filter to each row...\n")
-      # noise <- "rows"
     } else if (noise.red == 2){
       cat("Applying noise reduction filter to each column...\n")
-      # noise <- "columns"
-    } else {
-      # noise <- "none"
-    }
+    } 
 
     left<-channel(wave, which = c("left"))
-    # rm(wave)
 
     # Remove DC offset
     if(rm.offset == TRUE){
       cat("Removing DC offset...\n")
       left <- rmoffset(left, output = "Wave")
     }
-
-    # # Add information about noise reduction procedure
-    # if(noise.red == 1){
-    #   cat("Applying noise reduction filter (subtract median amplitude) to each row...\n")
-    #   noise <- "rows"
-    # } else if(noise.red == 2){
-    #   cat("Applying a noise reduction filter (subtract median amplitude) to each column...\n")
-    #   noise <- "columns"
-    # } else if(noise.red == 0) {
-    #   noise <- "none"
-    # }
-
 
     # Generate normalized spectrogram if norm.spec = TRUE
     if(norm.spec == TRUE){
@@ -608,56 +535,27 @@ adi <- function(wave,
 
       Score_left <- vegan::diversity(Score, index = "shannon")
 
-
     }else{
 
       Score_left <- -sum(Score * log(Score + 0.000001))
 
-
-      # Score1 = 0
-      # for (i in 1:length(Freq)) {
-      #   Score1 = Score1 + (-Score[i] * log(Score[i]+0.00001))
-      # }
-      #
-      # Score_left = Score1 / length(Freq)
-
     }
-
-
 
     left_adi_return = round(Score_left, 3)
 
-
-
     left_bandvals_return <- rep(NA, length(Freq))
-    # right_bandvals_return <- rep(NA, length(Freq))
     left_bandrange_return <- rep(NA, length(Freq))
-    # right_bandrange_return <- rep(NA, length(Freq))
 
 
     for (j in seq(length(Freq), 1, by = -1)) {
       left_bandvals_return[j] = round(left_vals[j], 6)
-      # right_bandvals_return[j] = round(right_vals[j], 6)
       left_bandrange_return[j] = paste((Freq[j]/1000), "-", ((Freq[j]/1000) + (freq_step/1000)), sep = "")
-      # right_bandrange_return[j] = paste((Freq[j]/1000), "-", ((Freq[j]/1000) + (freq_step/1000)), sep = "")
     }
 
     left_adi_return = round(Score_left, 3)
-    # right_adi_return = round(Score_right, 3)
 
     adiOutputMono <- tibble(index = "adi",
                             value = left_adi_return)
-
-
-    # # Add information about noise reduction procedure
-    # if(noise.red == 1){
-    #   noise <- "rows"
-    # } else if(noise.red == 2){
-    #   noise <- "columns"
-    # } else if(noise.red == 3) {
-    #   noise <- "none"
-    # }
-
 
     # Add metadata columns
     adiOutputMono <- adiOutputMono %>%
@@ -677,10 +575,6 @@ adi <- function(wave,
                  dur = duration,
                  channels = "mono")
 
-    # adiOutputMono <- adiOutputMono %>%
-    #   add_column(index = "adi", .before = "value")
-
-
     if(props == TRUE){
       # Add data on proportions for each frequency band per channel:
       proportions = tibble(band_kHz = left_bandrange_return,
@@ -694,16 +588,11 @@ adi <- function(wave,
 
       cat("Reporting ADI for 1 channel, metadata and energy proportions per frequency band. \n")
 
-      # return(adiOutputMono)
-
     }else {
 
       cat("Reporting ADI for 1 channel and metadata.\n")
-      # return(adiOutputMono)
 
     }
-    # adiOutputMono <- adiOutputMono %>%
-    #   add_column(index = "adi", .before = "value")
 
     return(adiOutputMono)
 

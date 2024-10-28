@@ -30,7 +30,7 @@
 #'
 #' @examples bbai(wave)
 bbai <- function(wave,
-                 channel = 'left',
+                 channel = "left",
                  hpf = 0,
                  rm.offset = TRUE,
                  freq.res = 50,
@@ -46,14 +46,14 @@ bbai <- function(wave,
   
   # Check if the wave is stereo
   if (wave@stereo) {
-    if (channel == 'each') {
-      wave.left <- tuneR::channel(wave, 'left')
-      wave.right <- tuneR::channel(wave, 'right')
-    } else if (channel == 'left') {
-      wave <- tuneR::channel(wave, 'left')
-    } else if (channel == 'right') {
-      wave <- tuneR::channel(wave, 'right')
-    } else if (channel == 'mix'){
+    if (channel == "each") {
+      wave.left <- tuneR::channel(wave, "left")
+      wave.right <- tuneR::channel(wave, "right")
+    } else if (channel == "left") {
+      wave <- tuneR::channel(wave, "left")
+    } else if (channel == "right") {
+      wave <- tuneR::channel(wave, "right")
+    } else if (channel == "mix"){
       wave <- tuneR::mono(wave, "both")
     } else {
       stop("Invalid channel selected.")
@@ -61,9 +61,9 @@ bbai <- function(wave,
   }
   
   if(!wave@stereo){
-    if (channel %in% c('each', 'mix', 'right')) {
+    if (channel %in% c("each", "mix", "right")) {
       cat('This is a mono recording. Calculating BBAI over the 1 channel.')
-      channel = 'left'
+      channel = "left"
     }
   }
   
@@ -278,12 +278,12 @@ bbai <- function(wave,
   }
   
   # Calculate the index based on the stereo condition
-  if (wave@stereo && channel == 'each') {
+  if (wave@stereo && channel == "each") {
     
     if (verbose) cat("Calculating Broadband Activity Index on 2 channels... \n")
     
     bbai_left <- bbai_mono(wave.left, 
-                           # channel = 'left',
+                           channel = "left",
                            rm.offset = rm.offset,
                            hpf = hpf,
                            freq.res = freq.res,
@@ -295,7 +295,7 @@ bbai <- function(wave,
                            dark.plot = dark.plot,
                            plot.title = plot.title)
     bbai_right <- bbai_mono(wave.right, 
-                            # channel = 'left',
+                            channel = "left",
                             rm.offset = rm.offset,
                             hpf = hpf,
                             freq.res = freq.res,

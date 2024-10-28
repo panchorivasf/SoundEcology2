@@ -30,7 +30,7 @@
 #'
 #' @examples bbai(wave)
 bbai <- function(wave,
-                 channel = 'left',
+                 channel = 'each',
                  hpf = 0,
                  rm.offset = TRUE,
                  freq.res = 50,

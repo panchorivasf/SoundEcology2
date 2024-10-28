@@ -46,6 +46,7 @@ bbai <- function(wave,
   
   # Check if the wave is stereo
   if (wave@stereo) {
+    cat('This is a STEREO recording!')
     if (channel == 'each') {
       wave.left <- tuneR::channel(wave, 'left')
       wave.right <- tuneR::channel(wave, 'right')

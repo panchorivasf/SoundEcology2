@@ -2,7 +2,7 @@
 #'
 #' This function generates and saves spectrogram images for various summary categories (mean, max, min, median, mode) for each recording in the input data frame. Spectrograms are created for specific wave files as indicated in the data, with options to normalize and remove DC offset.
 #'
-#' @param df A data frame containing summary statistics of recordings. It should include columns `unit_id`, `channel`, `index`, and columns named `closest_to_<stat>` for categories `mean`, `max`, `min`, `median`, and `mode`, each referring to the closest wave file for each statistic.
+#' @param df A data frame containing summary statistics of recordings. It should include columns `sensor_id`, `channel`, `index`, and columns named `closest_to_<stat>` for categories `mean`, `max`, `min`, `median`, and `mode`, each referring to the closest wave file for each statistic.
 #' @param parent_dir A character string specifying the parent directory containing the `.wav` files. Defaults to `NULL`, which sets `parent_dir` to the current working directory.
 #' @param output_dir A character string specifying the directory to save generated spectrogram images. Defaults to `"summary_spectrograms_se2"`.
 #' @param rmdcoff A logical value indicating whether to remove the DC offset from wave files before generating spectrograms. Defaults to `TRUE`.
@@ -36,12 +36,12 @@ summary_spectrograms <- function(df,
 
   # Helper function to process each row of the data
   process_row <- function(row) {
-    unit_id <- row$unit_id
+    sensor_id <- row$sensor_id
     channel <- row$channel
     index <- row$index
 
-    # Create separate output folder for each unit_id and channel combination
-    unit_channel_dir <- file.path(output_dir, paste0(unit_id, "_", channel))
+    # Create separate output folder for each sensor_id and channel combination
+    unit_channel_dir <- file.path(output_dir, paste0(sensor_id, "_", channel))
     if (!dir.exists(unit_channel_dir)) {
       dir.create(unit_channel_dir, recursive = TRUE)
     }
@@ -59,7 +59,7 @@ summary_spectrograms <- function(df,
 
         if (length(file_path) == 1 && file.exists(file_path)) {
           # Generate the output file name and path
-          output_file <- file.path(unit_channel_dir, paste0(unit_id, "_", channel, "_", index, "_", cat, ".png"))
+          output_file <- file.path(unit_channel_dir, paste0(sensor_id, "_", channel, "_", index, "_", cat, ".png"))
 
           # Read the wave file
           wave <- tuneR::readWave(file_path)

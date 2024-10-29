@@ -71,9 +71,10 @@ summary_spectrograms <- function(df,
           # Generate the spectrogram
           png(output_file, width = 2400, height = 1200, res = 300) # High resolution, landscape format
 
-          seewave::spectro(wave,
-                           norm = norm,
-                           scale = FALSE)
+          # seewave::spectro(wave,
+          #                  norm = norm,
+          #                  scale = FALSE)
+          spectrogram_cutoff(wave)
           # collevels = seq(-60, 0, by = 1)) # Customize frequency limits as needed
 
           grDevices::dev.off()

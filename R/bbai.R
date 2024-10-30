@@ -101,7 +101,8 @@ bbai <- function(wave,
     
     matrix <- spectrogram_cutoff(wave,
                                  freq.res = freq.res,
-                                 cutoff = cutoff)
+                                 cutoff = cutoff,
+                                 noise.red = "rows")
     
     # Initialize the number of time frames with clicks and list for click heights
     click_time_frames <- 0

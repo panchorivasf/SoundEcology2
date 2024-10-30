@@ -10,7 +10,8 @@ spectrogram_cutoff(
   freq.res = 100,
   plot = FALSE,
   plot.title = NULL,
-  ggplot = TRUE
+  ggplot = TRUE,
+  noise.red = NULL
 )
 }
 \arguments{

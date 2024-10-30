@@ -39,7 +39,17 @@ spectrogram_cutoff <- function(wave,
   # Remove DC offset
   wave <- rmoffset(wave, output = "Wave")
   
-  if (noise.red == "rows"){
+  if (is.null(noise.red)) {
+    # Get the spectrogram matrix
+    spectro_res <- seewave::spectro(wave,
+                                    wl = wl,
+                                    norm = FALSE,
+                                    dB = NULL,
+                                    plot = FALSE,
+                                    scale = FALSE,
+                                    correction = "amplitude")
+    
+  } else if (noise.red == "rows"){
     spectro_res <- seewave::spectro(wave,
                                     wl = wl,
                                     norm = FALSE,
@@ -58,16 +68,8 @@ spectrogram_cutoff <- function(wave,
                                     correction = "amplitude",
                                     noisereduction = 2)
     
-  } else if (is.null(noise.red)) {
-    # Get the spectrogram matrix
-    spectro_res <- seewave::spectro(wave,
-                                    wl = wl,
-                                    norm = FALSE,
-                                    dB = NULL,
-                                    plot = FALSE,
-                                    scale = FALSE,
-                                    correction = "amplitude")
-    
+  } else {
+    stop("noise.red should be 'rows', 'columns', or 'NULL'. \n")
   }
 
 

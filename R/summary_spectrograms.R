@@ -11,7 +11,7 @@
 #' @return None. Spectrogram images are saved in the specified output directory.
 #' @export
 #' @importFrom ggplot2 ggplot annotation_custom ggsave
-#' @importFrom grid textGrob
+#' @importFrom grid textGrob gpar
 #' @importFrom future plan multisession
 #' @importFrom future.apply future_lapply 
 #'
@@ -81,9 +81,9 @@ summary_spectrograms <- function(summary_df,
           }
           
           # Generate the spectrogram
-          p <- spectrogram_cutoff(wave, plot = TRUE)$plot 
+          p <- spectrogram_cutoff(wave, plot = TRUE, noise.red = NULL)$plot 
           
-          annotation_layer <- annotation_custom(
+          annotation1 <- annotation_custom(
             textGrob(
               label = paste("Sensor ID:", sensor_id,
                             "\nDate:", date,
@@ -91,11 +91,25 @@ summary_spectrograms <- function(summary_df,
               x = unit(0.02, "npc"), 
               y = unit(0.98, "npc"),
               just = c("left", "top"),
-              gp = gpar(col = "black", fontsize = 5, fontface = "bold")
+              gp = gpar(col = "black", fontsize = 10, fontface = "bold")
             )
           )
+          
+          annotation2 <- annotation_custom(
+            textGrob(
+              label = paste(" Index:", toupper(index),
+                            "\n Metric:", cat,
+                            "\nChannel:", channel),
+              x = unit(0.95, "npc"),
+              y = unit(0.98, "npc"),
+              just = c("right", "top"),
+              gp = gpar(col = "red", fontsize = 10, fontface = "bold")
+            )
+          )
+          
+          
           # Combine spectrogram and annotation layer
-          final_plot <- p + annotation_layer
+          final_plot <- p + annotation1 + annotation2
           
           # Save the annotated spectrogram with updated file naming
           ggsave(filename = output_file, plot = final_plot, 
@@ -109,6 +123,6 @@ summary_spectrograms <- function(summary_df,
   
   
   # Use future.apply for parallel processing to process each row of the dataframe
-  plan(multisession) # Set up parallel backend (works on Windows)
+  future::plan(multisession) # Set up parallel backend (works on Windows)
   future_lapply(seq_len(nrow(summary_df)), function(i) process_row(summary_df[i, ]))
 }

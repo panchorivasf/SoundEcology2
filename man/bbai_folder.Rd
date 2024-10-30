@@ -5,7 +5,7 @@
 \title{Calculate BBAI for all the Files in a Folder}
 \usage{
 bbai_folder(
-  folder,
+  folder = NULL,
   channel = "each",
   hpf = 0,
   rm.offset = TRUE,

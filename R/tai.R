@@ -59,7 +59,7 @@ tai <- function(wave,
   samp_rate <- wave@samp.rate
 
   calculate_index <- function(wave,
-                              # channel,
+                              channel,
                               hpf,
                               rm.offset,
                               cutoff,
@@ -152,7 +152,7 @@ tai <- function(wave,
 
       trill_df <- melt(trill_spectral)
 
-      trill_df$value[trill_df$value == 0] <- NA # To allow transparency of zero values
+      trill_df$value[trill_df$value == 0] <- NA # Transparency for zero values
 
       trill_df$frequency <- freq[trill_df$Var1]  # Frequency
       trill_df$time <- time[trill_df$Var2]  # Time

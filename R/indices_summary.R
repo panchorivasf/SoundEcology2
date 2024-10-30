@@ -77,10 +77,10 @@ indices_summary <- function(df, origin = "soundecology2") {
 
       median_value = median(value, na.rm = TRUE),
       closest_to_median = file_name[which.min(abs(value - median(value, na.rm = TRUE)))],
-      
+
       mode_value = pracma::Mode(round(value)),
       closest_to_mode = file_name[which.min(abs(value - pracma::Mode(round(value))))]
     )
-
+  
   return(summary)
 }

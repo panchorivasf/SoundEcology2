@@ -5,15 +5,15 @@
 \title{Generate and Save Summary Spectrograms}
 \usage{
 summary_spectrograms(
-  df,
+  summary_df,
   parent_dir = NULL,
-  output_dir = "summary_spectrograms_se2",
+  output_dir = "summary_spectros_se2",
   rmdcoff = TRUE,
   norm = FALSE
 )
 }
 \arguments{
-\item{df}{A data frame containing summary statistics of recordings. It should include columns \code{unit_id}, \code{channel}, \code{index}, and columns named \verb{closest_to_<stat>} for categories \code{mean}, \code{max}, \code{min}, \code{median}, and \code{mode}, each referring to the closest wave file for each statistic.}
+\item{summary_df}{A data frame containing summary statistics of recordings. It should include columns \code{sensor_id}, \code{channel}, \code{index}, and columns named \verb{closest_to_<stat>} for categories \code{mean}, \code{max}, \code{min}, \code{median}, and \code{mode}, each referring to the closest wave file for each statistic.}
 
 \item{parent_dir}{A character string specifying the parent directory containing the \code{.wav} files. Defaults to \code{NULL}, which sets \code{parent_dir} to the current working directory.}
 
@@ -30,6 +30,6 @@ None. Spectrogram images are saved in the specified output directory.
 This function generates and saves spectrogram images for various summary categories (mean, max, min, median, mode) for each recording in the input data frame. Spectrograms are created for specific wave files as indicated in the data, with options to normalize and remove DC offset.
 }
 \examples{
-# Example usage with a data frame `df` that includes necessary summary columns
-summary_spectrograms(df, parent_dir = "path/to/wav/files", output_dir = "spectrograms", rmdcoff = TRUE, norm = FALSE)
+# Example usage with a data frame `summary_df` that includes necessary summary columns
+summary_spectrograms(summary_df, parent_dir = "path/to/wav/files", output_dir = "spectrograms", rmdcoff = TRUE, norm = FALSE)
 }

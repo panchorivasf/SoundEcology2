@@ -39,5 +39,7 @@ Imports:
     stats,
     utils,
     writexl,
-    grid
+    grid,
+    future,
+    future.apply
 

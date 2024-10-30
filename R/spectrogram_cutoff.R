@@ -27,7 +27,8 @@ spectrogram_cutoff <- function(wave,
                                freq.res = 100,
                                plot = FALSE,
                                plot.title = NULL,
-                               ggplot = TRUE){
+                               ggplot = TRUE,
+                               noise.red = NULL){
 
   total_duration <- seewave::duration(wave)
   samp_rate <- wave@samp.rate
@@ -37,16 +38,40 @@ spectrogram_cutoff <- function(wave,
 
   # Remove DC offset
   wave <- rmoffset(wave, output = "Wave")
+  
+  if (noise.red == "rows"){
+    spectro_res <- seewave::spectro(wave,
+                                    wl = wl,
+                                    norm = FALSE,
+                                    dB = NULL,
+                                    plot = FALSE,
+                                    scale = FALSE,
+                                    correction = "amplitude",
+                                    noisereduction = 1)
+  } else if (noise.red == "cols"){
+    spectro_res <- seewave::spectro(wave,
+                                    wl = wl,
+                                    norm = FALSE,
+                                    dB = NULL,
+                                    plot = FALSE,
+                                    scale = FALSE,
+                                    correction = "amplitude",
+                                    noisereduction = 2)
+    
+  } else if (is.null(noise.red)) {
+    # Get the spectrogram matrix
+    spectro_res <- seewave::spectro(wave,
+                                    wl = wl,
+                                    norm = FALSE,
+                                    dB = NULL,
+                                    plot = FALSE,
+                                    scale = FALSE,
+                                    correction = "amplitude")
+    
+  }
 
 
-  # Get the spectrogram matrix
-  spectro_res <- seewave::spectro(wave,
-                                  wl = wl,
-                                  norm = FALSE,
-                                  dB = NULL,
-                                  plot = FALSE,
-                                  scale = FALSE,
-                                  correction = "amplitude")
+
 
   matrix <- spectro_res$amp
 

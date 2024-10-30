@@ -121,6 +121,11 @@ spectrogram_cutoff <- function(wave,
       box()
     }
   }
+  
+  if (plot) {
+    invisible(list(matrix = spectrogram, plot = p))
+  } else {
+    invisible(spectrogram)
+  }
 
-  invisible(spectrogram)
 }

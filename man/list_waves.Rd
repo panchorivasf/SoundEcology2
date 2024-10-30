@@ -16,5 +16,7 @@ A list of wave files
 List wave files in a directory
 }
 \examples{
+\dontrun{
 list_waves(folder)
+}
 }

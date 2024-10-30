@@ -4,18 +4,26 @@
 \alias{indices_summary}
 \title{Summary of Acoustic Indices}
 \usage{
-indices_summary(df, origin = "soundecolgy2")
+indices_summary(df, origin = "soundecology2")
 }
 \arguments{
-\item{df}{A data frame containing acoustic indices. Expected column names depend on the \code{origin} parameter. For \code{"kaleidoscope"} data, expected columns include \code{in.file}, \code{channel}, and various acoustic indices (\code{ndsi}, \code{cent}, etc.). For \code{"soundecology2"} data, columns should include \code{file_name}, \code{sensor_id}, and \code{datetime}.}
+\item{df}{A data frame containing acoustic indices. Expected column names depend on the \code{origin} parameter.
+For \code{"kaleidoscope"} data, expected columns include \code{IN.FILE}, \code{CHANNEL}, and several acoustic indices
+(\code{ndsi}, \code{cent}, etc.). For \code{"soundecology2"} data, columns should include \code{file_name}, \code{sensor_id},
+and \code{datetime}.}
 
-\item{origin}{A character string specifying the source of the data. Options are \code{"kaleidoscope"} or \code{"soundecology2"}. Default is \code{"kaleidoscope"}.}
+\item{origin}{A character string specifying the source of the data. Options are \code{"kaleidoscope"} or
+\code{"soundecology2"}. Default is \code{"kaleidoscope"}.}
 }
 \value{
-A data frame containing summary statistics (\code{mean}, \code{median}, \code{mode}, \code{max}, \code{min}) for each acoustic index, with the associated recording file closest to each statistic.
+A data frame containing summary statistics (\code{mean}, \code{median}, \code{mode}, \code{max}, \code{min}) for each
+acoustic index, with the associated recording file closest to each statistic.
 }
 \description{
-This function processes and summarizes acoustic indices from a data frame. It formats data based on its origin, either \code{"kaleidoscope"} or \code{"soundecology2"}, and computes summary statistics such as mean, median, mode, minimum, and maximum values for each acoustic index. Additionally, it identifies the recording files that are closest to each of these summary statistics.
+This function processes and summarizes acoustic indices from a data frame. It formats data based on its origin,
+either \code{"kaleidoscope"} or \code{"soundecology2"}, and computes summary statistics such as mean, median, mode,
+minimum, and maximum values for each acoustic index. Additionally, it identifies the recording files that
+are closest to each of these summary statistics.
 }
 \examples{
 # Example with kaleidoscope data

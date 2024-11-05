@@ -8,7 +8,7 @@
 #' @param audio.list a list of audio files from the working directory.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
+#' @param w.len numeric. The window length for the FFT.
 #' @param anthro.min minimum value of the range of frequencies of the anthrophony.
 #' @param anthro.max maximum value of the range of frequencies of the anthrophony.
 #' @param bio.min minimum value of the range of frequencies of the biophony.
@@ -39,7 +39,7 @@
 ndsi_list <- function (audio.list,
                       save.csv = FALSE,
                       csv.name = "ndsi_results.csv",
-                      freq.res = 50,
+                      w.len = 50,
                       anthro.min = 1000,
                       anthro.max = 2000,
                       bio.min = 2000,
@@ -65,7 +65,7 @@ ndsi_list <- function (audio.list,
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)
 
-  args_list <- list(freq.res = freq.res,
+  args_list <- list(w.len = w.len,
                     anthro.min = anthro.min,
                     anthro.max = anthro.max,
                     bio.min = bio.min,
@@ -79,7 +79,7 @@ ndsi_list <- function (audio.list,
   sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
   ndsi1 <- quiet(ndsi(sound1,
-              args_list$freq.res,
+              args_list$w.len,
               args_list$anthro.min,
               args_list$anthro.max,
               args_list$bio.min,
@@ -132,7 +132,7 @@ ndsi_list <- function (audio.list,
 
                        # Calculate NDSI and keep its default output columns
                        ndsi2 <- ndsi(sound,
-                                    args_list$freq.res,
+                                    args_list$w.len,
                                     args_list$anthro.min,
                                     args_list$anthro.max,
                                     args_list$bio.min,

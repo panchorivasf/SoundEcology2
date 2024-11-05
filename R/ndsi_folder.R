@@ -8,7 +8,7 @@
 #' This version is optimized to work with a path to the folder containing the audio files.
 #' @param folder a path to the folder containing the audio files.
 #' @param save.csv logical. Whether to save a csv in the working directory.
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name. Default name is "ndsi_results.csv"
 #' @param w.len numeric. Window length for the FFT (sampling rate / frequency resolution).
 #' @param anthro.min minimum value of the range of frequencies of the anthrophony.
 #' @param anthro.max maximum value of the range of frequencies of the anthrophony.
@@ -32,7 +32,7 @@
 #' path <- readClipboard() #use this to paste the folder path from the clipboard.
 #' ndsi_folder(path)
 ndsi_folder <- function (folder,
-                       save.csv = FALSE,
+                       save.csv = TRUE,
                        csv.name = "ndsi_results.csv",
                        w.len = 50,
                        anthro.min = 1000,

@@ -37,7 +37,7 @@
 #' files <- list_waves(path/to/folder)
 #' ndsi_list(files[1:5])
 ndsi_list <- function (audio.list,
-                      save.csv = FALSE,
+                      save.csv = TRUE,
                       csv.name = "ndsi_results.csv",
                       w.len = 50,
                       anthro.min = 1000,

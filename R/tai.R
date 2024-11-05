@@ -290,7 +290,7 @@ tai <- function(wave,
 
     }
 
-    invisible(list(summary, spectral))
+    invisible(list(summary = summary, spectral = spectral))
 
 
   }

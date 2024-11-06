@@ -30,7 +30,7 @@
 #'
 #' @examples bbai(wave)
 bbai <- function(wave,
-                 channel = "left",
+                 channel = 'left',
                  hpf = 0,
                  rm.offset = TRUE,
                  freq.res = 50,
@@ -44,35 +44,10 @@ bbai <- function(wave,
                  verbose = TRUE) {
   
   
-  # Check if the wave is stereo
-  if (wave@stereo) {
-    if (channel == "each") {
-      wave.left <- tuneR::channel(wave, "left")
-      wave.right <- tuneR::channel(wave, "right")
-    } else if (channel == "left") {
-      wave <- tuneR::channel(wave, "left")
-    } else if (channel == "right") {
-      wave <- tuneR::channel(wave, "right")
-    } else if (channel == "mix"){
-      wave <- tuneR::mono(wave, "both")
-    } else {
-      stop("Invalid channel selected.")
-    }
-  }
-  
-  if(!wave@stereo){
-    if (channel %in% c("each", "mix", "right")) {
-      cat('This is a mono recording. Calculating BBAI over the 1 channel.')
-      channel = "left"
-    }
-  }
-  
-  
   total_duration <- seewave::duration(wave)
   samp_rate <- wave@samp.rate
   
   bbai_mono <- function(wave,
-                        channel,
                         rm.offset,
                         hpf,
                         freq.res,
@@ -83,10 +58,7 @@ bbai <- function(wave,
                         spectrogram,
                         dark.plot,
                         plot.title){
-    
-    total_duration <- seewave::duration(wave)
-    samp_rate <- wave@samp.rate
-    
+
     # Remove DC offset
     if (rm.offset) {
       wave <- seewave::rmoffset(wave, output = "Wave")
@@ -94,7 +66,8 @@ bbai <- function(wave,
     
     # Apply high-pass filter
     if (hpf > 0) {
-      wave <- seewave::fir(wave, wl = 1024, from = hpf, to = NULL, bandpass = TRUE, output = "Wave")
+      wave <- seewave::fir(wave, wl = 1024, from = hpf, to = NULL, 
+                           bandpass = TRUE, output = "Wave")
     } else if (hpf < 0) {
       stop("HPF should be either 0 or a positive number (in Hertz) \n")
     }
@@ -185,11 +158,11 @@ bbai <- function(wave,
     total_cells <- n_freq_bins * n_time_frames
     
     # Step 3: Calculate the proportion of clicks
-    broadband_activity <- round((click_sum / total_cells) * 100, 1)
+    broadband_activity <- round((click_sum / total_cells) * 100, 2)
     
-    click_frames_prop <- round(click_time_frames / n_time_frames, 1)
+    click_frames_prop <- round(click_time_frames / n_time_frames, 2)
     
-    click_rate <- round(click_time_frames / total_duration, 1)
+    click_rate <- round(click_time_frames / total_duration, 2)
     
     n_clicks <- length(click_heights)
     
@@ -197,7 +170,6 @@ bbai <- function(wave,
     
     summary <- tibble(
       index = "bbai",
-      channel = channel,
       value = broadband_activity,
       nclicks = n_clicks,
       prop.clicks = click_frames_prop,
@@ -274,29 +246,104 @@ bbai <- function(wave,
       
     } else {
       
-      return(summary)
+      return(list(summary = summary, spectrogram = NULL))
     }
   }
   
+  
   # Calculate the index based on the stereo condition
-  if (wave@stereo && channel == "each") {
+  if (wave@stereo) { 
     
-    if (verbose) cat("Calculating Broadband Activity Index on 2 channels... \n")
-    
-    bbai_left <- bbai_mono(wave.left, 
-                           channel = "left",
-                           rm.offset = rm.offset,
-                           hpf = hpf,
-                           freq.res = freq.res,
-                           cutoff = cutoff,
-                           click.length = click.length,
-                           difference = difference,
-                           gap.allowance = gap.allowance,
-                           spectrogram = spectrogram,
-                           dark.plot = dark.plot,
-                           plot.title = plot.title)
-    bbai_right <- bbai_mono(wave.right, 
-                            channel = "left",
+    if (channel == "each") {
+      
+      wave.left <- tuneR::channel(wave, "left")
+      wave.right <- tuneR::channel(wave, "right")
+      
+      if (verbose) cat("Calculating Broadband Activity Index on 2 channels... \n")
+      
+      bbai_left <- bbai_mono(wave.left, 
+                             rm.offset = rm.offset,
+                             hpf = hpf,
+                             freq.res = freq.res,
+                             cutoff = cutoff,
+                             click.length = click.length,
+                             difference = difference,
+                             gap.allowance = gap.allowance,
+                             spectrogram = spectrogram,
+                             dark.plot = dark.plot,
+                             plot.title = plot.title)
+      
+      bbai_right <- bbai_mono(wave.right, 
+                              rm.offset = rm.offset,
+                              hpf = hpf,
+                              freq.res = freq.res,
+                              cutoff = cutoff,
+                              click.length = click.length,
+                              difference = difference,
+                              gap.allowance = gap.allowance,
+                              spectrogram = spectrogram,
+                              dark.plot = dark.plot,
+                              plot.title = plot.title)
+      
+      bbai_global <- tibble::tibble(
+        index = "bbai",
+        channel = "each",
+        value_l = bbai_left$summary$value,
+        value_r = bbai_right$summary$value,
+        value_avg = round((bbai_left$summary$value + bbai_right$summary$value) / 2, 2),
+        n_clicks_l = bbai_left$summary$nclicks,
+        n_clicks_r = bbai_right$summary$nclicks,
+        n_clicks_avg = round((bbai_left$summary$nclicks + bbai_right$summary$nclicks) / 2, 1),
+        mean_length_l = bbai_left$summary$mean.length,
+        mean_length_r = bbai_right$summary$mean.length,
+        mean_length_avg = round((bbai_left$summary$mean.length + bbai_right$summary$mean.length) / 2, 1),
+        var_length_l = bbai_left$summary$var.length,
+        var_length_r = bbai_right$summary$var.length,
+        var_length_avg = round((bbai_left$summary$var.length + bbai_right$summary$var.length) / 2, 1),
+        sd_length_l = bbai_left$summary$sd.length,
+        sd_length_r = bbai_right$summary$sd.length,
+        sd_length_avg = round((bbai_left$summary$sd.length + bbai_right$summary$sd.length) / 2, 1),
+        mean_centroid_l = bbai_left$summary$mean.centroid,
+        mean_centroid_r = bbai_right$summary$mean.centroid,
+        mean_centroid_avg = round((bbai_left$summary$mean.centroid + bbai_right$summary$mean.centroid) / 2, 1),
+        sd_centroid_l = bbai_left$summary$sd.centroid,
+        sd_centroid_r = bbai_right$summary$sd.centroid,
+        sd_centroid_avg = round((bbai_left$summary$sd.centroid + bbai_right$summary$sd.centroid) / 2, 1),
+        var_centroid_l = bbai_left$summary$var.centroid,
+        var_centroid_r = bbai_right$summary$var.centroid,
+        var_centroid_avg = round((bbai_left$summary$var.centroid + bbai_right$summary$var.centroid) / 2, 1),
+        mean_click_dist_l = bbai_left$summary$mean.click.dist,
+        mean_click_dist_r = bbai_right$summary$mean.click.dist,
+        mean_click_dist_avg = round((bbai_left$summary$mean.click.dist + bbai_right$summary$mean.click.dist) / 2, 1)
+      )
+      
+      if(verbose){
+        print(bbai_global)
+      }
+      
+      if(spectrogram){
+        
+        invisible(list(summary = bbai_global, 
+                       spectrogram_l = bbai_left$spectrogram,
+                       spectrogram_r = bbai_right$spectrogram))
+        
+      } else {
+        
+        invisible(bbai_global)
+        
+      }
+      
+      
+    } else if (channel == 'mix') {
+      
+      wave <- tuneR::mono(wave, "both")
+      
+      if (verbose) {
+        cat("Calculating Broadband Activity Index on a mix of the two channels... \n")
+      }
+      
+      
+      bbai_mix <- bbai_mono(wave, 
                             rm.offset = rm.offset,
                             hpf = hpf,
                             freq.res = freq.res,
@@ -307,73 +354,113 @@ bbai <- function(wave,
                             spectrogram = spectrogram,
                             dark.plot = dark.plot,
                             plot.title = plot.title)
-    
-    bbai_global <- tibble::tibble(
-      index = "bbai",
-      value_l = bbai_left$value,
-      value_r = bbai_right$value,
-      value_avg = round((bbai_left$value + bbai_right$value) / 2, 2),
-      n_clicks_l = bbai_left$nclicks,
-      n_clicks_r = bbai_right$nclicks,
-      n_clicks_avg = round((bbai_left$nclicks + bbai_right$nclicks) / 2, 1),
-      mean_length_l = bbai_left$mean.length,
-      mean_length_r = bbai_right$mean.length,
-      mean_length_avg = round((bbai_left$mean.length + bbai_right$mean.length) / 2, 1),
-      var_length_l = bbai_left$var.length,
-      var_length_r = bbai_right$var.length,
-      var_length_avg = round((bbai_left$var.length + bbai_right$var.length) / 2, 1),
-      sd_length_l = bbai_left$sd.length,
-      sd_length_r = bbai_right$sd.length,
-      sd_length_avg = round((bbai_left$sd.length + bbai_right$sd.length) / 2, 1),
-      mean_centroid_l = bbai_left$mean.centroid,
-      mean_centroid_r = bbai_right$mean.centroid,
-      mean_centroid_avg = round((bbai_left$mean.centroid + bbai_right$mean.centroid) / 2, 1),
-      sd_centroid_l = bbai_left$sd.centroid,
-      sd_centroid_r = bbai_right$sd.centroid,
-      sd_centroid_avg = round((bbai_left$sd.centroid + bbai_right$sd.centroid) / 2, 1),
-      var_centroid_l = bbai_left$var.centroid,
-      var_centroid_r = bbai_right$var.centroid,
-      var_centroid_avg = round((bbai_left$var.centroid + bbai_right$var.centroid) / 2, 1),
-      mean_click_dist_l = bbai_left$mean.click.dist,
-      mean_click_dist_r = bbai_right$mean.click.dist,
-      mean_click_dist_avg = round((bbai_left$mean.click.dist + bbai_right$mean.click.dist) / 2, 1)
-    )
-    
-    if(verbose){
-      print(bbai_global)
-    }
-    
-    if(spectrogram){
       
-      invisible(list(summary = bbai_global, 
-                     spectrogram_l = bbai_left$spectrogram,
-                     spectrogram_r = bbai_right$spectrogram))
+      bbai_mix$summary <- bbai_mix$summary |>
+        mutate(channel = "mix") |> 
+        relocate(channel, .after = index)
       
-    } else {
-      
-      invisible(bbai_global)
-      
-    }
-    
-    
-  } else {
-    # Only one channel
-    
-    if (verbose) {
-      if(channel == 'left'){
-        cat("Calculating Broadband Activity Index on the left channel... \n")
-        
-      }else if(channel == 'right'){
-        cat("Calculating Broadband Activity Index on the right channel... \n")
-        
-      }else if(channel == 'mix'){
-        cat("Calculating Broadband Activity Index on a mix of the two channels... \n")
+      if(verbose){
+        print(bbai_mix$summary)
       }
+
+        
+      
+      if(spectrogram){
+        
+        invisible(list(summary = bbai_mix$summary, spectrogram = bbai_mix$spectrogram))
+        
+      } else {
+        
+        invisible(bbai_mix$summary)
+        
+      }
+      
+      
+    } else if (channel == "left") {
+      if (verbose) {
+        cat("Calculating Broadband Activity Index on the left channel... \n")
+      }
+      
+      wave <- tuneR::channel(wave, "left")
+      
+      bbai_left <- bbai_mono(wave, 
+                             rm.offset = rm.offset,
+                             hpf = hpf,
+                             freq.res = freq.res,
+                             cutoff = cutoff,
+                             click.length = click.length,
+                             difference = difference,
+                             gap.allowance = gap.allowance,
+                             spectrogram = spectrogram,
+                             dark.plot = dark.plot,
+                             plot.title = plot.title)
+      
+      bbai_left$summary <- bbai_left$summary |>
+        mutate(channel = "left") |> 
+        relocate(channel, .after = index)
+      
+      if(verbose){
+        print(bbai_left$summary)
+      }
+      
+      if(spectrogram){
+        
+        invisible(list(summary = bbai_left$summary, spectrogram = bbai_left$spectrogram))
+        
+      } else {
+        
+        invisible(bbai_left$summary)
+        
+      }
+      
+      
+    } else if (channel == "right") {
+      if (verbose) {
+        cat("Calculating Broadband Activity Index on the right channel... \n")
+      }
+      
+      wave <- tuneR::channel(wave, "right")
+      
+      bbai_right <- bbai_mono(wave, 
+                              rm.offset = rm.offset,
+                              hpf = hpf,
+                              freq.res = freq.res,
+                              cutoff = cutoff,
+                              click.length = click.length,
+                              difference = difference,
+                              gap.allowance = gap.allowance,
+                              spectrogram = spectrogram,
+                              dark.plot = dark.plot,
+                              plot.title = plot.title)
+      
+      bbai_right$summary <- bbai_right$summary |>
+        mutate(channel = "right") |> 
+        relocate(channel, .after = index)
+      
+      if(verbose){
+        print(bbai_right$summary)
+      }
+      
+      if(spectrogram){
+        
+        invisible(list(summary = bbai_right$summary, spectrogram = bbai_right$spectrogram))
+        
+      } else {
+        
+        invisible(bbai_right$summary)
+        
+      }
+      
+      
     }
     
-    # Calulate NBAI
+    
+  }
+  
+  
+  else {
+    # Mono
     bbai_global <- bbai_mono(wave,
-                             channel = channel,
                              rm.offset = rm.offset,
                              hpf = hpf,
                              freq.res = freq.res,
@@ -385,20 +472,25 @@ bbai <- function(wave,
                              dark.plot = dark.plot,
                              plot.title = plot.title)
     
+    
+    
+    bbai_global$summary <- bbai_global$summary |>
+      mutate(channel = "mono") |> 
+      relocate(channel, .after = index)
+    
     if(verbose){
-      print(bbai_global)
-      
+      print(bbai_global$summary)
     }
     
     if(spectrogram){
-      invisible(list(summary = bbai_global$summary, spectrogram = bbai_global$spectrogram))
+      
+      invisible(list(summary = bbai_global$summary, 
+                     spectrogram = bbai_global$spectrogram))
       
     } else {
       
-      invisible(bbai_global)
+      invisible(bbai_global$summary)
     }
-    
-    
     
   }
   

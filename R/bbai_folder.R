@@ -37,27 +37,26 @@
 #' @import parallel
 #'
 #'
-#' @examples bbai_folder(path/to/folder)
+#' @examples 
+#' \dontrun{
+#' bbai_folder(path/to/folder)
+#' }  
+
+
+
 bbai_folder <- function(folder = NULL,
-                        channel = "each",
-                        hpf = 0,
-                        rm.offset = TRUE,
-                        freq.res = 50,
-                        cutoff = -60,
-                        click.length = 10,
-                        difference = 10,
-                        gap.allowance = 2,
-                        verbose = FALSE,
-                        output.csv = "bbai_results.csv",
-                        n.cores = -1) {
+                      channel = 'each',
+                      hpf = 0,
+                      rm.offset = TRUE,
+                      freq.res = 50,
+                      cutoff = -60,
+                      click.length = 10,
+                      difference = 10,
+                      gap.allowance = 2,
+                      verbose = FALSE,
+                      output.csv = "bbai_results.csv",
+                      n.cores = -1) {
   
-  if(is.null(folder)){
-    folder <- getwd()
-  }
-
-
-  cat("Evaluating the job...\n")
-
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -67,33 +66,19 @@ bbai_folder <- function(folder = NULL,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  
   setwd(folder)
-  files <- list.files(path=folder, pattern = ".wav|.WAV")
-
+  
+  files <- list_waves()
+  
   filename <- tibble(filename = files)
   nFiles <- length(files)
-
-
-  # Evaluate the duration of the analysis
-  # Measure processing time for a single file
-  startTime <- Sys.time()
-
-  sound1 <- readWave(files[1])
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-
-  bbai1 <- quiet(bbai(sound1, channel = channel))
-  tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
-
-  # Assess how long it takes to parse 1 file
-  timePerFile <-  Sys.time() - startTime
-  # Add overhead per file
-  timePerFile <- timePerFile + as.numeric(seconds(2.2))
-
-  rm(sound1)
-  rm(bbai1)
-
-
+  
+  
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
@@ -101,50 +86,65 @@ bbai_folder <- function(folder = NULL,
   }else{
     num_cores <- n.cores
   }
-
+  
   if(nFiles < num_cores){
     num_cores <- nFiles
   }
-
+  
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
-
-  # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
-  # Add overhead time
-  adjustedTotalTime <- estimatedTotalTime
-  # Calculate the end time
-  expectedCompletionTime <- Sys.time() + adjustedTotalTime
-  # Set up parallel processing
-
-  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-  cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-
-
+  
+  
+  if (length(files) > 10) {
+    
+    cat("Evaluating the job...\n")
+    # Evaluate the duration of the analysis
+    # Measure processing time for a single file
+    startTime <- Sys.time()
+    
+    sound1 <- readWave(files[1])
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    
+    bbai1 <- quiet(bbai(sound1, channel = channel))
+    tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
+    
+    # Assess how long it takes to parse 1 file
+    timePerFile <-  Sys.time() - startTime
+    # Add overhead per file
+    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    
+    rm(sound1)
+    rm(bbai1)
+    # Estimate total time accounting for parallel processing
+    estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
+    # Add overhead time
+    adjustedTotalTime <- estimatedTotalTime
+    # Calculate the end time
+    expectedCompletionTime <- Sys.time() + adjustedTotalTime
+    # Set up parallel processing
+    
+    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
+    
+    
+    
+  } else {
+    cat("Analyzing", nFiles, "files using", num_cores, "cores... \n")
+    
+  }
+  
   # Define parallel computation
   results <- foreach(file = files, .packages = c("tuneR", "seewave", "tibble")) %dopar% {
-
-    filename <- basename(file)  # Get file name without path
-
-    # Try to read the sound file, handle errors gracefully
-    sound <- tryCatch({
-      readWave(file)
-    }, error = function(e) {
-      message(paste("Error reading file:", file, "Skipping to the next file."))
-      return(NULL) # Skip this iteration and continue with the next file
-    })
-
-    # Skip processing if the sound is NULL (i.e., readWave failed)
-    if (is.null(sound)) {
-      return(NULL)
-    }
-
-
+    
+    filename <- basename(file)  
+    # Read audio file
+    audio <- readWave(file)
+    
     # Initialize an empty tibble for the results
     result_list <- list()
-
-    bbai <- bbai(sound,
+    
+    bbai <- bbai(audio,
                  channel = channel,
                  hpf = hpf,
                  rm.offset = rm.offset,
@@ -155,31 +155,35 @@ bbai_folder <- function(folder = NULL,
                  gap.allowance = gap.allowance,
                  verbose = FALSE
     )
-
+    
     result_list <- list(
-      tibble(file_name = filename, channel = channel, bbai)
+      tibble(file_name = filename, bbai)
     )
-
-
+    
     return(do.call(rbind, result_list))
   }
-
+  
   # Combine all the results into a single tibble
   combined_results <- do.call(rbind, results)
-
+  
   combined_results <- addMetadata(combined_results)
-
+  
   # Export results to CSV
-  combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
   write.csv(combined_results, file = output.csv, row.names = FALSE)
-
+  
   # Stop parallel cluster
   stopCluster(cl)
-
+  
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
-
+  
   return(combined_results)
+  
+  
 }
+
+
+
+
 
 
 

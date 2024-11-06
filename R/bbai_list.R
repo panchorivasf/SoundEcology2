@@ -54,9 +54,6 @@ bbai_list <- function(audio.list,
                         output.csv = "bbai_results.csv",
                         n.cores = -1) {
 
-
-  cat("Evaluating the job...\n")
-
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -66,33 +63,12 @@ bbai_list <- function(audio.list,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-
-  # setwd(folder)
-  # files <- list.files(path=folder, pattern = ".wav|.WAV")
+  
 
   filename <- tibble(filename = audio.list)
   nFiles <- length(audio.list)
-
-
-  # Evaluate the duration of the analysis
-  # Measure processing time for a single file
-  startTime <- Sys.time()
-
-  sound1 <- readWave(audio.list[1])
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-
-  bbai1 <- quiet(bbai(sound1, channel = channel))
-  tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
-
-  # Assess how long it takes to parse 1 file
-  timePerFile <-  Sys.time() - startTime
-  # Add overhead per file
-  timePerFile <- timePerFile + as.numeric(seconds(2.2))
-
-  rm(sound1)
-  rm(bbai1)
-
-
+  
+  
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
@@ -100,59 +76,64 @@ bbai_list <- function(audio.list,
   }else{
     num_cores <- n.cores
   }
-
+  
   if(nFiles < num_cores){
     num_cores <- nFiles
   }
-
+  
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
-
-  # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
-  # Add overhead time
-  adjustedTotalTime <- estimatedTotalTime
-  # Calculate the end time
-  expectedCompletionTime <- Sys.time() + adjustedTotalTime
-  # Set up parallel processing
-
-  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-  cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-
+  
+  
+  if (length(audio.list) > 10) {
+    
+    cat("Evaluating the job...\n")
+    # Evaluate the duration of the analysis
+    # Measure processing time for a single file
+    startTime <- Sys.time()
+    
+    sound1 <- readWave(audio.list[1])
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    
+    bbai1 <- quiet(bbai(sound1, channel = channel))
+    tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
+    
+    # Assess how long it takes to parse 1 file
+    timePerFile <-  Sys.time() - startTime
+    # Add overhead per file
+    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    
+    rm(sound1)
+    rm(bbai1)
+    # Estimate total time accounting for parallel processing
+    estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
+    # Add overhead time
+    adjustedTotalTime <- estimatedTotalTime
+    # Calculate the end time
+    expectedCompletionTime <- Sys.time() + adjustedTotalTime
+    # Set up parallel processing
+    
+    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
+    
+    
+    
+  } else {
+    cat("Analyzing", nFiles, "files using", num_cores, "cores... \n")
+    
+  }
 
   # Define parallel computation
   results <- foreach(file = audio.list, .packages = c("tuneR", "seewave", "tibble")) %dopar% {
 
-    filename <- basename(file)  # Get file name without path
-
+    filename <- basename(file)  
     # Read audio file
     audio <- readWave(file)
 
     # Initialize an empty tibble for the results
     result_list <- list()
 
-    # # Handle different channel selections
-    # if (channel == "each") {
-    #   # Process each channel separately
-    #   bbai_left <- bbai(audio, plot.title = filename, channel = "left")$summary
-    #   bbai_right <- bbai(audio, plot.title = filename, channel = "right")$summary
-    #
-    #   bbai <- bbai_left %>%
-    #     dplyr::select(-c(value))
-    #
-    #   # Combine the results into one row with 'value_l' and 'value_r' columns
-    #   result_list <- list(tibble(
-    #     file_name = filename,
-    #     value_l = bbai_left$value,
-    #     value_r = bbai_right$value,
-    #     value_avg = round((bbai_left$value + bbai_right$value) / 2, 3),
-    #     nbai
-    #   ))
-
-
-    # } else {
-    # Process selected channel ("left", "right", or "mix")
     bbai <- bbai(audio,
                  channel = channel,
                  hpf = hpf,
@@ -166,9 +147,8 @@ bbai_list <- function(audio.list,
     )
 
     result_list <- list(
-      tibble(file_name = filename, channel = channel, bbai)
+      tibble(file_name = filename, bbai)
     )
-    # }
 
     return(do.call(rbind, result_list))
   }

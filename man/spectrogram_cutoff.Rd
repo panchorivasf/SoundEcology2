@@ -24,6 +24,8 @@ spectrogram_cutoff(
 \item{plot.title}{An optional string specifying the title of the plot. Defaults to \code{NULL}.}
 
 \item{ggplot}{A logical value indicating whether to use ggplot2 for plotting. If \code{FALSE}, base R plotting will be used to generate the plot. Defaults to \code{TRUE}.}
+
+\item{noise.red}{Character. Either NULL, 'rows' or 'cols'. Determins if and in which direction to apply noise reduction (mean subtraction).}
 }
 \value{
 Returns the spectrogram matrix with the cutoff applied. If \code{plot = TRUE}, a plot of the spectrogram is displayed.

@@ -42,4 +42,8 @@ Imports:
     grid,
     future,
     future.apply
+VignetteBuilder: knitr
+URL: https://github.com/panchorivasf/SoundEcology2
+BugReports: https://github.com/panchorivasf/SoundEcology2/issues 
+Config/testthat/edition: 3
 

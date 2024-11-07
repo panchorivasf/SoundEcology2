@@ -5,7 +5,7 @@
 \title{Acoustic Complexity Index - folder input}
 \usage{
 aci_folder(
-  folder,
+  folder = NULL,
   save.csv = TRUE,
   csv.name = "aci_results.csv",
   freq.res = 50,

@@ -11,11 +11,9 @@ nbai_list(
   freq.res = 50,
   cutoff = -60,
   activity.cutoff = 10,
-  plot.binary.spec = FALSE,
-  dark.plot = FALSE,
-  plot.activity = FALSE,
   output.csv = "nbai_results.csv",
-  n.cores = -1
+  n.cores = -1,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -31,15 +29,11 @@ nbai_list(
 
 \item{activity.cutoff}{Numeric. Cutoff percent activity. Only the frequency bands active equal or above this percentage will be considered as "active" in the active band statistics.}
 
-\item{plot.binary.spec}{Logical. Whether to plot the binary spectrogram used for the analysis. Allowed only when Wave is mono or when one channel is selected from a stereo file.}
-
-\item{dark.plot}{Logical. If true (default) a the binary spectrogram will have a black background.}
-
-\item{plot.activity}{Logical. If true, a barplot depicting the percent activity in each frequency bin will be returned. Default is FALSE.}
-
 \item{output.csv}{= Character. Name for the csv output.}
 
 \item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+
+\item{verbose}{Logical. If TRUE, processing info and results will be printed in the console.}
 }
 \value{
 A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI) summary statistics, and 3) a tibble with NBI spectral, which number of rows equals the number of frequency bins in the analysis.

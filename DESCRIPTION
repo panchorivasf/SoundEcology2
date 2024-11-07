@@ -21,7 +21,6 @@ Imports:
     data.table,
     seewave,
     tuneR,
-    magrittr,
     ineq,
     plotly,
     parallel,
@@ -34,7 +33,6 @@ Imports:
     tibble,
     tidyr,
     tidyverse,
-    vegan,
     viridis,
     stats,
     utils,
@@ -42,4 +40,8 @@ Imports:
     grid,
     future,
     future.apply
+VignetteBuilder: knitr
+URL: https://github.com/panchorivasf/SoundEcology2
+BugReports: https://github.com/panchorivasf/SoundEcology2/issues 
+Config/testthat/edition: 3
 

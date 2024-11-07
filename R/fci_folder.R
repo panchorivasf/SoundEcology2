@@ -82,7 +82,7 @@ fci_folder <- function(folder,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(files[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   fci1 <- quiet(fci(sound1, channel = 'mix', plot = FALSE))

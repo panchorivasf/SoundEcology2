@@ -4,6 +4,7 @@
 #' before calculating the Acoustic Diversity Index and it doesn't use normalized spectrogram.
 #' Alternatively it can take a noise sample to reduce noise in the analyzed files.
 #' @param audiolist a list of audio files to import.
+#' @param folder a path to the folder with audio files to import.
 #' @param save_csv logical. Whether to save a csv in the working directory.
 #' @param csv_name character vector. When 'save_csv' is TRUE, optionally provide a file name.
 #' @param noise_file An R object of class Wave containing noise-only information if needed. Default = NULL.
@@ -45,6 +46,7 @@
 #' fadi_list(files[1:5])
 
 fadi_list <- function (audiolist,
+                         folder = NULL,
                          save_csv = TRUE,
                          csv_name = "fadi_results.csv",
                          noise_file=NULL,
@@ -56,7 +58,9 @@ fadi_list <- function (audiolist,
                          gamma = 13,
                          props=TRUE){
 
-  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
   #  Quiet function from SimDesign package to run functions without printing
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -70,7 +74,8 @@ fadi_list <- function (audiolist,
   
   cat("Evaluating the job...\n")
 
-
+  setwd(folder)
+  
   fileName <- tibble(file_name = audiolist)
   nFiles <- length(audiolist)
 
@@ -85,7 +90,7 @@ fadi_list <- function (audiolist,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audiolist[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
   fadi1 <- quiet(fadi(sound1, args_list$noise_file, args_list$NEM,
                       args_list$min_freq, args_list$max_freq, args_list$threshold_fixed,

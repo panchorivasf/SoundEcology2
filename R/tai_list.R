@@ -3,6 +3,7 @@
 #' This function calculates the trill index of an audio wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
 #'
 #' @param audio.list a list of audio files to analyze
+#' @param folder Character. The path to the folder containing the WAV files to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param wave A wave object to be analyzed.
 #' @param channel Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".
@@ -24,6 +25,7 @@
 #' files.list <- list_waves(path/to/folder)
 #' tai_results <- tai_list(files.list)
 tai_list <- function(audio.list,
+                     folder = NULL,
                      channel = 'each',
                      hpf = 0,
                      rm.offset = TRUE,
@@ -39,6 +41,10 @@ tai_list <- function(audio.list,
   
   cat("Evaluating the job...\n")
   
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -49,9 +55,8 @@ tai_list <- function(audio.list,
     out
   }
   
-  # setwd(folder)
-  # files <- list.files(path=folder, pattern = ".wav|.WAV")
-  
+  setwd(folder)
+
   filename <- tibble(filename = audio.list)
   nFiles <- length(audio.list)
   
@@ -60,7 +65,7 @@ tai_list <- function(audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
   
-  sound1 <- readWave(audio.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
   
   tai1 <- quiet(tai(sound1, channel = channel))

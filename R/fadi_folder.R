@@ -84,7 +84,7 @@ fadi_folder <- function (folder,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audiolist[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
   fadi1 <- quiet(fadi(sound1, args_list$noise_file, args_list$NEM,
                      args_list$min_freq, args_list$max_freq, args_list$threshold_fixed,

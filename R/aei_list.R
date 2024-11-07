@@ -3,8 +3,9 @@
 #' Calculates the Acoustic Evenness Index for all the files in a list, with extended parameter options.
 #' It uses parallel processing with all but one of the available cores.
 #' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
-#'
+
 #' @param audio.list a list with the audio files to import.
+#' @param folder a path to the folder with audio files to import.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param frew.res the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).
@@ -45,6 +46,7 @@
 #' files <- list.files(pattern=".wav|.WAV")
 #' aei_list(files[1:5])
 aei_list <- function (audio.list,
+                      folder = NULL,
                       save.csv = TRUE,
                       csv.name = "aei_results.csv",
                       freq.res = 50,
@@ -60,7 +62,9 @@ aei_list <- function (audio.list,
                       prop.den = 1,
                       n.cores = -1){
 
-
+  if(is.null(folder)){
+    folder <- getwd()
+  }
   #  Quiet function from SimDesign package to run functions without printing
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -73,6 +77,8 @@ aei_list <- function (audio.list,
   }
 
   cat("Evaluating the job...\n\n")
+  
+  setwd(folder)
 
 
   fileName <- tibble(file_name = audio.list)
@@ -89,7 +95,7 @@ aei_list <- function (audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audio.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   aei1 <- quiet(aei(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,

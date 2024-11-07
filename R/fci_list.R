@@ -4,6 +4,7 @@
 #' It processes each audio file in parallel (if specified) and saves the results in a CSV file.
 #'
 #' @param audio.list The list containing the WAV files to analyze.
+#' @param folder The folder containing the WAV files to analyze.
 #' @param output.csv The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
 #' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.
 #' @param rm.offset Logical. Whether to remove the DC offset from the signal. Default is TRUE.
@@ -34,6 +35,7 @@
 #' }
 
 fci_list <- function(audio.list,
+                      folder = NULL,
                       output.csv = "fci_results.csv",
                       channel = 'each',
                       rm.offset = TRUE,
@@ -54,7 +56,11 @@ fci_list <- function(audio.list,
                       uf.max = 24000,
                       n.cores = -1) {
 
-
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  
+  
   cat("Evaluating the job...\n")
 
   quiet <- function(..., messages=FALSE, cat=FALSE){
@@ -67,7 +73,7 @@ fci_list <- function(audio.list,
     out
   }
 
-
+  setwd(folder)
   files <- audio.list
 
   filename <- tibble(filename = files)
@@ -78,7 +84,7 @@ fci_list <- function(audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(files[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   fci1 <- quiet(fci(sound1, channel = 'mix', plot = FALSE))

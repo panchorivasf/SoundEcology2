@@ -3,6 +3,7 @@
 #' This function processes an audio signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.
 #'
 #' @param audio.list a list of audio files to analyze
+#' @param folder a path to the folder with audio files to import.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
 #' @param rm.offset Logical. Should the DC offset be removed from the audio signal? Defaults to `TRUE`.
@@ -42,6 +43,7 @@
 #' files.list <- list_waves(path/to/folder)
 #' bbai_results <- bbai_list(files.list)
 bbai_list <- function(audio.list,
+                        folder = NULL,
                         channel = 'each',
                         hpf = 0,
                         rm.offset = TRUE,
@@ -53,6 +55,10 @@ bbai_list <- function(audio.list,
                         verbose = FALSE,
                         output.csv = "bbai_results.csv",
                         n.cores = -1) {
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -84,6 +90,7 @@ bbai_list <- function(audio.list,
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
   
+  setwd(folder)
   
   if (length(audio.list) > 10) {
     
@@ -92,7 +99,7 @@ bbai_list <- function(audio.list,
     # Measure processing time for a single file
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     bbai1 <- quiet(bbai(sound1, channel = channel))

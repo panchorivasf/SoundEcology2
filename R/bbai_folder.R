@@ -94,6 +94,8 @@ bbai_folder <- function(folder = NULL,
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
   
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+  type <- ifelse(sound1@stereo, "stereo", "mono")
   
   if (length(files) > 10) {
     
@@ -102,7 +104,7 @@ bbai_folder <- function(folder = NULL,
     # Measure processing time for a single file
     startTime <- Sys.time()
     
-    sound1 <- readWave(files[1])
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     bbai1 <- quiet(bbai(sound1, channel = channel))
@@ -130,7 +132,8 @@ bbai_folder <- function(folder = NULL,
     
     
   } else {
-    cat("Analyzing", nFiles, "files using", num_cores, "cores... \n")
+    
+    cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
     
   }
   

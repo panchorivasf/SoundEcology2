@@ -79,7 +79,7 @@ aci_folder <- function (folder = NULL,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audiolist[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   aci1 <- quiet(aci(sound1,

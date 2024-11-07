@@ -113,12 +113,14 @@ adi_folder <- function (folder = NULL,
   # Evaluate the duration of the analysis
   # Measure processing time for a single file
   startTime <- Sys.time()
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+  type <- ifelse(sound1@stereo, "stereo", "mono")
   
   if(nFiles>10){
     cat("Evaluating the job...\n\n")
     
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,

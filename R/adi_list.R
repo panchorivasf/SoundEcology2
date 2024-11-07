@@ -5,7 +5,9 @@
 #' It uses parallel processing with all but one of the available cores.
 #' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
 #'
+#' 
 #' @param audio.list a list of audio files to analyze.
+#' @param folder a path to the folder with audio files to import.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
@@ -122,7 +124,7 @@ adi_list <- function (audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
   
-  sound1 <- readWave(audio.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
   
  
@@ -131,7 +133,8 @@ adi_list <- function (audio.list,
     cat("Evaluating the job...\n\n")
     
     
-    
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    type <- ifelse(sound1@stereo, "stereo", "mono")
     
     adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
                       args_list$max.freq, args_list$n.bands, args_list$cutoff,

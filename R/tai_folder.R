@@ -64,7 +64,7 @@ tai_folder <- function(folder,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(sound.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   tai1 <- quiet(tai(sound1, channel = channel))

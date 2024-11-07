@@ -8,6 +8,7 @@
 #' directly comparable to the original code in the paper.
 #'
 #' @param audio.list a list of audio files to import.
+#' @param folder a path to the folder with audio files to import.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
@@ -41,6 +42,7 @@
 #' bi_list(files[1:5])
 
 bi_list <- function (audio.list,
+                     folder = NULL,
                      save.csv = TRUE,
                      csv.name = "bi_results.csv",
                      w.len = 512,
@@ -53,7 +55,9 @@ bi_list <- function (audio.list,
                      n.cores = -1){
 
 
-
+  if(is.null(folder)){
+    folder <- getwd()
+  }
   #  Quiet function from SimDesign package to run functions without printing
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -64,6 +68,7 @@ bi_list <- function (audio.list,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
+  setwd(folder)
 
   cat("Evaluating the job...\n\n")
 
@@ -83,7 +88,7 @@ bi_list <- function (audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audio.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   bi1 <- quiet(bi(sound1,

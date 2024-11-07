@@ -32,6 +32,7 @@
 #' aci_list(files[1:5])
 
 aci_list <- function (audio.list,
+                      folder = NULL,
                       save.csv = TRUE,
                       csv.name = "aci_results.csv",
                       freq.res = 50,
@@ -42,6 +43,10 @@ aci_list <- function (audio.list,
                       noise.red = 2,
                       rm.offset = TRUE,
                       n.cores = -1){
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -54,6 +59,8 @@ aci_list <- function (audio.list,
   }
 
   cat("Evaluating the job...\n\n")
+  
+  setwd(folder)
 
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)

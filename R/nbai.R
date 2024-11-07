@@ -36,22 +36,22 @@ nbai <- function(wave,
   
   if (wave@stereo) {
     if (channel == 'each') {
-      wave.left <- tuneR::channel(wave, 'left')
-      wave.right <- tuneR::channel(wave, 'right')
+     cat("Calculating NBAI for each channel... \n")
     } else if (channel == 'left') {
-      wave <- tuneR::channel(wave, 'left')
+      cat("Calculating NBAI for left channel... \n")
     } else if (channel == 'right') {
-      wave <- tuneR::channel(wave, 'right')
+      cat("Calculating NBAI for right channel... \n")
     } else if (channel == 'mix'){
-      wave <- tuneR::mono(wave, "both")
+      cat("Calculating NBAI for a mix of 2 channels... \n")
     } else {
       stop("Invalid channel selected.")
     }
+  } else {
+    cat("Calculating NBAI for a mono file... \n")
   }
   
   
   nbai_mono <- function(wave, 
-                        channel = 'left', 
                         hpf = 0, 
                         freq.res = 50, 
                         cutoff = -60, 
@@ -129,9 +129,14 @@ nbai <- function(wave,
       w.value = round(value * (shannon_entropy + 1), 2),
       nab = bins_above_threshold,
       pab = round(percent_bins_above_threshold, 2),
-      ent = round(shannon_entropy, 2)
+      ent = round(shannon_entropy, 2),
+      par.hpf = hpf, 
+      par.freq.res = freq.res, 
+      par.cutoff = cutoff, 
+      par.act.cutoff = activity.cutoff, 
     )
     
+
     if (spectrogram) {
       # Retrieve binary spectrogram
       # binary_spectrogram <- nbai_global$spectrogram
@@ -139,7 +144,8 @@ nbai <- function(wave,
       # Create the time axis values
       time_values <- seq(0, total_duration, length.out = ncol(binary_spectrogram))
       # Create the frequency axis values
-      freq_values <- seq(0, by = wave@samp.rate / 2 / nrow(binary_spectrogram), length.out = nrow(binary_spectrogram)) / 1000  # Convert to kHz
+      freq_values <- seq(0, by = wave@samp.rate / 2 / nrow(binary_spectrogram), 
+                         length.out = nrow(binary_spectrogram)) / 1000  # Convert to kHz
       
       # Create a color gradient based on percent activity
       colors <- scales::col_numeric(palette = c("#2c7bb6","#00a6ca","#00ccbc","#90eb9d",
@@ -151,7 +157,8 @@ nbai <- function(wave,
       plot_data <- as.data.frame(binary_spectrogram)
       colnames(plot_data) <- time_values
       plot_data <- cbind(Frequency = freq_values, plot_data)
-      plot_data <- reshape2::melt(plot_data, id.vars = "Frequency", variable.name = "Time", value.name = "Binary")
+      plot_data <- reshape2::melt(plot_data, id.vars = "Frequency", 
+                                  variable.name = "Time", value.name = "Binary")
       plot_data$Time <- as.numeric(as.character(plot_data$Time))
       
       # Add activity percent color coding
@@ -243,12 +250,11 @@ nbai <- function(wave,
   }
   
   
-  
+  if (wave@stereo) {
   # Calculate the index based on the stereo condition
   if (channel == 'each') {
-    if(!wave@stereo){
-      stop("Can't select 'each' channel for a mono file.\n")
-    }
+    wave.left <- tuneR::channel(wave, 'left')
+    wave.right <- tuneR::channel(wave, 'right')
     
     if (verbose) cat("Calculating Narrow Band Activity Index on 2 channels... \n")
     
@@ -256,11 +262,12 @@ nbai <- function(wave,
                            activity.cutoff = activity.cutoff, spectrogram = spectrogram, 
                            plot.title = paste(plot.title, "NBAI - Left Channel"))
     nbai_right <- nbai_mono(wave.right, hpf = hpf, freq.res = freq.res, cutoff = cutoff, 
-                            activity.cutoff = activity.cutoff, , spectrogram = spectrogram,
+                            activity.cutoff = activity.cutoff, spectrogram = spectrogram,
                             plot.title = paste(plot.title, "NBAI - Right Channel"))
     
     nbai_global <- tibble::tibble(
       index = "nbai",
+      channel = 'each',
       value_l = nbai_left$summary$value,
       value_r = nbai_right$summary$value,
       value_avg = round((nbai_left$summary$value + nbai_right$summary$value) / 2, 1),
@@ -285,10 +292,9 @@ nbai <- function(wave,
           "nab: Number of active (>", activity.cutoff, "%) frequency bins \n",
           "pab: Percent of active (>", activity.cutoff, "%) bins across the spectrogram \n",
           "ent: Shannon's Entropy\n")
+      print(nbai_global)
       
     }
-    print(nbai_global)
-    
     
     if(spectrogram){
       # if(spectrogram)
@@ -306,27 +312,12 @@ nbai <- function(wave,
              spectral_right = nbai_right$spectral)
       )
     }
+    } else if (channel == 'left') {
+    
+    wave <- tuneR::channel(wave, 'left')
     
     
-    
-  } else {
-    # MONO RECORDING
-    
-    if (verbose) {
-      if(is.null(channel) || channel == 'left'){
-        cat("Calculating Narrow Band Activity Index on the left channel... \n")
-        
-      }else if(channel == 'right'){
-        cat("Calculating Narrow Band Activity Index on the right channel... \n")
-        
-      }else if(channel == 'mix'){
-        cat("Calculating Narrow Band Activity Index on a mix of the two channels... \n")
-      }
-    }
-    
-    # Calulate NBAI
-    nbai_global <- nbai_mono(wave, 
-                             channel = channel, 
+    nbai_left <- nbai_mono(wave, 
                              hpf = hpf, 
                              freq.res = freq.res, 
                              cutoff = cutoff, 
@@ -335,25 +326,149 @@ nbai <- function(wave,
                              plot.title = plot.title, 
                              dark.plot = dark.plot)
     
+    nbai_left$summary <- nbai_left$summary |> 
+      mutate(channel = "left") |> 
+      relocate(channel, .after = index)
+    
+    if(verbose){
+      
+      cat(" value: Narrow-band Activity Index (NBAI)\n",
+          "w.value: Weighted NBAI \n",
+          "nab: Number of active (>", activity.cutoff, "%) frequency bins \n",
+          "pab: Percent of active (>", activity.cutoff, "%) bins across the spectrogram \n",
+          "ent: Shannon's Entropy\n")
+      print(nbai_left$summary)
+      
+    }
+    
+    
+    if(spectrogram){
+      invisible(list(summary = nbai_left$summary,
+                     spectral = nbai_left$spectral,
+                     spectrogram = nbai_left$spectrogram))
+    } else {
+      invisible(list(summary = nbai_left$summary,
+                     spectral = nbai_left$spectral))
+      
+    } 
+    
+    } else if (channel == 'right') {
+      
+      wave <- tuneR::channel(wave, 'right')
+      
+      
+      nbai_right <- nbai_mono(wave, 
+                             hpf = hpf, 
+                             freq.res = freq.res, 
+                             cutoff = cutoff, 
+                             activity.cutoff = activity.cutoff, 
+                             spectrogram = spectrogram, 
+                             plot.title = plot.title, 
+                             dark.plot = dark.plot)
+      
+      nbai_right$summary <- nbai_right$summary |> 
+        mutate(channel = "right") |> 
+        relocate(channel, .after = index)
+      
+      
+      if(verbose){
+        cat(" value: Narrow-band Activity Index (NBAI)\n",
+            "w.value: Weighted NBAI \n",
+            "nab: Number of active (>", activity.cutoff, "%) frequency bins \n",
+            "pab: Percent of active (>", activity.cutoff, "%) bins across the spectrogram \n",
+            "ent: Shannon's Entropy\n")
+        print(nbai_right$summary)
+        
+      }
+      
+      if(spectrogram){
+        invisible(list(summary = nbai_right$summary,
+                       spectral = nbai_right$spectral,
+                       spectrogram = nbai_right$spectrogram))
+      } else {
+        invisible(list(summary = nbai_right$summary,
+                       spectral = nbai_right$spectral))
+        
+      }
+      
+    
+    } else if (channel == 'mix') {
+      
+      wave <- tuneR::mono(wave, "both")
+      
+      
+      nbai_mix <- nbai_mono(wave, 
+                              hpf = hpf, 
+                              freq.res = freq.res, 
+                              cutoff = cutoff, 
+                              activity.cutoff = activity.cutoff, 
+                              spectrogram = spectrogram, 
+                              plot.title = plot.title, 
+                              dark.plot = dark.plot)
+      
+      nbai_mix$summary <- nbai_mix$summary |> 
+        mutate(channel = "mix") |> 
+        relocate(channel, .after = index)
+      
+      if(verbose){
+        cat(" value: Narrow-band Activity Index (NBAI)\n",
+            "w.value: Weighted NBAI \n",
+            "nab: Number of active (>", activity.cutoff, "%) frequency bins \n",
+            "pab: Percent of active (>", activity.cutoff, "%) bins across the spectrogram \n",
+            "ent: Shannon's Entropy\n")
+        print(nbai_mix$summary)
+        
+      }
+      
+      if(spectrogram){
+        invisible(list(summary = nbai_mix$summary,
+                       spectral = nbai_mix$spectral,
+                       spectrogram = nbai_mix$spectrogram))
+      } else {
+        invisible(list(summary = nbai_mix$summary,
+                       spectral = nbai_mix$spectral))
+        
+      }
+    }
+  } else {
+    # MONO RECORDING
+    nbai_monofile <- nbai_mono(wave, 
+                             hpf = hpf, 
+                             freq.res = freq.res, 
+                             cutoff = cutoff, 
+                             activity.cutoff = activity.cutoff, 
+                             spectrogram = spectrogram, 
+                             plot.title = plot.title, 
+                             dark.plot = dark.plot)
+    
+    nbai_monofile$summary <- nbai_monofile$summary |> 
+      mutate(channel = "mono") |> 
+      relocate(channel, .after = index)
+    
+    
     if(verbose){
       cat(" value: Narrow-band Activity Index (NBAI)\n",
           "w.value: Weighted NBAI \n",
           "nab: Number of active (>", activity.cutoff, "%) frequency bins \n",
           "pab: Percent of active (>", activity.cutoff, "%) bins across the spectrogram \n",
           "ent: Shannon's Entropy\n")
+      print(nbai_monofile$summary)
       
-      name <- deparse(substitute(wave))
-      print(name, "\n")
-      print(nbai_global$summary)
+    }
+    
+    if(spectrogram){
+      invisible(list(summary = nbai_monofile$summary,
+                     spectral = nbai_monofile$spectral,
+                     spectrogram = nbai_monofile$spectrogram))
+    } else {
+      invisible(list(summary = nbai_monofile$summary,
+                     spectral = nbai_monofile$spectral))
       
     }
     
     
-    return(nbai_global)
-    
-    
   }
-  
+    
   
 }
 

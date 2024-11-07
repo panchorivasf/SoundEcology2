@@ -9,7 +9,7 @@
 #'
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram.
 #' @param max.freq maximum frequency to compute the spectrogram.
 #' @param n.bands number of bands to split the spectrogram.
@@ -40,7 +40,7 @@
 
 adi <- function(wave,
                 freq.res = 50,
-                w.fun = "hanning",
+                win.fun = "hanning",
                 min.freq = 0,
                 max.freq = 10000,
                 n.bands = 10,
@@ -193,11 +193,11 @@ adi <- function(wave,
 
       if(noise.red == 1 || noise.red == 2) {
         specA_left <- seewave::spectro(left, wl = wlen,
-                                       wn = w.fun,
+                                       wn = win.fun,
                                        noisereduction = noise.red,
                                        plot = FALSE)$amp
         specA_right <- seewave::spectro(right, wl = wlen,
-                                        wn = w.fun,
+                                        wn = win.fun,
                                         noisereduction = noise.red,
                                         plot = FALSE)$amp
       }else if (noise.red == 0) {
@@ -205,11 +205,11 @@ adi <- function(wave,
         # Use the original parameters for window length and function
         specA_left <- seewave::spectro(left,
                                        wl = wlen,
-                                       wn = w.fun,
+                                       wn = win.fun,
                                        plot = FALSE)$amp
         specA_right <- seewave::spectro(right,
                                         wl = wlen,
-                                        wn = w.fun,
+                                        wn = win.fun,
                                         plot = FALSE)$amp
       }
 
@@ -388,7 +388,7 @@ adi <- function(wave,
     # Add metadata columns
     adiOutputStereo <- adiOutputStereo %>%
       add_column(w_len = wlen,
-                 w_fun = w.fun,
+                 w_fun = win.fun,
                  cutoff = cutoff,
                  min_f = min.freq,
                  max_f = max.freq,
@@ -559,7 +559,7 @@ adi <- function(wave,
     # Add metadata columns
     adiOutputMono <- adiOutputMono %>%
       add_column(w_len = wlen,
-                 w_fun = w.fun,
+                 w_fun = win.fun,
                  cutoff = cutoff,
                  min_f = min.freq,
                  max_f = max.freq,

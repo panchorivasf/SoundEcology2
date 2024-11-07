@@ -3,6 +3,7 @@
 #' NBAI describes the relative amount of narrow-band persistent sound activity, like that of Cicadas and Orthopterans. This index can be used to evaluate insect activity and their influence on other soundscape metrics (e.g., summary acoustic indices).
 #'
 #' @param audio.list Character. A list containing the names of the wave audio.list to analyze.
+#' @param folder Character. The path to the folder containing the wave files to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
@@ -27,6 +28,7 @@
 #' @examples nbai_list(wave.list, channel = 'left', plot = TRUE)
 
 nbai_list <- function(audio.list,
+                      folder = NULL,
                       channel = "each",
                       hpf = 0,
                       freq.res = 50,
@@ -36,7 +38,11 @@ nbai_list <- function(audio.list,
                       n.cores = -1,
                       verbose = TRUE) {
   
-
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  
+  setwd(folder)
   filename <- tibble(filename = audio.list)
   naudio.list <- length(audio.list)
 
@@ -74,7 +80,7 @@ nbai_list <- function(audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audio.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   nbai1 <- quiet(nbai(sound1, channel = 'mix'))

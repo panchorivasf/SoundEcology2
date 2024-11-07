@@ -6,6 +6,7 @@
 #' (anthrophony) to biological (biophony) acoustic components found in field
 #' collected sound samples" (Kasten, et al. 2012). This version is optimized to work with lists of files.
 #' @param audio.list a list of audio files from the working directory.
+#' @param folder a path to the folder containing the audio files.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param w.len numeric. The window length for the FFT.
@@ -37,6 +38,7 @@
 #' files <- list_waves(path/to/folder)
 #' ndsi_list(files[1:5])
 ndsi_list <- function (audio.list,
+                      folder = NULL,
                       save.csv = TRUE,
                       csv.name = "ndsi_results.csv",
                       w.len = 50,
@@ -47,7 +49,10 @@ ndsi_list <- function (audio.list,
                       rm.offset = TRUE,
                       n.cores = -1){
 
-
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  
   #  Quiet function from SimDesign package to run functions without printing
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -60,6 +65,7 @@ ndsi_list <- function (audio.list,
   }
 
   cat("Evaluating the job...\n\n")
+  setwd(folder)
 
 
   fileName <- tibble(file_name = audio.list)
@@ -76,7 +82,7 @@ ndsi_list <- function (audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audio.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
   ndsi1 <- quiet(ndsi(sound1,
               args_list$w.len,

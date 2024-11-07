@@ -48,12 +48,10 @@ aci <- function(wave,
   #test arguments
   if (is.na(max.freq)){
     max.freq <- wave@samp.rate / 2
-    # cat(paste("\n max.freq not set, using value of:", max.freq, "\n\n"))
   }
 
   if (is.na(min.freq)){
     min.freq <- 0
-    # cat(paste("\n min.freq not set, using value of:", min.freq, "\n\n"))
   }
 
   if (is.numeric(as.numeric(min.freq))){
@@ -76,13 +74,9 @@ aci <- function(wave,
     stop(" freq.res is not a number.")
   }
 
-
-
-  #Some general values
-  #Get sampling rate
+  # Extract general values
   samplingrate <- wave@samp.rate
   duration <- length(wave@left)/samplingrate
-
 
   if(is.na(j)){
     j <- duration
@@ -190,11 +184,6 @@ aci <- function(wave,
       which_max.freq = dim(specA_left)[1]-1
     }
 
-    # 		cat(which_min.freq)
-    # 		cat(",")
-    # 		cat(which_max.freq)
-    # 		cat(",")
-    # 		cat(dim(specA_left))
     specA_left <- spec_left$amp[which_min.freq:which_max.freq,]
     rm(spec_left)
 
@@ -216,15 +205,6 @@ aci <- function(wave,
 
     rm(left,right)
 
-    # 		specA_rows <- dim(specA_left)[1]
-    # 		specA_cols <- dim(specA_left)[2]
-    #
-    # 		freq_per_row <- specA_rows/nyquist_freq
-    #
-    # 		max_row <- round(max.freq * freq_per_row)
-    #
-    # 		specA_left <- specA_left[1:max_row,]
-    # 		specA_right <- specA_right[1:max_row,]
     specA_rows <- dim(specA_left)[1]
     specA_cols <- dim(specA_left)[2]
 
@@ -232,8 +212,6 @@ aci <- function(wave,
     delta_fl <- ( max.freq - min.freq ) / specA_rows
     delta_tk <- (length(wave@left)/wave@samp.rate) / specA_cols
 
-    #m <- floor(duration / j)
-    #q <- specA_rows
     no_j <- floor(duration / j)
 
     #Number of values, in each row, for each j period (no. of columns)
@@ -266,7 +244,6 @@ aci <- function(wave,
     }
 
     ACI_tot_left <- sum(ACI_fl_left_vector)
-    # ACI_tot_left <- as.numeric(ACI_tot_left)
 
     #Right channel
     #For each frequency bin fl
@@ -287,31 +264,9 @@ aci <- function(wave,
     }
 
     ACI_tot_right <- sum(ACI_fl_right_vector)
-    # ACI_tot_right <- as.numeric(ACI_tot_right)
 
-    ACI_tot_left_by_min <- round((ACI_tot_left/duration) * 60)#, 2)
-    ACI_tot_right_by_min <- round((ACI_tot_right/duration) * 60)#, 2)
-
-    # cat(paste("  Acoustic Complexity Index (total):\n", "   Left channel: ", sep=""))
-    # cat(ACI_tot_left)
-    # cat(paste("\n", "   Right channel: ", sep=""))
-    # cat(ACI_tot_right)
-    # cat("\n\n")
-    # if (duration > 60){
-    #   cat(paste("  Acoustic Complexity Index (by minute):\n", "   Left channel: ", sep=""))
-    #   cat(ACI_tot_left_by_min)
-    #   cat(paste("\n", "   Right channel: ", sep=""))
-    #   cat(ACI_tot_right_by_min)
-    #   cat("\n\n")
-    # }
-
-    # if(noise.red == 1){
-    #   noise <- "rows"
-    # } else if(noise.red == 2){
-    #   noise <- "columns"
-    # } else {
-      # noise <- "none"
-    # }
+    ACI_tot_left_by_min <- round((ACI_tot_left/duration) * 60)
+    ACI_tot_right_by_min <- round((ACI_tot_right/duration) * 60)
 
 
     aciOutputStereo <- tibble(value_l = ACI_tot_left,
@@ -364,7 +319,6 @@ aci <- function(wave,
 
 
     #matrix of values
-    # cat("\n Calculating index. Please wait... \n\n")
     if(noise.red == 1 || noise.red == 2) {
       spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
                            norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun,
@@ -374,7 +328,6 @@ aci <- function(wave,
                            norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun)
     }
 
-    # spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE, norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun)
 
     specA_left <- spec_left$amp
 
@@ -393,20 +346,13 @@ aci <- function(wave,
     specA_rows <- dim(specA_left)[1]
     specA_cols <- dim(specA_left)[2]
 
-    # 		freq_per_row <- specA_rows/nyquist_freq
-    #
-    # 		max_row <- round(max.freq * freq_per_row)
-    #
-    # 		specA_left <- specA_left[1:max_row,]
-    # 		specA_rows <- dim(specA_left)[1]
 
     fl <- rep(NA, specA_rows)
     delta_fl <- ( max.freq - min.freq ) / specA_rows
     delta_tk <- (length(wave@left)/wave@samp.rate) / specA_cols
 
     no_j <- floor(duration / j)
-    #q <- specA_rows
-    #m <- floor(duration / j)
+
 
     #Number of values, in each row, for each j period (no. of columns)
     I_per_j <- floor(j/delta_tk)
@@ -443,24 +389,6 @@ aci <- function(wave,
     ACI_tot_right <- NA
     ACI_tot_right_by_min <- NA
 
-    # cat("  Acoustic Complexity Index (total): ")
-    # cat(ACI_tot_left)
-    # cat("\n\n")
-    # if (duration > 60){
-    #   cat("  Acoustic Complexity Index (by minute): ")
-    #   cat(ACI_tot_left_by_min)
-    #   cat("\n\n")
-    # }
-
-  # if(noise.red == 1){
-  #   noise <- "rows"
-  # } else if(noise.red == 2){
-  #   noise <- "columns"
-  # } else {
-  #   noise <- "none"
-  # }
-
-
     aciOutputMono <- tibble(value = ACI_tot_left)
 
      # Add metadata columns
@@ -487,10 +415,4 @@ aci <- function(wave,
 
   }
 
-  # invisible(list(AciTotAll_left = ACI_tot_left, AciTotAll_right = ACI_tot_right,
-  #                AciTotAll_left_bymin = ACI_tot_left_by_min, AciTotAll_right_bymin = ACI_tot_right_by_min,
-  #                #AciIfTotAll_left=ACIif_tot_left, AciIfTotAll_right=ACIif_tot_right,
-  #                aci_fl_left_vals = ACI_fl_left_vector, aci_fl_right_vals = ACI_fl_right_vector,
-  #                #aci_if_left_vals=ACI_if_left_vector, aci_if_right_vals=ACI_if_right_vector,
-  #                aci_left_matrix = ACI_left_matrix, aci_right_matrix = ACI_right_matrix))
 }

@@ -31,7 +31,7 @@
 #' @examples
 #' aci_folder(path/to/folder)
 
-aci_folder <- function (folder,
+aci_folder <- function (folder = NULL,
                        save.csv = TRUE,
                        csv.name = "aci_results.csv",
                        freq.res = 50,

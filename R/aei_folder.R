@@ -183,6 +183,7 @@ aei_folder <- function (folder,
   stopCluster(cl)
 
   if(save.csv == TRUE){
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
 

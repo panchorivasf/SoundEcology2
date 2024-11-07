@@ -41,7 +41,7 @@
 #'
 #' @examples
 #' adi_folder("path/to/folder")
-adi_folder <- function (folder,
+adi_folder <- function (folder = NULL,
                       save.csv = TRUE,
                       csv.name = "adi_results.csv",
                       freq.res = 50,
@@ -74,7 +74,9 @@ adi_folder <- function (folder,
   }
   
   setwd(folder)
+
   audio.list <- list.files(path=folder, pattern = ".wav|.WAV")
+
   
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)
@@ -186,6 +188,8 @@ adi_folder <- function (folder,
   stopCluster(cl)
   
   if(save.csv == TRUE){
+    # Convert POSIXct column to character format to retain zeros
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
   

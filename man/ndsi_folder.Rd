@@ -6,9 +6,9 @@
 \usage{
 ndsi_folder(
   folder,
-  save.csv = FALSE,
+  save.csv = TRUE,
   csv.name = "ndsi_results.csv",
-  freq.res = 50,
+  w.len = 50,
   anthro.min = 1000,
   anthro.max = 2000,
   bio.min = 2000,
@@ -22,9 +22,9 @@ ndsi_folder(
 
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name. Default name is "ndsi_results.csv"}
 
-\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
+\item{w.len}{numeric. Window length for the FFT (sampling rate / frequency resolution).}
 
 \item{anthro.min}{minimum value of the range of frequencies of the anthrophony.}
 

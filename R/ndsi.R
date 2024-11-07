@@ -3,7 +3,7 @@
 #' Normalized Difference Soundscape Index (NDSI) from REAL and Kasten, et al. 2012. The NDSI seeks to "estimate the level of anthropogenic disturbance on the soundscape by computing the ratio of human-generated (anthrophony) to biological (biophony) acoustic components found in field collected sound samples" (Kasten, et al. 2012).
 #'
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
-#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
+#' @param w.len numeric. The window length for the FFT (sampling rate / frequency resolution).
 #' @param anthro.min minimum value of the range of frequencies of the anthrophony.
 #' @param anthro.max maximum value of the range of frequencies of the anthrophony.
 #' @param bio.min minimum value of the range of frequencies of the biophony.
@@ -21,7 +21,7 @@
 #'
 #' @examples ndsi(tropicalsound)
 ndsi <- function(wave,
-                freq.res = 50,
+                w.len = 512,
                 anthro.min = 1000,
                 anthro.max = 2000,
                 bio.min = 2000,
@@ -29,8 +29,8 @@ ndsi <- function(wave,
                 rm.offset = TRUE){
 
   #test arguments
-  if (is.numeric(as.numeric(freq.res))){
-    freq.res <- as.numeric(freq.res)
+  if (is.numeric(as.numeric(w.len))){
+    w.len <- as.numeric(w.len)
   } else{
     stop(" freq.res is not a number.")
   }
@@ -62,10 +62,9 @@ ndsi <- function(wave,
   #Get sampling rate
   samplingrate <- wave@samp.rate
   duration <- length(wave@left)/wave@samp.rate
-  
-  # Assess window length
-  w.len <- samplingrate/freq.res
-  
+  freq.res <- samplingrate/w.len
+
+
 
   # Adding 1 if w.len is an odd number (new behavior in seewave)
   # fix by JSueur
@@ -390,11 +389,3 @@ ndsi <- function(wave,
   }
 
 }
-
-# setwd(readClipboard())
-# files <- list.files(pattern=".wav")
-#
-# sound1 <- readWave(files[1], to =61, units = "seconds")
-# sound1mono <- channel(sound1, "left")
-# ndsi(sound1)
-# ndsi(sound1mono)

@@ -31,7 +31,7 @@
 #' @examples
 #' aci_folder(path/to/folder)
 
-aci_folder <- function (folder,
+aci_folder <- function (folder = NULL,
                        save.csv = TRUE,
                        csv.name = "aci_results.csv",
                        freq.res = 50,
@@ -91,7 +91,7 @@ aci_folder <- function (folder,
                   args_list$noise.red,
                   args_list$rm.offset))
 
-  tibble(file_name = "filename") %>% bind_cols(aci1)
+  tibble(file_name = "filename")  |>  bind_cols(aci1)
 
   # Assess how long it takes to parse 1 file
   timePerFile <-  Sys.time() - startTime
@@ -158,7 +158,7 @@ aci_folder <- function (folder,
                                 args_list$rm.offset)
 
                        # Combine the results for each file into a single row
-                       tibble(file_name = file) %>%
+                       tibble(file_name = file)  |> 
                          bind_cols(aci)
 
 
@@ -172,6 +172,7 @@ aci_folder <- function (folder,
   stopCluster(cl)
 
   if(save.csv == TRUE){
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
 

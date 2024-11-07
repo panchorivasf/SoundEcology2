@@ -1,6 +1,6 @@
 Package: SoundEcology2
 Title: Soundscape Ecology
-Version: 0.0.0.9000
+Version: 0.0.9
 Authors@R: c(
            person(
            "Francisco", "Rivas", 
@@ -8,7 +8,8 @@ Authors@R: c(
            role = c("cre","aut"),
            comment = c(ORCID = "0000-0002-1256-2225")),
            person("Luis", "Villanueva-Rivera", role = "aut"),
-           person("Bryan", "Pijanowski", email = "bpijanow@purdue.edu", role = "aut"))
+           person("Bryan", "Pijanowski", email = "bpijanow@purdue.edu", role = "aut"),
+           person("Angel", "Ramirez", email = "azahramirez@gmail.com", role = "ctb"))
 Description: Computes acoustic indices on audio recordings.
 License: CC BY-NC 4.0
 Encoding: UTF-8
@@ -21,7 +22,6 @@ Imports:
     data.table,
     seewave,
     tuneR,
-    magrittr,
     ineq,
     plotly,
     parallel,
@@ -34,9 +34,15 @@ Imports:
     tibble,
     tidyr,
     tidyverse,
-    vegan,
     viridis,
     stats,
     utils,
-    writexl
+    writexl,
+    grid,
+    future,
+    future.apply
+VignetteBuilder: knitr
+URL: https://github.com/panchorivasf/SoundEcology2
+BugReports: https://github.com/panchorivasf/SoundEcology2/issues 
+Config/testthat/edition: 3
 

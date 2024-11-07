@@ -28,10 +28,11 @@
 #' }
 
 plot_diel_indices <- function(data, 
-                               sensor_id = NULL, 
-                               plot.title = "Circadian Indices", 
-                               loess = TRUE, span = 0.3, 
-                               scaling = "none") {
+                              sensor_id = NULL, 
+                              plot.title = "Circadian Indices", 
+                              loess = TRUE, 
+                              span = 0.3, 
+                              scaling = "none") {
   
   # Ensure the datetime column is properly parsed as POSIXct
   data <- data %>%
@@ -111,30 +112,36 @@ plot_diel_indices <- function(data,
     data_idx <- data_grouped %>% filter(index == idx)
     
     if (loess) {
-      # Apply LOESS smoothing
+      # Apply LOESS smoothing with interpolation to match the original 'hour' values
       loess_model <- loess(value_avg ~ as.numeric(hour), data = data_idx, span = span)
-      smoothed_values <- predict(loess_model)
+      
+      smoothed_values <- predict(loess_model, newdata = as.numeric(data_idx$hour))
+      
       plot <- plot %>%
         add_trace(data = data_idx, x = ~hour, y = smoothed_values, 
                   type = 'scatter', mode = 'lines', 
-                  name = idx, line = list(width = 3),
-                  showlegend = TRUE)
+                  name = idx, line = list(width = 3, shape = 'spline'),
+                  showlegend = TRUE,
+                  hovertemplate = paste('Time: %{x}<br>',
+                                        'Value: %{y:.2f}<extra></extra>'))
     } else {
       # Plot raw lines
       plot <- plot %>%
         add_trace(data = data_idx, x = ~hour, y = ~value_avg, 
                   type = 'scatter', mode = 'lines', 
-                  name = idx, line = list(width = 2),
-                  showlegend = TRUE)
+                  name = idx, line = list(width = 2,shape = 'spline'),
+                  showlegend = TRUE,
+                  hovertemplate = paste('Time: %{x}<br>',
+                                        idx,': %{y:.2f}<extra></extra>'))
     }
   }
+  
   
   # Customize layout
   plot <- plot %>%
     layout(title = plot.title,
-           xaxis = list(title = "Hour of the Day", tickangle = 45),
+           xaxis = list(title = "Hour of the Day", tickangle = 90),
            yaxis = list(title = "Scaled Indices (0-1)"))
   
   return(plot)
 }
-

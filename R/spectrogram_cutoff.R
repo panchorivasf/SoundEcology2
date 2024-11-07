@@ -9,6 +9,7 @@
 #' @param plot A logical value indicating whether to plot the resulting spectrogram. Defaults to `FALSE`.
 #' @param plot.title An optional string specifying the title of the plot. Defaults to `NULL`.
 #' @param ggplot A logical value indicating whether to use ggplot2 for plotting. If `FALSE`, base R plotting will be used to generate the plot. Defaults to `TRUE`.
+#' @param noise.red Character. Either NULL, 'rows' or 'cols'. Determins if and in which direction to apply noise reduction (mean subtraction).
 #'
 #' @return Returns the spectrogram matrix with the cutoff applied. If `plot = TRUE`, a plot of the spectrogram is displayed.
 #' @export
@@ -27,7 +28,8 @@ spectrogram_cutoff <- function(wave,
                                freq.res = 100,
                                plot = FALSE,
                                plot.title = NULL,
-                               ggplot = TRUE){
+                               ggplot = TRUE,
+                               noise.red = NULL){
 
   total_duration <- seewave::duration(wave)
   samp_rate <- wave@samp.rate
@@ -37,16 +39,42 @@ spectrogram_cutoff <- function(wave,
 
   # Remove DC offset
   wave <- rmoffset(wave, output = "Wave")
+  
+  if (is.null(noise.red)) {
+    # Get the spectrogram matrix
+    spectro_res <- seewave::spectro(wave,
+                                    wl = wl,
+                                    norm = FALSE,
+                                    dB = NULL,
+                                    plot = FALSE,
+                                    scale = FALSE,
+                                    correction = "amplitude")
+    
+  } else if (noise.red == "rows"){
+    spectro_res <- seewave::spectro(wave,
+                                    wl = wl,
+                                    norm = FALSE,
+                                    dB = NULL,
+                                    plot = FALSE,
+                                    scale = FALSE,
+                                    correction = "amplitude",
+                                    noisereduction = 1)
+  } else if (noise.red == "cols"){
+    spectro_res <- seewave::spectro(wave,
+                                    wl = wl,
+                                    norm = FALSE,
+                                    dB = NULL,
+                                    plot = FALSE,
+                                    scale = FALSE,
+                                    correction = "amplitude",
+                                    noisereduction = 2)
+    
+  } else {
+    stop("noise.red should be 'rows', 'columns', or 'NULL'. \n")
+  }
 
 
-  # Get the spectrogram matrix
-  spectro_res <- seewave::spectro(wave,
-                                  wl = wl,
-                                  norm = FALSE,
-                                  dB = NULL,
-                                  plot = FALSE,
-                                  scale = FALSE,
-                                  correction = "amplitude")
+
 
   matrix <- spectro_res$amp
 
@@ -121,6 +149,11 @@ spectrogram_cutoff <- function(wave,
       box()
     }
   }
+  
+  if (plot) {
+    invisible(list(matrix = spectrogram, plot = p))
+  } else {
+    invisible(matrix)
+  }
 
-  invisible(spectrogram)
 }

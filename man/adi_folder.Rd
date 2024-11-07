@@ -5,7 +5,7 @@
 \title{Calculate the Acoustic Diversity Index on the Files in a Folder}
 \usage{
 adi_folder(
-  folder,
+  folder = NULL,
   save.csv = TRUE,
   csv.name = "adi_results.csv",
   freq.res = 50,

@@ -5,8 +5,15 @@
 #' @return A list of wave files
 #' @export
 #'
-#' @examples list_waves(folder)
-list_waves <- function(folder){
+#' @examples 
+#' \dontrun{
+#' list_waves(folder)
+#' }
+list_waves <- function(folder = NULL){
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   setwd(folder)
 

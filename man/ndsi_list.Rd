@@ -6,9 +6,9 @@
 \usage{
 ndsi_list(
   audio.list,
-  save.csv = FALSE,
+  save.csv = TRUE,
   csv.name = "ndsi_results.csv",
-  freq.res = 50,
+  w.len = 50,
   anthro.min = 1000,
   anthro.max = 2000,
   bio.min = 2000,
@@ -24,7 +24,7 @@ ndsi_list(
 
 \item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
+\item{w.len}{numeric. The window length for the FFT.}
 
 \item{anthro.min}{minimum value of the range of frequencies of the anthrophony.}
 

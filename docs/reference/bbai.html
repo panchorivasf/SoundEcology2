@@ -46,7 +46,7 @@
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">bbai</span><span class="op">(</span></span>
 <span>  <span class="va">wave</span>,</span>
-<span>  channel <span class="op">=</span> <span class="st">"each"</span>,</span>
+<span>  channel <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  hpf <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  rm.offset <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
@@ -54,7 +54,7 @@
 <span>  click.length <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  difference <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  gap.allowance <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  plot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  spectrogram <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  dark.plot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot.title <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -97,7 +97,7 @@
 <dd><p>Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click. Default is <code>2</code>. Gaps larger than this value will split clicks.</p></dd>
 
 
-<dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
+<dt id="arg-spectrogram">spectrogram<a class="anchor" aria-label="anchor" href="#arg-spectrogram"></a></dt>
 <dd><p>Logical. Should a spectrogram with highlighted clicks be plotted? Default is <code>TRUE</code>.</p></dd>
 
 
@@ -129,7 +129,7 @@
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">bbai</span><span class="op">(</span><span class="va">wave</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'wave' not found</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in bbai(wave):</span> object 'wave' not found</span>
 </code></pre></div>
     </div>
   </div>
@@ -144,7 +144,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>

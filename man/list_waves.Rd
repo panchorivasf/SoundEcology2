@@ -4,7 +4,7 @@
 \alias{list_waves}
 \title{List wave files in a directory}
 \usage{
-list_waves(folder)
+list_waves(folder = NULL)
 }
 \arguments{
 \item{folder}{Character. The path to the folder where the WAV files are stored.}
@@ -16,5 +16,7 @@ A list of wave files
 List wave files in a directory
 }
 \examples{
+\dontrun{
 list_waves(folder)
+}
 }

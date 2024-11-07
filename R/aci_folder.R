@@ -46,7 +46,12 @@ aci_folder <- function (folder = NULL,
   if(is.null(folder)){
     folder <- getwd()
   }
-
+  setwd(folder)
+  
+  audio.list <- list_waves()
+  fileName <- tibble(file_name = audio.list)
+  nFiles <- length(audio.list)
+  
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -57,15 +62,6 @@ aci_folder <- function (folder = NULL,
     out
   }
 
-  cat("Evaluating the job...\n\n")
-
-
-  setwd(folder)
-  audiolist <- list.files(path=folder, pattern = ".wav|.WAV")
-
-  fileName <- tibble(file_name = audiolist)
-  nFiles <- length(audiolist)
-
   args_list <- list(freq.res = freq.res,
                     win.fun = win.fun,
                     min.freq = min.freq,
@@ -73,13 +69,31 @@ aci_folder <- function (folder = NULL,
                     j = j,
                     noise.red = noise.red,
                     rm.offset = rm.offset
-                    )
+  )
+  
+  # Declare the number of cores to be used 
+  if(is.null(n.cores)){
+    num_cores <- 1
+  }else if(n.cores == -1){
+    num_cores <- parallel::detectCores() - 1 # Leave one core free 
+  }else{
+    num_cores <- n.cores
+  } 
+  if (num_cores > nFiles){
+    num_cores <- nFiles  # Limit the number of cores to the number of files
+  }
+  cl <- makeCluster(num_cores[1])
+  registerDoParallel(cl)
+  
+  # Evaluate the duration of the analysis if nFiles > 10
+  if(nFiles>10){
+  cat("Evaluating the job...\n\n")
 
   # Evaluate the duration of the analysis
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+  sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   aci1 <- quiet(aci(sound1,
@@ -101,36 +115,26 @@ aci_folder <- function (folder = NULL,
   rm(sound1)
   rm(aci1)
 
-  # Declare the number of cores to be used (all but one of the available cores)
-  if(is.null(n.cores)){
-    num_cores <- 1
-  }else if(n.cores == -1){
-    num_cores <- parallel::detectCores() - 1  # Detect available cores
-  }else{
-    num_cores <- n.cores
-  } # Leave one core free
-  # Limit the number of cores to the number of files, if 'cores' was initially a higher number
-  if (num_cores > nFiles){
-    num_cores <- nFiles
-  }
-
   # Estimate total time accounting for parallel processing
   estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
   # Add overhead time
   adjustedTotalTime <- estimatedTotalTime
   # Calculate the end time
   expectedCompletionTime <- Sys.time() + adjustedTotalTime
-  # Setup parallel back-end
-  cl <- makeCluster(num_cores[1])
-  registerDoParallel(cl)
 
   cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
   cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+  
+  } else {
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    rm(sound1)
+  }
+
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
 
-
   # Start loop
-  results <- foreach(file = audiolist, .combine = rbind,
+  results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
 
                        # Try to read the sound file, handle errors gracefully

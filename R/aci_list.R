@@ -6,7 +6,7 @@
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
-#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to use when calculating the value, in Hertz. Default = 0.
 #' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
 #' @param j the cluster size, in seconds. Default = NA (Duration of the audio file).
@@ -38,7 +38,7 @@ aci_list <- function (audio.list,
                       save.csv = TRUE,
                       csv.name = "aci_results.csv",
                       freq.res = 50,
-                      w.fun = "hanning",
+                      win.fun = "hanning",
                       min.freq = NA,
                       max.freq = NA,
                       j = NA,
@@ -49,7 +49,11 @@ aci_list <- function (audio.list,
   if(is.null(folder)){
     folder <- getwd()
   }
-
+  setwd(folder)
+  
+  fileName <- tibble(file_name = audio.list)
+  nFiles <- length(audio.list)
+  
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -59,74 +63,79 @@ aci_list <- function (audio.list,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-
-  cat("Evaluating the job...\n\n")
   
-  setwd(folder)
-
-  fileName <- tibble(file_name = audio.list)
-  nFiles <- length(audio.list)
-
   args_list <- list(freq.res = freq.res,
-                    w.fun = w.fun,
+                    win.fun = win.fun,
                     min.freq = min.freq,
                     max.freq = max.freq,
                     j = j,
                     noise.red = noise.red,
                     rm.offset = rm.offset
   )
-
-  # Evaluate the duration of the analysis
-  # Measure processing time for a single file
-  startTime <- Sys.time()
-
-  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-
-  aci1 <- quiet(aci(sound1,
-                    args_list$freq.res,
-                    args_list$w.fun,
-                    args_list$min.freq,
-                    args_list$max.freq,
-                    args_list$j,
-                    args_list$noise.red,
-                    args_list$rm.offset))
-
-  tibble(file_name = "filename") %>% bind_cols(aci1)
-
-  # Assess how long it takes to parse 1 file
-  timePerFile <-  Sys.time() - startTime
-  # Add overhead per file
-  timePerFile <- timePerFile + as.numeric(seconds(2.2))
-
-  rm(sound1)
-  rm(aci1)
-
-  # Declare the number of cores to be used (all but one of the available cores)
+  
+  # Declare the number of cores to be used 
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
-    num_cores <- parallel::detectCores() - 1  # Detect available cores
+    num_cores <- parallel::detectCores() - 1 # Leave one core free 
   }else{
     num_cores <- n.cores
-  } # Leave one core free
-  # Limit the number of cores to the number of files, if 'cores' was initially a higher number
+  } 
   if (num_cores > nFiles){
-    num_cores <- nFiles
+    num_cores <- nFiles  # Limit the number of cores to the number of files
   }
-
-  # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
-  # Add overhead time
-  adjustedTotalTime <- estimatedTotalTime
-  # Calculate the end time
-  expectedCompletionTime <- Sys.time() + adjustedTotalTime
-  # Setup parallel back-end
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
-
-  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-  cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+  
+  # Evaluate the duration of the analysis if nFiles > 10
+  if(nFiles>10){
+    cat("Evaluating the job...\n\n")
+    
+    # Evaluate the duration of the analysis
+    # Measure processing time for a single file
+    startTime <- Sys.time()
+    
+    sound1 <- readWave(audio.list[1])
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    
+    aci1 <- quiet(aci(sound1,
+                      args_list$freq.res,
+                      args_list$win.fun,
+                      args_list$min.freq,
+                      args_list$max.freq,
+                      args_list$j,
+                      args_list$noise.red,
+                      args_list$rm.offset))
+    
+    tibble(file_name = "filename")  |>  bind_cols(aci1)
+    
+    # Assess how long it takes to parse 1 file
+    timePerFile <-  Sys.time() - startTime
+    # Add overhead per file
+    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    
+    rm(sound1)
+    rm(aci1)
+    
+    # Estimate total time accounting for parallel processing
+    estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
+    # Add overhead time
+    adjustedTotalTime <- estimatedTotalTime
+    # Calculate the end time
+    expectedCompletionTime <- Sys.time() + adjustedTotalTime
+    # # Setup parallel back-end
+    # cl <- makeCluster(num_cores[1])
+    # registerDoParallel(cl)
+    
+    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    
+  } else {
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    rm(sound1)
+  }
+  
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
 
 
@@ -138,14 +147,14 @@ aci_list <- function (audio.list,
                        sound <- readWave(file)
 
                        # Calculate ACI and keep its default output columns
-                       aci <- aci(sound,
+                       aci <- quiet(aci(sound,
                                   args_list$freq.res,
-                                  args_list$w.fun,
+                                  args_list$win.fun,
                                   args_list$min.freq,
                                   args_list$max.freq,
                                   args_list$j,
                                   args_list$noise.red,
-                                  args_list$rm.offset)
+                                  args_list$rm.offset))
 
                        # Combine the results for each file into a single row
                        tibble(file_name = file) %>%

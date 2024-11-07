@@ -2,7 +2,7 @@
 #'
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
 #' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
-#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to use when calculating the value, in Hertz. Default = 0.
 #' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
 #' @param j the cluster size, in seconds. Default = NA (Duration of the audio file).
@@ -36,15 +36,13 @@
 #' aci(tropicalsound)}
 aci <- function(wave,
                 freq.res = 50,
-                w.fun = "hanning",
+                win.fun = "hanning",
                 min.freq = NA,
                 max.freq = NA,
                 j = NA,
                 noise.red = 0,
                 rm.offset = TRUE
                 ){
-
-
   #test arguments
   if (is.na(max.freq)){
     max.freq <- wave@samp.rate / 2
@@ -65,8 +63,6 @@ aci <- function(wave,
   } else{
     stop(" max.freq is not a number.")
   }
-
-
 
   if (is.numeric(as.numeric(freq.res))){
     freq.res <- as.numeric(freq.res)
@@ -153,7 +149,7 @@ aci <- function(wave,
                          norm = TRUE,
                          dB = NULL,
                          scale = FALSE,
-                         wn = w.fun,
+                         wn = win.fun,
                          noisereduction = noise.red)
     }else if (noise.red == 0) {
       spec_left <- seewave::spectro(left,
@@ -163,7 +159,7 @@ aci <- function(wave,
                            norm = TRUE,
                            dB = NULL,
                            scale = FALSE,
-                           wn = w.fun)
+                           wn = win.fun)
     }
 
 
@@ -190,11 +186,11 @@ aci <- function(wave,
 
     if(noise.red == 1 || noise.red == 2) {
     spec_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
-                          norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun,
+                          norm = TRUE, dB = NULL, scale = FALSE, wn = win.fun,
                           noise.reduction = noise.red)
     }else if (noise.red == 0) {
       spec_right <- spectro(right, f = samplingrate, wl = w.len, plot = FALSE,
-                            norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun)
+                            norm = TRUE, dB = NULL, scale = FALSE, wn = win.fun)
     }
 
 
@@ -279,7 +275,7 @@ aci <- function(wave,
     # Add metadata columns
     aciOutputStereo <- aciOutputStereo %>%
       add_column(w.len = w.len,
-                 w.fun = w.fun,
+                 win.fun = win.fun,
                  j = j,
                  minf = min.freq,
                  maxf = max.freq,
@@ -321,11 +317,11 @@ aci <- function(wave,
     #matrix of values
     if(noise.red == 1 || noise.red == 2) {
       spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                           norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun,
+                           norm = TRUE, dB = NULL, scale = FALSE, wn = win.fun,
                            noise.reduction = noise.red)
     }else if (noise.red == 0) {
       spec_left <- spectro(left, f = samplingrate, wl = w.len, plot = FALSE,
-                           norm = TRUE, dB = NULL, scale = FALSE, wn = w.fun)
+                           norm = TRUE, dB = NULL, scale = FALSE, wn = win.fun)
     }
 
 
@@ -395,7 +391,7 @@ aci <- function(wave,
     aciOutputMono <- aciOutputMono %>%
       add_column(freq.res = freq.res,
                  w.len = w.len,
-                 w.fun = w.fun,
+                 win.fun = win.fun,
                  j = j,
                  minf = min.freq,
                  maxf = max.freq,

@@ -22,7 +22,7 @@ This version is optimized to work with a path to the folder containing the audio
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.9</span>
       </span>
     </div>
 
@@ -30,7 +30,13 @@ This version is optimized to work with a path to the folder containing the audio
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -40,7 +46,7 @@ This version is optimized to work with a path to the folder containing the audio
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Normalized Difference Soundscape Index - folder input</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/ndsi_folder.R" class="external-link"><code>R/ndsi_folder.R</code></a></small>
     <div class="hidden name"><code>ndsi_folder.Rd</code></div>
     </div>
 
@@ -56,9 +62,9 @@ This version is optimized to work with a path to the folder containing the audio
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ndsi_folder</span><span class="op">(</span></span>
 <span>  <span class="va">folder</span>,</span>
-<span>  save.csv <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save.csv <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  csv.name <span class="op">=</span> <span class="st">"ndsi_results.csv"</span>,</span>
-<span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>  w.len <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>  anthro.min <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  anthro.max <span class="op">=</span> <span class="fl">2000</span>,</span>
 <span>  bio.min <span class="op">=</span> <span class="fl">2000</span>,</span>
@@ -81,11 +87,11 @@ This version is optimized to work with a path to the folder containing the audio
 
 
 <dt id="arg-csv-name">csv.name<a class="anchor" aria-label="anchor" href="#arg-csv-name"></a></dt>
-<dd><p>character vector. When 'save.csv' is TRUE, optionally provide a file name.</p></dd>
+<dd><p>character vector. When 'save.csv' is TRUE, optionally provide a file name. Default name is "ndsi_results.csv"</p></dd>
 
 
-<dt id="arg-freq-res">freq.res<a class="anchor" aria-label="anchor" href="#arg-freq-res"></a></dt>
-<dd><p>numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).</p></dd>
+<dt id="arg-w-len">w.len<a class="anchor" aria-label="anchor" href="#arg-w-len"></a></dt>
+<dd><p>numeric. Window length for the FFT (sampling rate / frequency resolution).</p></dd>
 
 
 <dt id="arg-anthro-min">anthro.min<a class="anchor" aria-label="anchor" href="#arg-anthro-min"></a></dt>
@@ -123,7 +129,7 @@ This version is optimized to work with a path to the folder containing the audio
 <span class="r-in"><span><span class="fu">ndsi_folder</span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Evaluating the job...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in readBin(con, int, n = 4, size = 1, endian = "little", signed = FALSE) %*%     2^c(0, 8, 16, 24):</span> non-conformable arguments</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in setwd(folder):</span> cannot change working directory</span>
 </code></pre></div>
     </div>
   </div>

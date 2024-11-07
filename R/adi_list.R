@@ -49,6 +49,7 @@
 #' adi_list(files[1:5])
 
 adi_list <- function (audio.list,
+                      folder = NULL,
                       save.csv = TRUE,
                       csv.name = "adi_results.csv",
                       freq.res = 50,
@@ -65,6 +66,10 @@ adi_list <- function (audio.list,
                       db.fs = TRUE,
                       n.cores = -1){
 
+  
+  if(is.null(folder)){
+    folder <- getwd()
+  }
 
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
@@ -77,8 +82,8 @@ adi_list <- function (audio.list,
   }
 
 
-
-
+  
+  setwd(folder)
 
   fileName <- tibble(file_name = audio.list)
   nFiles <- length(audio.list)
@@ -117,12 +122,16 @@ adi_list <- function (audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
   
+  sound1 <- readWave(audio.list[1])
+  type <- ifelse(sound1@stereo, "stereo", "mono")
+  
+ 
+
   if(nFiles>10){
     cat("Evaluating the job...\n\n")
     
     
-    sound1 <- readWave(audio.list[1])
-    type <- ifelse(sound1@stereo, "stereo", "mono")
+    
     
     adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
                       args_list$max.freq, args_list$n.bands, args_list$cutoff,
@@ -160,7 +169,7 @@ adi_list <- function (audio.list,
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
-
+                  
                        # Import the sounds
                        sound <- readWave(file)
 

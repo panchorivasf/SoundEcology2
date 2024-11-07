@@ -1,6 +1,8 @@
 #' Calculate Acoustic Complexity Index on a List of Wave Files
 #'
+
 #' @param audio.list a list of audio files to import.
+#' @param folder a path to the folder with audio files to import.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).
@@ -78,7 +80,7 @@ aci_list <- function (audio.list,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audio.list[1])
+  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
   aci1 <- quiet(aci(sound1,

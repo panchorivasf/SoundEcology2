@@ -29,7 +29,6 @@
 #' @import tibble
 #' @import tidyr
 #' @import dplyr
-#' @import vegan
 #'
 #' @details
 #' Options for the 'prop.den' parameter: 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band. 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max_freq'). 3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
@@ -324,7 +323,7 @@ adi <- function(wave,
 
     if(prop.den == 1){
 
-      Score_left <- vegan::diversity(Score, index = "shannon")
+      Score_left <- diversity(Score, index = "shannon")
 
 
     }else{

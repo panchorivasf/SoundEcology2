@@ -22,7 +22,7 @@
 #' @importFrom tuneR readWave
 #' @importFrom dplyr bind_cols
 #' @importFrom tibble tibble
-#' @import lubridate seconds
+#' @importFrom lubridate seconds
 #'
 #' @details
 #' It uses parallel processing with all but one of the available cores.
@@ -122,7 +122,7 @@ aci_list <- function (audio.list,
                        sound <- readWave(file)
                        
                        # Calculate ACI and keep its default output columns
-                       aci1 <- quiet(do.call(aci, c(list(sound), args_list)))
+                       aci <- quiet(do.call(aci, c(list(sound), args_list)))
                        
                        # Combine the results for each file into a single row
                        tibble(file_name = file) |>

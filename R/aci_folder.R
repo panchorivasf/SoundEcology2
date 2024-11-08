@@ -130,7 +130,7 @@ aci_folder <- function (folder = NULL,
                        }
                        
                        # Calculate ACI and keep its default output columns
-                       aci1 <- quiet(do.call(aci, c(list(sound), args_list)))
+                       aci <- quiet(do.call(aci, c(list(sound), args_list)))
                        
                        # Combine the results for each file into a single row
                        tibble(file_name = file)  |> 

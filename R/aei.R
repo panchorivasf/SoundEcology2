@@ -9,7 +9,7 @@
 #' the proportions before calculating the Gini, among other new parameter options (see Details)
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
 #' @param frew.res the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).
-#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram.
 #' @param max.freq maximum frequency to compute the spectrogram.
 #' @param n.bands number of bands to split the spectrogram.
@@ -33,7 +33,7 @@
 #' @examples aei(tropicalsound)
 aei <- function(wave,
                 freq.res = 50,
-                w.fun = "hanning",
+                win.fun = "hanning",
                 min.freq = 0,
                 max.freq = 10000,
                 n.bands = 10,
@@ -196,26 +196,26 @@ aei <- function(wave,
         specA_left <- spectro(left,
                               f = samplingrate,
                               wl = w.len,
-                              wn = w.fun,
+                              wn = win.fun,
                               noisereduction = noise.red,
                               plot = FALSE)$amp
         specA_right <- spectro(right,
                                f = samplingrate,
                                wl = w.len,
-                               wn = w.fun,
+                               wn = win.fun,
                                noisereduction = noise.red,
                                plot = FALSE)$amp
       }else if (noise.red == 0) {
         specA_left <- spectro(left,
                               f = samplingrate,
                               wl = w.len,
-                              wn = w.fun,
+                              wn = win.fun,
                               noisereduction = NULL,
                               plot = FALSE)$amp
         specA_right <- spectro(right,
                                f = samplingrate,
                                wl = w.len,
-                               wn = w.fun,
+                               wn = win.fun,
                                noisereduction = NULL,
                                plot = FALSE)$amp
       }
@@ -425,7 +425,7 @@ aei <- function(wave,
     # Add metadata columns
     aeiOutputStereo <- aeiOutputStereo %>%
       add_column(w.len = w.len,
-                 w.fun = w.fun,
+                 win.fun = win.fun,
                  cutoff = cutoff,
                  minf = min.freq,
                  maxf = max.freq,
@@ -601,7 +601,7 @@ aei <- function(wave,
     # Add metadata columns
     aeiOutputMono <- aeiOutputMono %>%
       add_column(w_len = w.len,
-                 w_fun = w.fun,
+                 w_fun = win.fun,
                  cutoff = cutoff,
                  min_f = min.freq,
                  max_f = max.freq,

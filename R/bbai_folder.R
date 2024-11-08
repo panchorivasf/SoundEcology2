@@ -5,18 +5,19 @@
 #' @param folder Character. The path to a folder with the wave files to analyze.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.
-#' @param rm.offset Logical. Should the DC offset be removed from the sound signal? Defaults to `TRUE`.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
 #' @param cutoff Numeric. The amplitude threshold (in dBFS) for removing low-amplitude values in the spectrogram. Default is `-50`.
 #' @param click.height Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is `10`.
 #' @param difference Numeric. The maximum difference in amplitude between adjacent frequency bins to be considered part of a single 'click'. Default is `20`.
 #' @param gap.allowance Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click. Default is `2`. Gaps larger than this value will split clicks.
-#' @param plot Logical. Should a spectrogram with highlighted clicks be plotted? Default is `TRUE`.
+#' @param spectrogram Logical. Should a spectrogram with highlighted clicks be plotted? Default is `TRUE`.
 #' @param dark.plot Logical. Should the plot use a dark theme (black background)? Default is `FALSE`.
 #' @param plot.title Character. The title for the plot, if `plot` is `TRUE`. Default is `NULL`.
 #' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
-
+#' @param output.csv Character. Name for the csv file. Default is "bbai_results.csv".
+#' @param n.cores Numeric. Number of cores to be used in parallel. Use -1 (Default) to use all but one. 
+#' 
 #' @return A tibble containing the following columns:
 #'   - `index`: The name of the index. Useful later when merging data with other indices.
 #'   - `value`: The number of clicks detected in the recording.
@@ -26,16 +27,15 @@
 
 #' @export
 #'
-#' @import tuneR
-#' @import seewave
-#' @import patchwork
-#' @import ggplot2
-#' @import dplyr
-#' @import tibble
-#' @import foreach
 #' @import doParallel
-#' @import parallel
-#'
+#' @import seewave
+#' @import foreach 
+#' @importFrom tuneR readWave
+#' @importFrom dplyr bind_cols
+#' @importFrom tibble tibble
+#' @importFrom parallel detectCores makeCluster
+#' @importFrom tibble tibble
+#' @importFrom lubridate seconds
 #'
 #' @examples 
 #' \dontrun{
@@ -45,19 +45,20 @@
 bbai_folder <- function(folder = NULL,
                         channel = 'each',
                         hpf = 0,
-                        rm.offset = TRUE,
                         freq.res = 50,
                         cutoff = -60,
                         click.length = 10,
                         difference = 10,
                         gap.allowance = 2,
+                        spectrogram = FALSE,
+                        dark.plot = FALSE,
+                        plot.title = "",
                         verbose = FALSE,
                         output.csv = "bbai_results.csv",
                         n.cores = -1) {
   
   args_list <- list(channel = channel,
                     hpf = hpf,
-                    rm.offset = rm.offset,
                     freq.res = freq.res,
                     cutoff = cutoff,
                     click.length = click.length,
@@ -73,8 +74,8 @@ bbai_folder <- function(folder = NULL,
   }
   setwd(folder)
   
-  files <- list_waves()
-  nFiles <- length(files)
+  audio.list <- list_waves()
+  nFiles <- length(audio.list)
   
   if(is.null(n.cores)){
     num_cores <- 1
@@ -89,7 +90,7 @@ bbai_folder <- function(folder = NULL,
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
   
-  if (length(files) > 10) {
+  if (length(audio.list) > 10) {
     cat("Evaluating the job...\n")
     
     startTime <- Sys.time()
@@ -98,7 +99,7 @@ bbai_folder <- function(folder = NULL,
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     bbai1 <- quiet(do.call(bbai, c(list(sound1), args_list)))
-    tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
+    tibble::tibble(file_name = "filename") |> bind_cols(bbai1)
     
     timePerFile <-  Sys.time() - startTime
     timePerFile <- timePerFile + as.numeric(seconds(2.2))
@@ -115,8 +116,7 @@ bbai_folder <- function(folder = NULL,
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-    cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-    
+
   } else {
     sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
     type <- ifelse(sound1@stereo, "stereo", "mono")
@@ -125,20 +125,22 @@ bbai_folder <- function(folder = NULL,
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
   
   # Define parallel computation
-  results <- foreach(file = files, .packages = c("tuneR", "seewave", "tibble")) %dopar% {
-    
-    filename <- basename(file)  
-    sound <- readWave(file)
-    result_list <- list()
-    
-    bbai <- quiet(do.call(bbai, c(list(sound), args_list)))
-    
-    result_list <- list(
-      tibble(file_name = filename, bbai)
-    )
-    
-    return(do.call(rbind, result_list))
-  }
+  results <- foreach(file = audio.list, 
+                     .packages = c("tuneR", "seewave", "tibble")) %dopar% {
+                       
+                       filename <- basename(file) 
+                       sound <- readWave(file)
+                       result_list <- list()
+                       
+                       results <- quiet(do.call(bbai, c(list(sound), args_list)))
+                       
+                       result_list <- list(
+                         tibble(file_name = filename, results)
+                       )
+
+                       return(do.call(rbind, result_list))
+                       
+                     }
   
   # Combine all the results into a single tibble
   combined_results <- do.call(rbind, results)

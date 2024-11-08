@@ -42,20 +42,18 @@
 #' bbai_folder(path/to/folder)
 #' }  
 
-
-
 bbai_folder <- function(folder = NULL,
-                      channel = 'each',
-                      hpf = 0,
-                      rm.offset = TRUE,
-                      freq.res = 50,
-                      cutoff = -60,
-                      click.length = 10,
-                      difference = 10,
-                      gap.allowance = 2,
-                      verbose = FALSE,
-                      output.csv = "bbai_results.csv",
-                      n.cores = -1) {
+                        channel = 'each',
+                        hpf = 0,
+                        rm.offset = TRUE,
+                        freq.res = 50,
+                        cutoff = -60,
+                        click.length = 10,
+                        difference = 10,
+                        gap.allowance = 2,
+                        verbose = FALSE,
+                        output.csv = "bbai_results.csv",
+                        n.cores = -1) {
   
   args_list <- list(channel = channel,
                     hpf = hpf,
@@ -93,8 +91,7 @@ bbai_folder <- function(folder = NULL,
   
   if (length(files) > 10) {
     cat("Evaluating the job...\n")
-    # Evaluate the duration of the analysis
-    # Measure processing time for a single file
+    
     startTime <- Sys.time()
     
     sound1 <- readWave(audio.list[1])
@@ -103,9 +100,7 @@ bbai_folder <- function(folder = NULL,
     bbai1 <- quiet(do.call(bbai, c(list(sound1), args_list)))
     tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
     
-    # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
-    # Add overhead per file
     timePerFile <- timePerFile + as.numeric(seconds(2.2))
     
     rm(sound1)
@@ -121,7 +116,7 @@ bbai_folder <- function(folder = NULL,
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-
+    
   } else {
     sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
     type <- ifelse(sound1@stereo, "stereo", "mono")

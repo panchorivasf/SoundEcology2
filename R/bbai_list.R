@@ -91,8 +91,7 @@ bbai_list <- function(audio.list,
 
   if (length(files) > 10) {
     cat("Evaluating the job...\n")
-    # Evaluate the duration of the analysis
-    # Measure processing time for a single file
+
     startTime <- Sys.time()
     
     sound1 <- readWave(audio.list[1])
@@ -101,9 +100,7 @@ bbai_list <- function(audio.list,
     bbai1 <- quiet(do.call(bbai, c(list(sound1), args_list)))
     tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
     
-    # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
-    # Add overhead per file
     timePerFile <- timePerFile + as.numeric(seconds(2.2))
     
     rm(sound1)

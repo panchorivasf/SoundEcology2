@@ -22,13 +22,13 @@
 #'
 #' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
-#' @import doParallel
+#' @import doParallel 
 #' @import foreach
 #' @import parallel
-#' @import tuneR
-#' @import tidyverse
-#' @import seewave
-#' @import lubridate
+#' @importFrom tuneR readWave
+#' @importFrom dplyr bind_cols
+#' @importFrom tibble tibble
+#' @importFrom lubridate seconds
 #' 
 #' @details
 #' Options for propden:
@@ -104,7 +104,7 @@ adi_folder <- function (folder = NULL,
     
     adi1 <- quiet(do.call(adi, c(list(sound1), args_list)))
     
-    tibble(file_name = "filename") %>% bind_cols(adi1)
+    tibble(file_name = "filename") |> bind_cols(adi1)
     
     timePerFile <-  Sys.time() - startTime
     timePerFile <- timePerFile + as.numeric(seconds(2.2))
@@ -142,7 +142,7 @@ adi_folder <- function (folder = NULL,
                        adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
                        
                        # Combine the results for each file into a single row
-                       result <- tibble(file_name = file) %>%
+                       result <- tibble(file_name = file) |>
                          bind_cols(adi_result)
                        
                      }

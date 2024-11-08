@@ -27,13 +27,13 @@
 #' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
 #'
-#' @import doParallel
+#' @import doParallel 
 #' @import foreach
 #' @import parallel
-#' @import tuneR
-#' @import tidyverse
-#' @import seewave
-#' @import lubridate
+#' @importFrom tuneR readWave
+#' @importFrom dplyr bind_cols
+#' @importFrom tibble tibble
+#' @importFrom lubridate seconds
 
 #'
 #' @details

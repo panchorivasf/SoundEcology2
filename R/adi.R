@@ -24,11 +24,11 @@
 #' @return A tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
 #'
-#' @importFrom tuneR readWave
-#' @importFrom seewave spectro
-#' @import tibble
-#' @import tidyr
-#' @import dplyr
+#' @importFrom tuneR readWave channel
+#' @importFrom seewave spectro rmoffset
+#' @importFrom tibble tibble add_column
+#' @importFrom tidyr pivot_wider pivot_longer
+#' @importFrom dplyr bind_cols
 #'
 #' @details
 #' Options for the 'prop.den' parameter: 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band. 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max_freq'). 3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
@@ -341,7 +341,7 @@ adi <- function(wave,
 
     if(prop.den == 1){
 
-      Score_right <- vegan::diversity(Score, index = "shannon")
+      Score_right <- diversity(Score, index = "shannon")
 
 
     }else{
@@ -375,7 +375,8 @@ adi <- function(wave,
                               value_r = right_adi_return)
 
     adiOutputStereo <- adiOutputStereo %>%
-      add_column(value_avg = ((adiOutputStereo$value_l+adiOutputStereo$value_r)/2), .after = "value_r")
+      add_column(value_avg = ((adiOutputStereo$value_l+adiOutputStereo$value_r)/2), 
+                 .after = "value_r")
 
 
 
@@ -526,7 +527,7 @@ adi <- function(wave,
 
     if(prop.den == 1){
 
-      Score_left <- vegan::diversity(Score, index = "shannon")
+      Score_left <- diversity(Score, index = "shannon")
 
     }else{
 

@@ -57,27 +57,26 @@ bbai_folder <- function(folder = NULL,
                       output.csv = "bbai_results.csv",
                       n.cores = -1) {
   
-  quiet <- function(..., messages=FALSE, cat=FALSE){
-    if(!cat){
-      tmpf <- tempfile()
-      sink(tmpf)
-      on.exit({sink(); file.remove(tmpf)})
-    }
-    out <- if(messages) eval(...) else suppressMessages(eval(...))
-    out
-  }
+  args_list <- list(channel = channel,
+                    hpf = hpf,
+                    rm.offset = rm.offset,
+                    freq.res = freq.res,
+                    cutoff = cutoff,
+                    click.length = click.length,
+                    difference = difference,
+                    gap.allowance = gap.allowance,
+                    spectrogram = spectrogram,
+                    dark.plot = dark.plot,
+                    plot.title = plot.title,
+                    verbose = verbose)
   
   if(is.null(folder)){
     folder <- getwd()
   }
-  
   setwd(folder)
   
   files <- list_waves()
-  
-  filename <- tibble(filename = files)
   nFiles <- length(files)
-  
   
   if(is.null(n.cores)){
     num_cores <- 1
@@ -86,28 +85,22 @@ bbai_folder <- function(folder = NULL,
   }else{
     num_cores <- n.cores
   }
-  
   if(nFiles < num_cores){
     num_cores <- nFiles
   }
-  
   cl <- parallel::makeCluster(num_cores)
   doParallel::registerDoParallel(cl)
   
-  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-  
   if (length(files) > 10) {
-    
     cat("Evaluating the job...\n")
     # Evaluate the duration of the analysis
     # Measure processing time for a single file
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    sound1 <- readWave(audio.list[1])
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
-    bbai1 <- quiet(bbai(sound1, channel = channel))
+    bbai1 <- quiet(do.call(bbai, c(list(sound1), args_list)))
     tibble::tibble(file_name = "filename") %>% bind_cols(bbai1)
     
     # Assess how long it takes to parse 1 file
@@ -128,36 +121,22 @@ bbai_folder <- function(folder = NULL,
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-    
-    
-    
+
   } else {
-    
-    cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-    
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    rm(sound1)
   }
+  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
   
   # Define parallel computation
   results <- foreach(file = files, .packages = c("tuneR", "seewave", "tibble")) %dopar% {
     
     filename <- basename(file)  
-    # Read audio file
-    audio <- readWave(file)
-    
-    # Initialize an empty tibble for the results
+    sound <- readWave(file)
     result_list <- list()
     
-    bbai <- bbai(audio,
-                 channel = channel,
-                 hpf = hpf,
-                 rm.offset = rm.offset,
-                 freq.res = freq.res,
-                 cutoff = cutoff,
-                 click.length = click.length,
-                 difference = difference,
-                 gap.allowance = gap.allowance,
-                 verbose = FALSE
-    )
+    bbai <- quiet(do.call(bbai, c(list(sound), args_list)))
     
     result_list <- list(
       tibble(file_name = filename, bbai)
@@ -180,7 +159,6 @@ bbai_folder <- function(folder = NULL,
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
   return(combined_results)
-  
   
 }
 

@@ -3,7 +3,7 @@
 #' The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains a floating noise profile
 #' before calculating the Acoustic Diversity Index and it doesn't use normalized spectrogram.
 #' Alternatively it can take a noise sample to reduce noise in the analyzed files.
-#' @param audiolist a list of audio files to import.
+#' @param audio.list a list of audio files to import.
 #' @param folder a path to the folder with audio files to import.
 #' @param save_csv logical. Whether to save a csv in the working directory.
 #' @param csv_name character vector. When 'save_csv' is TRUE, optionally provide a file name.
@@ -45,7 +45,7 @@
 #' files <- list.files(pattern=".wav|.WAV")
 #' fadi_list(files[1:5])
 
-fadi_list <- function (audiolist,
+fadi_list <- function (audio.list,
                          folder = NULL,
                          save_csv = TRUE,
                          csv_name = "fadi_results.csv",
@@ -76,8 +76,8 @@ fadi_list <- function (audiolist,
 
   setwd(folder)
   
-  fileName <- tibble(file_name = audiolist)
-  nFiles <- length(audiolist)
+  fileName <- tibble(file_name = audio.list)
+  nFiles <- length(audio.list)
 
 
   args_list <- list(noise_file=noise_file,NEM=NEM,min_freq=min_freq,
@@ -90,7 +90,7 @@ fadi_list <- function (audiolist,
   # Measure processing time for a single file
   startTime <- Sys.time()
 
-  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+  sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
   fadi1 <- quiet(fadi(sound1, args_list$noise_file, args_list$NEM,
                       args_list$min_freq, args_list$max_freq, args_list$threshold_fixed,
@@ -125,7 +125,7 @@ fadi_list <- function (audiolist,
   cat("Analyzing", nFiles, type, "files using", cores, "cores... \n")
 
   # Start loop
-  results <- foreach(file = audiolist, .combine = rbind,
+  results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
 
                        # Import the sounds

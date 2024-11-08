@@ -9,7 +9,7 @@
 #'
 #' @param wave an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram.
 #' @param max.freq maximum frequency to compute the spectrogram.
 #' @param n.bands number of bands to split the spectrogram.
@@ -24,11 +24,11 @@
 #' @return A tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
 #'
-#' @importFrom tuneR readWave
-#' @import seewave
-#' @import tibble
-#' @import tidyr
-#' @import dplyr
+#' @importFrom tuneR readWave channel
+#' @importFrom seewave spectro rmoffset
+#' @importFrom tibble tibble add_column
+#' @importFrom tidyr pivot_wider pivot_longer
+#' @importFrom dplyr bind_cols
 #'
 #' @details
 #' Options for the 'prop.den' parameter: 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band. 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max_freq'). 3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
@@ -37,10 +37,9 @@
 #' @examples
 #' data(tropicalsound)
 #' adi(tropicalsound)
-
 adi <- function(wave,
                 freq.res = 50,
-                w.fun = "hanning",
+                win.fun = "hanning",
                 min.freq = 0,
                 max.freq = 10000,
                 n.bands = 10,
@@ -52,18 +51,13 @@ adi <- function(wave,
                 prop.den = 1,
                 db.fs = TRUE){
 
-
-
   # Store the frequency step (band "height") # NEW 09/25/2023 Francisco Rivas
   freq_step <- (max.freq - min.freq)/n.bands
-
 
   # Store the decibel threshold as numeric
   cutoff <- as.numeric(cutoff)
 
   # Test arguments
-  # Check if the maximum frequency, decibel threshold,
-  # and frequency step arguments are numbers:
   if (is.numeric(as.numeric(max.freq))){
     max.freq <- as.numeric(max.freq)
   } else{
@@ -193,11 +187,11 @@ adi <- function(wave,
 
       if(noise.red == 1 || noise.red == 2) {
         specA_left <- seewave::spectro(left, wl = wlen,
-                                       wn = w.fun,
+                                       wn = win.fun,
                                        noisereduction = noise.red,
                                        plot = FALSE)$amp
         specA_right <- seewave::spectro(right, wl = wlen,
-                                        wn = w.fun,
+                                        wn = win.fun,
                                         noisereduction = noise.red,
                                         plot = FALSE)$amp
       }else if (noise.red == 0) {
@@ -205,11 +199,11 @@ adi <- function(wave,
         # Use the original parameters for window length and function
         specA_left <- seewave::spectro(left,
                                        wl = wlen,
-                                       wn = w.fun,
+                                       wn = win.fun,
                                        plot = FALSE)$amp
         specA_right <- seewave::spectro(right,
                                         wl = wlen,
-                                        wn = w.fun,
+                                        wn = win.fun,
                                         plot = FALSE)$amp
       }
 
@@ -347,7 +341,7 @@ adi <- function(wave,
 
     if(prop.den == 1){
 
-      Score_right <- vegan::diversity(Score, index = "shannon")
+      Score_right <- diversity(Score, index = "shannon")
 
 
     }else{
@@ -381,14 +375,15 @@ adi <- function(wave,
                               value_r = right_adi_return)
 
     adiOutputStereo <- adiOutputStereo %>%
-      add_column(value_avg = ((adiOutputStereo$value_l+adiOutputStereo$value_r)/2), .after = "value_r")
+      add_column(value_avg = ((adiOutputStereo$value_l+adiOutputStereo$value_r)/2), 
+                 .after = "value_r")
 
 
 
     # Add metadata columns
     adiOutputStereo <- adiOutputStereo %>%
       add_column(w_len = wlen,
-                 w_fun = w.fun,
+                 w_fun = win.fun,
                  cutoff = cutoff,
                  min_f = min.freq,
                  max_f = max.freq,
@@ -532,7 +527,7 @@ adi <- function(wave,
 
     if(prop.den == 1){
 
-      Score_left <- vegan::diversity(Score, index = "shannon")
+      Score_left <- diversity(Score, index = "shannon")
 
     }else{
 
@@ -559,7 +554,7 @@ adi <- function(wave,
     # Add metadata columns
     adiOutputMono <- adiOutputMono %>%
       add_column(w_len = wlen,
-                 w_fun = w.fun,
+                 w_fun = win.fun,
                  cutoff = cutoff,
                  min_f = min.freq,
                  max_f = max.freq,

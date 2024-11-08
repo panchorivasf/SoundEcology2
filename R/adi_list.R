@@ -67,16 +67,7 @@ adi_list <- function (audio.list,
                       prop.den = 1,
                       db.fs = TRUE,
                       n.cores = -1){
-  quiet <- function(..., messages=FALSE, cat=FALSE){
-    if(!cat){
-      tmpf <- tempfile()
-      sink(tmpf)
-      on.exit({sink(); file.remove(tmpf)})
-    }
-    out <- if(messages) eval(...) else suppressMessages(eval(...))
-    out
-  }
-  
+
   # Store the arguments
   args_list <- list(freq.res = freq.res,
                     win.fun = win.fun,
@@ -144,7 +135,7 @@ adi_list <- function (audio.list,
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     
   } else {
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    sound1 <- readWave(audio.list[1])
     type <- ifelse(sound1@stereo, "stereo", "mono")
     rm(sound1)
   }
@@ -160,11 +151,6 @@ adi_list <- function (audio.list,
                        sound <- readWave(file)
 
                        adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
-
-                       # Log for debugging
-                       print(paste("Processing:", file))
-                       print(paste("Left channel value:", adi_result$value_l))
-                       print(paste("Right channel value:", adi_result$value_r))
 
                        # Combine the results for each file into a single row
                        result <- tibble(file_name = file) %>%

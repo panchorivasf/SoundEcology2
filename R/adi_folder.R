@@ -58,16 +58,6 @@ adi_folder <- function (folder = NULL,
                       db.fs = TRUE,
                       n.cores = -1){
   
-  quiet <- function(..., messages=FALSE, cat=FALSE){
-    if(!cat){
-      tmpf <- tempfile()
-      sink(tmpf)
-      on.exit({sink(); file.remove(tmpf)})
-    }
-    out <- if(messages) eval(...) else suppressMessages(eval(...))
-    out
-  }
-  
   # Store the arguments
   args_list <- list(freq.res = freq.res,
                     win.fun = win.fun,
@@ -116,9 +106,7 @@ adi_folder <- function (folder = NULL,
     
     tibble(file_name = "filename") %>% bind_cols(adi1)
     
-    # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
-    # Add overhead per file
     timePerFile <- timePerFile + as.numeric(seconds(2.2))
     
     rm(adi1)
@@ -152,11 +140,6 @@ adi_folder <- function (folder = NULL,
                        
                        # Calculate ADI and keep its default output columns
                        adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
-                       
-                       # Log for debugging
-                       print(paste("Processing:", file))
-                       print(paste("Left channel value:", adi_result$value_l))
-                       print(paste("Right channel value:", adi_result$value_r))
                        
                        # Combine the results for each file into a single row
                        result <- tibble(file_name = file) %>%

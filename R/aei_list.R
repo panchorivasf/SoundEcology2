@@ -139,7 +139,6 @@ aei_list <- function (audio.list,
                          return(NULL)
                        }
                        
-
                        # Calculate AEI and keep its default output columns
                        aei <- quiet(do.call(aei, c(list(sound), args_list)))
                        

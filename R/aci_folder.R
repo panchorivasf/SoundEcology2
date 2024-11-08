@@ -43,15 +43,6 @@ aci_folder <- function (folder = NULL,
                        rm.offset = TRUE,
                        n.cores = -1){
   
-  if(is.null(folder)){
-    folder <- getwd()
-  }
-  setwd(folder)
-  
-  audio.list <- list_waves()
-  fileName <- tibble(file_name = audio.list)
-  nFiles <- length(audio.list)
-  
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -61,16 +52,23 @@ aci_folder <- function (folder = NULL,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-
+  
   args_list <- list(freq.res = freq.res,
                     win.fun = win.fun,
                     min.freq = min.freq,
                     max.freq = max.freq,
                     j = j,
                     noise.red = noise.red,
-                    rm.offset = rm.offset
-  )
+                    rm.offset = rm.offset)
   
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  setwd(folder)
+  
+  audio.list <- list_waves()
+  nFiles <- length(audio.list)
+
   # Declare the number of cores to be used 
   if(is.null(n.cores)){
     num_cores <- 1
@@ -96,14 +94,7 @@ aci_folder <- function (folder = NULL,
   sound1 <- readWave(audio.list[1])
   type <- ifelse(sound1@stereo, "stereo", "mono")
 
-  aci1 <- quiet(aci(sound1,
-                  args_list$freq.res,
-                  args_list$win.fun,
-                  args_list$min.freq,
-                  args_list$max.freq,
-                  args_list$j,
-                  args_list$noise.red,
-                  args_list$rm.offset))
+  aci1 <- quiet(do.call(aci, c(list(sound1), args_list)))
 
   tibble(file_name = "filename")  |>  bind_cols(aci1)
 
@@ -150,28 +141,17 @@ aci_folder <- function (folder = NULL,
                          return(NULL)
                        }
 
-
                        # Calculate ACI and keep its default output columns
-                       aci <- aci(sound,
-                                args_list$freq.res,
-                                args_list$win.fun,
-                                args_list$min.freq,
-                                args_list$max.freq,
-                                args_list$j,
-                                args_list$noise.red,
-                                args_list$rm.offset)
+                       aci1 <- quiet(do.call(aci, c(list(sound), args_list)))
 
                        # Combine the results for each file into a single row
                        tibble(file_name = file)  |> 
                          bind_cols(aci)
 
-
                      }
-
 
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
-
 
   stopCluster(cl)
 

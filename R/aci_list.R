@@ -46,16 +46,6 @@ aci_list <- function (audio.list,
                       rm.offset = TRUE,
                       n.cores = -1){
   
-  quiet <- function(..., messages=FALSE, cat=FALSE){
-    if(!cat){
-      tmpf <- tempfile()
-      sink(tmpf)
-      on.exit({sink(); file.remove(tmpf)})
-    }
-    out <- if(messages) eval(...) else suppressMessages(eval(...))
-    out
-  }
-  
   args_list <- list(freq.res = freq.res,
                     win.fun = win.fun,
                     min.freq = min.freq,

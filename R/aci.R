@@ -27,9 +27,9 @@
 #'
 #' @return A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
-#' @importFrom tuneR readWave
-#' @import seewave
-#' @import tibble
+#' @importFrom tuneR readWave channel
+#' @importFrom seewave rmoffset spectro
+#' @importFrom tibble tibble add_column
 #'
 #' @examples 
 #' \dontrun{
@@ -268,12 +268,12 @@ aci <- function(wave,
     aciOutputStereo <- tibble(value_l = ACI_tot_left,
                               value_r = ACI_tot_right)
 
-    aciOutputStereo <- aciOutputStereo %>%
+    aciOutputStereo <- aciOutputStereo |>
       add_column(value_avg = ((aciOutputStereo$value_l+aciOutputStereo$value_r)/2), .after = "value_r")
 
 
     # Add metadata columns
-    aciOutputStereo <- aciOutputStereo %>%
+    aciOutputStereo <- aciOutputStereo |>
       add_column(w.len = w.len,
                  win.fun = win.fun,
                  j = j,
@@ -287,7 +287,7 @@ aci <- function(wave,
                  duration = duration,
                  channels = "stereo")
 
-    aciOutputStereo <- aciOutputStereo %>%
+    aciOutputStereo <- aciOutputStereo |>
       add_column(index = "aci", .before = "value_l")
 
     return(aciOutputStereo)
@@ -388,7 +388,7 @@ aci <- function(wave,
     aciOutputMono <- tibble(value = ACI_tot_left)
 
      # Add metadata columns
-    aciOutputMono <- aciOutputMono %>%
+    aciOutputMono <- aciOutputMono |>
       add_column(freq.res = freq.res,
                  w.len = w.len,
                  win.fun = win.fun,
@@ -403,7 +403,7 @@ aci <- function(wave,
                  duration = duration,
                  channels = "mono")
 
-    aciOutputMono <- aciOutputMono %>%
+    aciOutputMono <- aciOutputMono |>
       add_column(index = "aci", .before = "value")
 
     return(aciOutputMono)

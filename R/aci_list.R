@@ -16,13 +16,13 @@
 #' @return A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
 #'
-#' @import doParallel
+#' @import doParallel 
 #' @import foreach
 #' @import parallel
-#' @import tuneR
-#' @import tidyverse
-#' @import seewave
-#' @import lubridate
+#' @importFrom tuneR readWave
+#' @importFrom dplyr bind_cols
+#' @importFrom tibble tibble
+#' @import lubridate seconds
 #'
 #' @details
 #' It uses parallel processing with all but one of the available cores.
@@ -125,7 +125,7 @@ aci_list <- function (audio.list,
                        aci1 <- quiet(do.call(aci, c(list(sound), args_list)))
                        
                        # Combine the results for each file into a single row
-                       tibble(file_name = file) %>%
+                       tibble(file_name = file) |>
                          bind_cols(aci)
                      }
   

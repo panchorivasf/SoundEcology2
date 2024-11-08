@@ -11,7 +11,7 @@
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram
 #' @param max.freq maximum frequency to compute the spectrogram
 #' @param n.bands number of bands to split the spectrogram
@@ -55,7 +55,7 @@ adi_list <- function (audio.list,
                       save.csv = TRUE,
                       csv.name = "adi_results.csv",
                       freq.res = 50,
-                      w.fun = "hanning",
+                      win.fun = "hanning",
                       min.freq = 0,
                       max.freq = 10000,
                       n.bands = 10,
@@ -67,12 +67,6 @@ adi_list <- function (audio.list,
                       prop.den = 1,
                       db.fs = TRUE,
                       n.cores = -1){
-
-  
-  if(is.null(folder)){
-    folder <- getwd()
-  }
-
   quiet <- function(..., messages=FALSE, cat=FALSE){
     if(!cat){
       tmpf <- tempfile()
@@ -82,33 +76,10 @@ adi_list <- function (audio.list,
     out <- if(messages) eval(...) else suppressMessages(eval(...))
     out
   }
-
-
   
-  setwd(folder)
-
-  fileName <- tibble(file_name = audio.list)
-  nFiles <- length(audio.list)
-
-  
-  if(is.null(n.cores)){
-    num_cores <- 1
-  }else if(n.cores == -1){
-    num_cores <- parallel::detectCores() - 1  # Detect available cores
-  }else{
-    num_cores <- n.cores
-  }
-  
-  if(nFiles < num_cores){
-    num_cores <- nFiles
-  }
-  
-  # Setup parallel back-end
-  cl <- makeCluster(num_cores[1])
-  registerDoParallel(cl)
-  
+  # Store the arguments
   args_list <- list(freq.res = freq.res,
-                    w.fun = w.fun,
+                    win.fun = win.fun,
                     min.freq = min.freq,
                     max.freq = max.freq,
                     n.bands = n.bands,
@@ -120,26 +91,37 @@ adi_list <- function (audio.list,
                     prop.den = prop.den,
                     db.fs = db.fs)
   
-  # Evaluate the duration of the analysis
-  # Measure processing time for a single file
-  startTime <- Sys.time()
+  if(is.null(folder)){
+    folder <- getwd()
+  }
+  setwd(folder)
   
-  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
-  type <- ifelse(sound1@stereo, "stereo", "mono")
+  nFiles <- length(audio.list)
   
- 
-
+  # Set up parallel workers
+  if(is.null(n.cores)){
+    num_cores <- 1
+  }else if(n.cores == -1){
+    num_cores <- parallel::detectCores() - 1  # Detect available cores
+  }else{
+    num_cores <- n.cores
+  }
+  if(nFiles < num_cores){
+    num_cores <- nFiles
+  }
+  cl <- makeCluster(num_cores[1])
+  registerDoParallel(cl)
+  
+  # Evaluate the duration of the analysis if nFiles > 10
   if(nFiles>10){
     cat("Evaluating the job...\n\n")
     
+    startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    sound1 <- readWave(audio.list[1])
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
-    adi1 <- quiet(adi(sound1, args_list$freq.res, args_list$w.fun, args_list$min.freq,
-                      args_list$max.freq, args_list$n.bands, args_list$cutoff,
-                      args_list$norm.spec, args_list$noise.red, args_list$rm.offset,
-                      args_list$props, args_list$prop.den, args_list$db.fs))
+    adi1 <- quiet(do.call(adi, c(list(sound1), args_list)))
     
     tibble(file_name = "filename") %>% bind_cols(adi1)
     
@@ -148,10 +130,8 @@ adi_list <- function (audio.list,
     # Add overhead per file
     timePerFile <- timePerFile + as.numeric(seconds(2.2))
     
-    rm(sound1)
     rm(adi1)
-    
-    
+    rm(sound1)
     
     # Estimate total time accounting for parallel processing
     estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
@@ -160,10 +140,13 @@ adi_list <- function (audio.list,
     # Calculate the end time
     expectedCompletionTime <- Sys.time() + adjustedTotalTime
     
-    
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     
+  } else {
+    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    rm(sound1)
   }
   
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
@@ -176,13 +159,7 @@ adi_list <- function (audio.list,
                        # Import the sounds
                        sound <- readWave(file)
 
-                       # Calculate ADI and keep its default output columns
-                       adi_result <- adi(sound, freq.res = args_list$freq.res, w.fun = args_list$w.fun,
-                                         min.freq = args_list$min.freq, max.freq = args_list$max.freq,
-                                         n.bands = args_list$n.bands, cutoff = args_list$cutoff,
-                                         norm.spec = args_list$norm.spec, noise.red = args_list$noise.red,
-                                         rm.offset = args_list$rm.offset, props = args_list$props,
-                                         prop.den = args_list$prop.den, db.fs = args_list$db.fs)
+                       adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
 
                        # Log for debugging
                        print(paste("Processing:", file))

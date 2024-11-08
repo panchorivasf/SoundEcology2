@@ -25,7 +25,7 @@
 #' @export
 #'
 #' @importFrom tuneR readWave
-#' @import seewave
+#' @importFrom seewave spectro
 #' @import tibble
 #' @import tidyr
 #' @import dplyr
@@ -37,7 +37,6 @@
 #' @examples
 #' data(tropicalsound)
 #' adi(tropicalsound)
-
 adi <- function(wave,
                 freq.res = 50,
                 win.fun = "hanning",
@@ -52,18 +51,13 @@ adi <- function(wave,
                 prop.den = 1,
                 db.fs = TRUE){
 
-
-
   # Store the frequency step (band "height") # NEW 09/25/2023 Francisco Rivas
   freq_step <- (max.freq - min.freq)/n.bands
-
 
   # Store the decibel threshold as numeric
   cutoff <- as.numeric(cutoff)
 
   # Test arguments
-  # Check if the maximum frequency, decibel threshold,
-  # and frequency step arguments are numbers:
   if (is.numeric(as.numeric(max.freq))){
     max.freq <- as.numeric(max.freq)
   } else{

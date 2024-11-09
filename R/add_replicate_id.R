@@ -5,11 +5,13 @@
 #'
 #' @return a data frame with treatment_id column
 #' @export
+#' 
+#' @importFrom dplyr mutate mutate
 #'
 #' @examples add_replicate_id(my_dataset, treatment = 'zone')
 add_replicate_id <- function(data, treatment = "treatment") {
-  data %>%
-    group_by(treatment) %>%
-    mutate(replicate = dense_rank(sensor_id)) %>%
+  data |>
+    group_by(treatment) |> 
+    mutate(replicate = dense_rank(sensor_id)) |> 
     ungroup()
 }

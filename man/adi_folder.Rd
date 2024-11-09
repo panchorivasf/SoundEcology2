@@ -9,7 +9,7 @@ adi_folder(
   save.csv = TRUE,
   csv.name = "adi_results.csv",
   freq.res = 50,
-  w.fun = "hanning",
+  win.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
   n.bands = 10,
@@ -32,7 +32,7 @@ adi_folder(
 
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 
-\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to compute the spectrogram}
 

@@ -8,12 +8,14 @@ bbai_folder(
   folder = NULL,
   channel = "each",
   hpf = 0,
-  rm.offset = TRUE,
   freq.res = 50,
   cutoff = -60,
   click.length = 10,
   difference = 10,
   gap.allowance = 2,
+  spectrogram = FALSE,
+  dark.plot = FALSE,
+  plot.title = "",
   verbose = FALSE,
   output.csv = "bbai_results.csv",
   n.cores = -1
@@ -26,8 +28,6 @@ bbai_folder(
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
 
-\item{rm.offset}{Logical. Should the DC offset be removed from the sound signal? Defaults to \code{TRUE}.}
-
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 
 \item{cutoff}{Numeric. The amplitude threshold (in dBFS) for removing low-amplitude values in the spectrogram. Default is \code{-50}.}
@@ -36,17 +36,19 @@ bbai_folder(
 
 \item{gap.allowance}{Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click. Default is \code{2}. Gaps larger than this value will split clicks.}
 
-\item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
-
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
-
-\item{click.height}{Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is \code{10}.}
-
-\item{plot}{Logical. Should a spectrogram with highlighted clicks be plotted? Default is \code{TRUE}.}
+\item{spectrogram}{Logical. Should a spectrogram with highlighted clicks be plotted? Default is \code{TRUE}.}
 
 \item{dark.plot}{Logical. Should the plot use a dark theme (black background)? Default is \code{FALSE}.}
 
 \item{plot.title}{Character. The title for the plot, if \code{plot} is \code{TRUE}. Default is \code{NULL}.}
+
+\item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
+
+\item{output.csv}{Character. Name for the csv file. Default is "bbai_results.csv".}
+
+\item{n.cores}{Numeric. Number of cores to be used in parallel. Use -1 (Default) to use all but one.}
+
+\item{click.height}{Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is \code{10}.}
 }
 \value{
 A tibble containing the following columns:

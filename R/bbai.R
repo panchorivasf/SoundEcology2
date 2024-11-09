@@ -14,12 +14,7 @@
 #' @param dark.plot Logical. Should the plot use a dark theme (black background)? Default is `FALSE`.
 #' @param plot.title Character. The title for the plot, if `plot` is `TRUE`. Default is `NULL`.
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
-#' @return A tibble containing the following columns:
-#'   - `index`: The name of the index. Useful later when merging data with other indices.
-#'   - `value`: The number of clicks detected in the recording.
-#'   - `mean`: The mean click height (in frequency bins).
-#'   - `variance`: The variance of the click height.
-#'   - `sd`: The standard deviation of the click height.
+#' @return A tibble and optional spectrogram. 
 #' @export
 #' @import ggplot2
 #' @importFrom tuneR channel mono
@@ -208,7 +203,6 @@ bbai <- function(wave,
       mean.click.dist = mean_all_click_dist
     )
     
-    
     if(spectrogram){
       
       time_values <- seq(0, total_duration, length.out = n_time_frames)
@@ -301,7 +295,7 @@ bbai <- function(wave,
                               dark.plot = dark.plot,
                               plot.title = plot.title)
       
-      bbai_global <- tibble::tibble(
+      summary <- tibble::tibble(
         index = "bbai",
         channel = "each",
         value_l = bbai_left$summary$value,
@@ -333,19 +327,17 @@ bbai <- function(wave,
         mean_click_dist_avg = round((bbai_left$summary$mean.click.dist + bbai_right$summary$mean.click.dist) / 2, 1)
       )
       
-      if(verbose){
-        print(bbai_global)
-      }
+      print(summary)
       
       if(spectrogram){
         
-        invisible(list(summary = bbai_global,
+        invisible(list(summary = summary,
                        spectrogram_l = bbai_left$spectrogram,
                        spectrogram_r = bbai_right$spectrogram))
         
       } else {
         
-        invisible(bbai_global)
+        invisible(summary)
         
       }
       
@@ -367,12 +359,11 @@ bbai <- function(wave,
         mutate(channel = channel) |>
         relocate(channel, .after = index)
       
-      if(verbose){
-        print(bbai_global$summary)
-      }
-      
+      print(bbai_global$summary)
+     
       if(spectrogram){
-        invisible(list(summary = bbai_global$summary, spectrogram = bbai_global$spectrogram))
+        invisible(list(summary = bbai_global$summary, 
+                       spectrogram = bbai_global$spectrogram))
         
       } else {
         invisible(bbai_global$summary)
@@ -403,7 +394,8 @@ bbai <- function(wave,
     }
     
     if(spectrogram){
-      invisible(list(summary = bbai_global$summary, spectrogram = bbai_global$spectrogram))
+      invisible(list(summary = bbai_global$summary, 
+                     spectrogram = bbai_global$spectrogram))
       
     } else {
       invisible(bbai_global$summary)

@@ -8,7 +8,6 @@ bbai(
   wave,
   channel = "left",
   hpf = 0,
-  rm.offset = TRUE,
   freq.res = 50,
   cutoff = -60,
   click.length = 10,
@@ -26,8 +25,6 @@ bbai(
 \item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.}
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.}
-
-\item{rm.offset}{Logical. Should the DC offset be removed from the audio signal? Defaults to \code{TRUE}.}
 
 \item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
 
@@ -48,14 +45,7 @@ bbai(
 \item{click.height}{Numeric. The minimum height (in frequency bins) for a detected click to be kept. Default is \code{10}.}
 }
 \value{
-A tibble containing the following columns:
-\itemize{
-\item \code{index}: The name of the index. Useful later when merging data with other indices.
-\item \code{value}: The number of clicks detected in the recording.
-\item \code{mean}: The mean click height (in frequency bins).
-\item \code{variance}: The variance of the click height.
-\item \code{sd}: The standard deviation of the click height.
-}
+A tibble and optional spectrogram.
 }
 \description{
 This function processes an audio signal to detect broadband activity by identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. The function also classifies whether the signal contains noise or insect based on the variance and centroid frequencies of the clicks.

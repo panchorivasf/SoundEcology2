@@ -30,13 +30,13 @@ spectrogram_cutoff <- function(wave,
                                plot.title = NULL,
                                ggplot = TRUE,
                                noise.red = NULL){
-
+  
   total_duration <- seewave::duration(wave)
   samp_rate <- wave@samp.rate
   wl <- samp_rate / freq.res
   if (wl %% 2 == 1) { wl <- wl + 1 }
   cat("Automatic window length:", wl, "\n")
-
+  
   # Remove DC offset
   wave <- rmoffset(wave, output = "Wave")
   
@@ -72,12 +72,12 @@ spectrogram_cutoff <- function(wave,
   } else {
     stop("noise.red should be 'rows', 'columns', or 'NULL'. \n")
   }
-
-
-
-
+  
+  
+  
+  
   matrix <- spectro_res$amp
-
+  
   # Calculate amp_max based on bit depth
   amp_max <- if (wave@bit == 16) {
     32768
@@ -88,27 +88,27 @@ spectrogram_cutoff <- function(wave,
   } else {
     stop("Unsupported bit depth")
   }
-
+  
   # Convert amplitude to dBFS
   spectrogram <- 20 * log10(abs(matrix) / amp_max)
   rm(matrix)
-
+  
   # Apply the cutoff to filter out values below the threshold
   spectrogram[spectrogram < cutoff] <- NA
-
+  
   if (plot) {
     # Define frequency ranges
     samp_rate <- wave@samp.rate
     freq_bins <- seq(0, samp_rate / 2, length.out = nrow(spectrogram))
     time <- seq(0, seewave::duration(wave), length.out = ncol(spectrogram))
     freq <- freq_bins / 1000
-
+    
     if (ggplot) {
       # Convert the spectrogram matrix into a data frame for ggplot
-      spectro_df <- melt(spectrogram)
+      spectro_df <- reshape2::melt(spectrogram)
       spectro_df$Frequency <- freq[spectro_df$Var1]
       spectro_df$Time <- time[spectro_df$Var2]
-
+      
       # Use ggplot for plotting
       p <- ggplot(spectro_df, aes(x = Time, y = Frequency, fill = value)) +
         geom_tile(na.rm = TRUE) +
@@ -120,19 +120,19 @@ spectrogram_cutoff <- function(wave,
         theme(legend.position = "none",
               panel.grid.major = element_line(color = scales::alpha("black", 0.2), linetype = "solid", linewidth = 0.3),
               panel.grid.minor = element_line(color = scales::alpha("black", 0.2), linetype = "solid", linewidth = 0.05))
-
+      
       print(p)
-
+      
     } else {
       # Use base R for plotting
       # Use viridis colors and handle NA as transparent
       viridis_colors <- viridis(100, option = "D")
-
+      
       # Plot the spectrogram using base R
       image(time, freq, t(spectrogram),
             col = viridis_colors, xlab = "Time (s)", ylab = "Frequency (kHz)",
             main = plot.title, useRaster = TRUE, axes = FALSE)
-
+      
       # Add NA transparency by overwriting the plot with white rectangles for NA values
       na_matrix <- is.na(spectrogram)
       if (any(na_matrix)) {
@@ -140,20 +140,22 @@ spectrogram_cutoff <- function(wave,
              time[col(na_matrix) + 1][na_matrix], freq[row(na_matrix) + 1][na_matrix],
              col = "white", border = NA)
       }
-
+      
       # Add axes and grid lines
       axis(1, at = pretty(time), labels = pretty(time))
       axis(2, at = pretty(freq), labels = pretty(freq))
       abline(h = pretty(freq), col = "lightgray", lty = "dashed")
       abline(v = pretty(time), col = "lightgray", lty = "dashed")
       box()
+      
+      
     }
   }
   
-  if (plot) {
+  if (plot && ggplot) {
     invisible(list(matrix = spectrogram, plot = p))
   } else {
-    invisible(matrix)
+    invisible(spectrogram)
   }
-
+  
 }

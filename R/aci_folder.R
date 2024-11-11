@@ -18,11 +18,10 @@
 #'
 #' @import doParallel 
 #' @import foreach
-#' @import parallel
+#' @import seewave
+#' @importFrom parallel detectCores makeCluster
 #' @importFrom tuneR readWave
-#' @importFrom dplyr bind_cols
-#' @importFrom tibble tibble
-#' @importFrom lubridate seconds
+#' @importFrom dplyr bind_cols tibble
 #'
 #' @details
 #' Optimized to facilitate working with a folder of audio files before importing them into R.
@@ -89,7 +88,7 @@ aci_folder <- function (folder = NULL,
     # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
     # Add overhead per file
-    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    timePerFile <- timePerFile + 2.2
     
     rm(sound1)
     rm(aci1)
@@ -114,27 +113,24 @@ aci_folder <- function (folder = NULL,
   
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
-                       # Try to read the sound file, handle errors gracefully
                        sound <- tryCatch({
                          readWave(file)
                        }, error = function(e) {
                          message(paste("Error reading file:", file, "Skipping to the next file."))
-                         return(NULL) # Skip this iteration and continue with the next file
+                         return(NULL) 
                        })
-                       
-                       # Skip processing if the sound is NULL (i.e., readWave failed)
                        if (is.null(sound)) {
                          return(NULL)
                        }
                        
                        # Calculate ACI and keep its default output columns
-                       aci <- quiet(do.call(aci, c(list(sound), args_list)))
+                       aci_result <- quiet(do.call(aci, c(list(sound), args_list)))
                        
                        # Combine the results for each file into a single row
                        tibble(file_name = file)  |> 
-                         bind_cols(aci)
+                         bind_cols(aci_result)
                        
                      }
   

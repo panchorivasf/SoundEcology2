@@ -18,11 +18,10 @@
 #'
 #' @import doParallel 
 #' @import foreach
-#' @import parallel
+#' @import seewave
+#' @importFrom parallel detectCores makeCluster
 #' @importFrom tuneR readWave
-#' @importFrom dplyr bind_cols
-#' @importFrom tibble tibble
-#' @importFrom lubridate seconds
+#' @importFrom dplyr bind_cols tibble
 #'
 #' @details
 #' It uses parallel processing with all but one of the available cores.
@@ -91,7 +90,7 @@ aci_list <- function (audio.list,
     # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
     # Add overhead per file
-    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    timePerFile <- timePerFile + 2.2
     
     rm(sound1)
     rm(aci1)
@@ -116,7 +115,7 @@ aci_list <- function (audio.list,
   
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
                        # Import the sounds
                        sound <- readWave(file)

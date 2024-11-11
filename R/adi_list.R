@@ -30,11 +30,9 @@
 #' @import doParallel 
 #' @import foreach
 #' @import parallel
+#' @import seewave
 #' @importFrom tuneR readWave
-#' @importFrom dplyr bind_cols
-#' @importFrom tibble tibble
-#' @importFrom lubridate seconds
-
+#' @importFrom dplyr bind_cols tibble
 #'
 #' @details
 #' Options for prop.den:
@@ -114,12 +112,12 @@ adi_list <- function (audio.list,
     
     adi1 <- quiet(do.call(adi, c(list(sound1), args_list)))
     
-    tibble(file_name = "filename") %>% bind_cols(adi1)
+    tibble(file_name = "filename") |> bind_cols(adi1)
     
     # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
     # Add overhead per file
-    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    timePerFile <- timePerFile + 2.2
     
     rm(adi1)
     rm(sound1)
@@ -145,7 +143,7 @@ adi_list <- function (audio.list,
 
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                   
                        # Import the sounds
                        sound <- readWave(file)
@@ -153,7 +151,7 @@ adi_list <- function (audio.list,
                        adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
 
                        # Combine the results for each file into a single row
-                       result <- tibble(file_name = file) %>%
+                       result <- tibble(file_name = file) |>
                          bind_cols(adi_result)
 
                      }

@@ -25,10 +25,9 @@
 #' @import doParallel 
 #' @import foreach
 #' @import parallel
+#' @import seewave
 #' @importFrom tuneR readWave
-#' @importFrom dplyr bind_cols
-#' @importFrom tibble tibble
-#' @importFrom lubridate seconds
+#' @importFrom dplyr bind_cols tibble
 #' 
 #' @details
 #' Options for propden:
@@ -107,7 +106,7 @@ adi_folder <- function (folder = NULL,
     tibble(file_name = "filename") |> bind_cols(adi1)
     
     timePerFile <-  Sys.time() - startTime
-    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    timePerFile <- timePerFile + 2.2
     
     rm(adi1)
     rm(sound1)
@@ -133,11 +132,19 @@ adi_folder <- function (folder = NULL,
   
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
-                       # Import the sounds
-                       sound <- readWave(file)
-                       
+                       sound <- tryCatch({
+                         readWave(file)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", 
+                                       file, "Skipping to the next file."))
+                         return(NULL)
+                       })
+                       if (is.null(sound)) {
+                         return(NULL)
+                       }
+                    
                        # Calculate ADI and keep its default output columns
                        adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
                        

@@ -11,7 +11,7 @@
 #'
 #' @return A tibble with summary data on file size, including the last day with complete recordings and days with corrupted files (i.e., smaller than most).
 #' @description This function parses all the WAVE files in a folder and checks their size, reporting corrupted files.
-#' @export
+#' @noRd
 #'
 #' @importFrom dplyr mutate group_by summarize filter pull
 #' @importFrom ggplot2 ggplot aes geom_line geom_bar geom_point scale_x_date labs theme element_text ggsave

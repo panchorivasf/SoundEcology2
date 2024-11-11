@@ -1,6 +1,6 @@
 #' List the CSV files in a directory
 #'
-#' @param path Directory to search. If NULL (default), the current working directory will be used.
+#' @param folder Directory to search. If NULL (default), the current working directory will be used.
 #'
 #' @return A list with the csv files in the chosen directory. 
 #' @export
@@ -9,16 +9,22 @@
 #' \dontrun{
 #' list_csvs()
 #' }
-list_csvs <- function(path = NULL){
+list_csvs <- function(folder = NULL){
   
-  if (is.null(path)) {
-    setwd(getwd())
-  } else {
-    setwd(path)
+  print_list <- function(list){
+    for (i in seq_along(list)) {
+      cat(i, list[[i]], "\n")
+    }
   }
   
-  list <- list.files(pattern = "*.csv$")
+  if (is.null(folder)) {
+    setwd(getwd())
+  } else {
+    setwd(folder)
+  }
   
-  return(list)
+  print_list(list)
+  
+  invisible(list)
   
 }

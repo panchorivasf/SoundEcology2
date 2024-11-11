@@ -11,14 +11,23 @@
 #' }
 list_waves <- function(folder = NULL){
   
-  if(is.null(folder)){
-    folder <- getwd()
+  print_list <- function(list){
+    for (i in seq_along(list)) {
+      cat(i, list[[i]], "\n")
+    }
   }
-
-  setwd(folder)
+  
+  if (is.null(folder)) {
+    setwd(getwd())
+  } else {
+    setwd(folder)
+  }
+  
 
   list <- list.files(pattern = "*.wav$")
+  
+  print_list(list)
 
-  return(list)
+  invisible(list)
 
 }

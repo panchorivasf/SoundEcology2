@@ -1,11 +1,18 @@
 #' Generate and Save Summary Spectrograms
 #'
-#' This function generates and saves spectrogram images for various summary categories (mean, max, min, median, mode) for each recording in the input data frame. Spectrograms are created for specific wave files as indicated in the data, with options to normalize and remove DC offset.
+#' This function generates and saves spectrogram images for various summary categories (mean, max, min, 
+#' median, mode) for each recording in the input data frame. Spectrograms are created for specific wave 
+#' files as indicated in the data, with options to normalize and remove DC offset.
 #'
-#' @param summary_df A data frame containing summary statistics of recordings. It should include columns `sensor_id`, `channel`, `index`, and columns named `closest_to_<stat>` for categories `mean`, `max`, `min`, `median`, and `mode`, each referring to the closest wave file for each statistic.
-#' @param parent_dir A character string specifying the parent directory containing the `.wav` files. Defaults to `NULL`, which sets `parent_dir` to the current working directory.
-#' @param output_dir A character string specifying the directory to save generated spectrogram images. Defaults to `"summary_spectrograms_se2"`.
-#' @param rmdcoff A logical value indicating whether to remove the DC offset from wave files before generating spectrograms. Defaults to `TRUE`.
+#' @param summary_df A data frame containing summary statistics of recordings. It should include 
+#' columns `sensor_id`, `channel`, `index`, and columns named `closest_to_<stat>` for categories `mean`,
+#'  `max`, `min`, `median`, and `mode`, each referring to the closest wave file for each statistic.
+#' @param parent_dir A character string specifying the parent directory containing the `.wav` files. 
+#' Defaults to `NULL`, which sets `parent_dir` to the current working directory.
+#' @param output_dir A character string specifying the directory to save generated spectrogram images.
+#' aults to `"summary_spectrograms_se2"`.
+#' @param rmdcoff A logical value indicating whether to remove the DC offset from wave files before 
+#' generating spectrograms. Defaults to `TRUE`.
 #' @param norm A logical value indicating whether to normalize the spectrogram. Defaults to `FALSE`.
 #'
 #' @return None. Spectrogram images are saved in the specified output directory.
@@ -16,8 +23,12 @@
 #' @importFrom future.apply future_lapply 
 #'
 #' @examples
-#' # Example usage with a data frame `summary_df` that includes necessary summary columns
-#' summary_spectrograms(summary_df, parent_dir = "path/to/wav/files", output_dir = "spectrograms", rmdcoff = TRUE, norm = FALSE)
+#' \dontrun{
+#' Example usage with a data frame `summary_df` that includes necessary summary columns 
+#' summary_spectrograms(summary_df, parent_dir = "path/to/wav/files", output_dir = "spectrograms", 
+#' rmdcoff = TRUE, norm = FALSE)
+#' }
+
 summary_spectrograms <- function(summary_df,
                                  parent_dir = NULL,
                                  output_dir = "summary_spectros_se2",
@@ -64,8 +75,8 @@ summary_spectrograms <- function(summary_df,
         if (length(file_path) == 1 && file.exists(file_path)) {
           # Extract datetime from file name
           datetime <- sub(".*_(\\d{8}_\\d{6})\\.wav$", "\\1", file_name)
-          date <- paste0(substr(datetime, 1, 4), "/", substr(datetime, 5, 6), "/", substr(datetime, 7, 8))  # YYYY/MM/DD
-          time <- paste0(substr(datetime, 10, 11), ":", substr(datetime, 12, 13))  # HH:MM
+          date <- paste0(substr(datetime, 1, 4), "/", substr(datetime, 5, 6), "/", substr(datetime, 7, 8)) 
+          time <- paste0(substr(datetime, 10, 11), ":", substr(datetime, 12, 13))  
           
           # Generate the output file name and path with datetime
           output_file <- file.path(

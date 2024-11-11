@@ -6,7 +6,10 @@
 #' @return A tibble with summary data on file size, including the last day with complete recordings and days with corrupted files (i.e., smaller than most).
 #' @export
 #'
-#' @examples wave_integrity_batch(parentFolder)
+#' @examples 
+#' \dontrun{
+#' wave_integrity_batch(parentFolder)
+#' }
 wave_integrity_batch <- function(parent_folder, n.cores = -1) {
   # List all subfolders in the parent folder
   subfolders <- list.dirs(parent_folder, full.names = TRUE, recursive = FALSE)

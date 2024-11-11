@@ -6,6 +6,7 @@
 \usage{
 fci_folder(
   folder = NULL,
+  list = NULL,
   output.csv = "fci_results.csv",
   channel = "each",
   hpf = 0,
@@ -28,6 +29,9 @@ fci_folder(
 }
 \arguments{
 \item{folder}{The folder containing the WAV files to analyze.}
+
+\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.}
 
 \item{output.csv}{The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".}
 

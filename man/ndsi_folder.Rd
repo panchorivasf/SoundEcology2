@@ -5,24 +5,23 @@
 \title{Normalized Difference Soundscape Index - folder input}
 \usage{
 ndsi_folder(
-  folder,
-  save.csv = TRUE,
-  csv.name = "ndsi_results.csv",
+  folder = NULL,
+  list = NULL,
   w.len = 50,
   anthro.min = 1000,
   anthro.max = 2000,
   bio.min = 2000,
   bio.max = 11000,
   rm.offset = TRUE,
+  output.csv = "ndsi_results.csv",
   n.cores = -1
 )
 }
 \arguments{
 \item{folder}{a path to the folder containing the audio files.}
 
-\item{save.csv}{logical. Whether to save a csv in the working directory.}
-
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name. Default name is "ndsi_results.csv"}
+\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.}
 
 \item{w.len}{numeric. Window length for the FFT (sampling rate / frequency resolution).}
 
@@ -36,10 +35,15 @@ ndsi_folder(
 
 \item{rm.offset}{logical. Whether to remove the DC offset.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+\item{output.csv}{character vector. When 'save.csv' is TRUE, optionally provide a file name.
+Default name is "ndsi_results.csv"}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all
+but one core. Default is NULL (single-core processing).}
 }
 \value{
-a wide format tibble with NDSI values per channel (if stereo), parameters used and audio metadata
+a wide format tibble with NDSI values per channel (if stereo), parameters used and audio
+metadata
 }
 \description{
 Normalized Difference Soundscape Index (NDSI) from REAL and Kasten,
@@ -50,6 +54,8 @@ collected sound samples" (Kasten, et al. 2012).
 This version is optimized to work with a path to the folder containing the audio files.
 }
 \examples{
+\dontrun{
 path <- readClipboard() #use this to paste the folder path from the clipboard.
 ndsi_folder(path)
+}
 }

@@ -14,12 +14,11 @@
 #'
 #' @return Returns the spectrogram matrix with the cutoff applied. If `plot = TRUE`, a plot of the spectrogram is displayed.
 #' @export
-#'
+#' @import tibble 
+#' @import viridis
 #' @importFrom seewave duration spectro rmoffset
-#' @importFrom tibble rownames
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr mutate
-#' @import viridis
 #'
 #' @examples
 #' \dontrun{

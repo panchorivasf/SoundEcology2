@@ -11,8 +11,8 @@ spectrogram_binary(
   cutoff = -50,
   plot = FALSE,
   plot.title = NULL,
-  verbose = FALSE,
-  ggplot = FALSE
+  ggplot = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -28,9 +28,9 @@ spectrogram_binary(
 
 \item{plot.title}{An optional character string to use as the title of the plot. Default is \code{NULL}.}
 
-\item{verbose}{A logical value indicating whether to print additional information (such as the amplitude range and cutoff) to the console. Default is \code{FALSE}.}
-
 \item{ggplot}{A logical value indicating whether to use ggplot2 to plot the spectrogram. If FALSE (default), R's base plot function is used instead, rendering much faster.}
+
+\item{verbose}{A logical value indicating whether to print additional information (such as the amplitude range and cutoff) to the console. Default is \code{FALSE}.}
 }
 \value{
 Returns a binary matrix representing the spectrogram, where \code{1} represents amplitude above the cutoff and \code{0} represents amplitude below the cutoff.

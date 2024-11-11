@@ -18,5 +18,7 @@ A tibble with summary data on file size, including the last day with complete re
 Compute file integrity diagnostics for several folders containing WAV files
 }
 \examples{
+\dontrun{
 wave_integrity_batch(parentFolder)
+}
 }

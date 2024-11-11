@@ -4,10 +4,10 @@
 \alias{list_csvs}
 \title{List the CSV files in a directory}
 \usage{
-list_csvs(path = NULL)
+list_csvs(folder = NULL)
 }
 \arguments{
-\item{path}{Directory to search. If NULL (default), the current working directory will be used.}
+\item{folder}{Directory to search. If NULL (default), the current working directory will be used.}
 }
 \value{
 A list with the csv files in the chosen directory.

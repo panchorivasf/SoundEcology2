@@ -11,7 +11,8 @@ spectrogram_cutoff(
   plot = FALSE,
   plot.title = NULL,
   ggplot = TRUE,
-  noise.red = NULL
+  noise.red = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ spectrogram_cutoff(
 \item{ggplot}{A logical value indicating whether to use ggplot2 for plotting. If \code{FALSE}, base R plotting will be used to generate the plot. Defaults to \code{TRUE}.}
 
 \item{noise.red}{Character. Either NULL, 'rows' or 'cols'. Determins if and in which direction to apply noise reduction (mean subtraction).}
+
+\item{verbose}{Logical. If TRUE, ancillary messages are printed in the console.}
 }
 \value{
 Returns the spectrogram matrix with the cutoff applied. If \code{plot = TRUE}, a plot of the spectrogram is displayed.

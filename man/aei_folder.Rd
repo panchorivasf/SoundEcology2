@@ -6,6 +6,7 @@
 \usage{
 aei_folder(
   folder = NULL,
+  list = NULL,
   save.csv = TRUE,
   csv.name = "aei_results.csv",
   freq.res = 50,
@@ -25,6 +26,9 @@ aei_folder(
 }
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
+
+\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.}
 
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 

@@ -5,7 +5,8 @@
 \title{Calculate Trill Activity Index for all the Files in a Folder}
 \usage{
 tai_folder(
-  folder,
+  folder = NULL,
+  list = NULL,
   channel = "each",
   hpf = 0,
   rm.offset = TRUE,
@@ -21,6 +22,9 @@ tai_folder(
 }
 \arguments{
 \item{folder}{Character. The path to the folder containing the WAV files to analyze.}
+
+\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.}
 
 \item{channel}{Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".}
 
@@ -45,6 +49,8 @@ A tibble summarizing TAI statistics, including values for low and mid-frequency 
 This function calculates the trill index of an sound wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
 }
 \examples{
+\dontrun{
 path <- "path/to/folder"
 tai_results <- tai_folder(path)
+}
 }

@@ -8,13 +8,12 @@ tai(
   wave,
   channel = "each",
   hpf = 0,
-  rm.offset = TRUE,
   cutoff = -60,
   n.windows = 120,
   freq.res = 100,
   plot = FALSE,
   plot.title = NULL,
-  verbose = FALSE
+  verbose = TRUE
 )
 }
 \arguments{

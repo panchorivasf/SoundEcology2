@@ -5,7 +5,8 @@
 \title{Bioacoustic Index - folder input}
 \usage{
 bi_folder(
-  folder,
+  folder = NULL,
+  list = NULL,
   save.csv = TRUE,
   csv.name = "bi_results.csv",
   w.len = 512,
@@ -21,28 +22,37 @@ bi_folder(
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
 
+\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.}
+
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 
 \item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
 \item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
 
-\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop",
+"hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{miminum frequency to use when calculating the value, in Hertz. Default = NA.}
 
 \item{max.freq}{maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).}
 
-\item{norm.spec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).}
+\item{norm.spec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended
+because normalized spectrograms with different SNR are not comparable).}
 
-\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.}
+\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied
+to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each
+column similarly. If set to 0 (Default), noise reduction is not applied.}
 
 \item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
+Default is NULL (single-core processing).}
 }
 \value{
-A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used for the calculation.
+A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used
+for the calculation.
 }
 \description{
 Inspired by the "Bioacoustic Index" from the paper:Boelman NT, Asner GP, Hart PJ, Martin RE. 2007.

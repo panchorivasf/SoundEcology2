@@ -2,10 +2,11 @@
 % Please edit documentation in R/aci_folder.R
 \name{aci_folder}
 \alias{aci_folder}
-\title{Acoustic Complexity Index - folder input}
+\title{Acoustic Complexity Index - Batch process}
 \usage{
 aci_folder(
   folder = NULL,
+  list = NULL,
   save.csv = TRUE,
   csv.name = "aci_results.csv",
   freq.res = 50,
@@ -21,13 +22,18 @@ aci_folder(
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
 
+\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.}
+
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 
 \item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
+\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine
+the window length for the FFT (sampling rate / frequency resolution).}
 
-\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman",
+"flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to use when calculating the value, in Hertz. Default = 0.}
 
@@ -35,17 +41,22 @@ aci_folder(
 
 \item{j}{the cluster size, in seconds. Default = NA (Duration of the audio file).}
 
-\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
+\item{noise.red}{numeric; controls the application of noise reduction. If set to 1,
+noise reduction is applied to each row by subtracting the median from the amplitude values.
+If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
 
-\item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
+\item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI.
+Default = TRUE.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
+Default is NULL (single-core processing).}
 }
 \value{
-A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and the parameters used for the calculation.
+A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and
+the parameters used for the calculation.
 }
 \description{
-Acoustic Complexity Index - folder input
+Acoustic Complexity Index - Batch process
 }
 \details{
 Optimized to facilitate working with a folder of audio files before importing them into R.

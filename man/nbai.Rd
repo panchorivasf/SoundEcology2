@@ -14,7 +14,7 @@ nbai(
   spectrogram = FALSE,
   dark.plot = TRUE,
   plot.title = deparse(substitute(wave)),
-  verbose = FALSE
+  verbose = TRUE
 )
 }
 \arguments{

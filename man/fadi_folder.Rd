@@ -5,7 +5,8 @@
 \title{Frequency-dependent Acoustic Diversity Index - folder input}
 \usage{
 fadi_folder(
-  folder,
+  folder = NULL,
+  list = NULL,
   save_csv = TRUE,
   csv_name = "fadi_results.csv",
   noise_file = NULL,
@@ -15,11 +16,15 @@ fadi_folder(
   threshold_fixed = -50,
   freq_step = 1000,
   gamma = 13,
-  props = FALSE
+  props = FALSE,
+  n.cores = -1
 )
 }
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
+
+\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.}
 
 \item{save_csv}{logical. Whether to save a csv in the working directory.}
 
@@ -44,6 +49,9 @@ automatic noise level estimation method (median of each row in the spectrogram).
 
 \item{props}{Logical; if TRUE, the energy proportion values for each frequency band
 and channel are added to the output tibble. Default = TRUE.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
+Default is NULL (single-core processing).}
 }
 \value{
 A tibble with the FADI value per channel, energy proportions, metadata, and parameters used.

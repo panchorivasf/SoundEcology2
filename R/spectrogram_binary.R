@@ -13,12 +13,11 @@
 #'
 #' @return Returns a binary matrix representing the spectrogram, where `1` represents amplitude above the cutoff and `0` represents amplitude below the cutoff.
 #' @export
-#'
+#' @import tibble
+#' @import viridis
 #' @importFrom seewave duration spectro rmoffset
-#' @importFrom tibble rownames
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr mutate
-#' @import viridis
 #'
 #' @examples
 #' \dontrun{

@@ -26,12 +26,8 @@
 #' @import seewave
 #' @import foreach 
 #' @importFrom tuneR readWave
-#' @importFrom dplyr bind_cols
-#' @importFrom tibble tibble
+#' @importFrom dplyr bind_cols tibble
 #' @importFrom parallel detectCores makeCluster
-#' @importFrom tibble tibble
-#' @importFrom lubridate seconds
-#'
 #'
 #' @examples
 #' files.list <- list_waves(path/to/folder)
@@ -97,7 +93,7 @@ bbai_list <- function(audio.list,
       bind_cols(bbai1)
     
     timePerFile <-  Sys.time() - startTime
-    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    timePerFile <- timePerFile + 2.2
     
     rm(sound1)
     rm(bbai1)
@@ -128,7 +124,6 @@ bbai_list <- function(audio.list,
                        result_list <- list()
                        
                        results <- quiet(do.call(bbai, c(list(sound), args_list)))
-                       
                        
                        result_list <- list(
                          tibble(file_name = filename, results)

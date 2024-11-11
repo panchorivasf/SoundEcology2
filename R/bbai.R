@@ -19,9 +19,9 @@
 #' @import ggplot2
 #' @importFrom tuneR channel mono
 #' @importFrom seewave duration fir
-#' @importFrom reshape2 melt
 #' @importFrom scales col_numeric
 #' @importFrom tibble add_column
+#' @importFrom dplyr mutate relocate
 #'
 #' @examples bbai(wave)
 bbai <- function(wave,
@@ -37,33 +37,13 @@ bbai <- function(wave,
                  plot.title = NULL,
                  verbose = TRUE) {
   
-  if (!channel %in% c("left", "right", "mix", "each")) {
-    stop("Invalid channel selected. Choose from 'left', 'right', 'mix', or 'each' (for stereo).")
-  }
-  
-  process_channel <- function(wave, channel) {
-    if (channel == "left") return(tuneR::channel(wave, "left"))
-    if (channel == "right") return(tuneR::channel(wave, "right"))
-    if (channel == "mix") return(tuneR::mono(wave, "both"))
-  }
-  
   if (wave@stereo) {
-    # Stereo case: process the selected channel
-    if (channel == "each") {
-      # Process left and right channels separately for stereo
-      wave.left <- process_channel(wave, "left")
-      wave.right <- process_channel(wave, "right")
-    } else {
-      # Process selected channel (left, right, or mix)
-      wave <- process_channel(wave, channel)
+    if (!channel %in% c("left", "right", "mix", "each")) {
+      stop("Invalid channel selected. Choose from 'left', 'right', 'mix', or 'each'.")
     }
   } else {
-    # Mono case: force `channel` to "left" for unsupported options
-    if (channel %in% c("each", "mix", "right")) {
-      if (verbose) {
-        cat("This is a mono recording. Calculating BBAI over the 'left' channel.\n")
-      }
-      channel <- "left"
+    if (channel %in% c("right", "mix", "each")) {
+      stop("Invalid channel selected. Can't parse 'right', 'mix', or 'each' in a mono file.")
     }
   }
   
@@ -178,11 +158,11 @@ bbai <- function(wave,
     total_cells <- n_freq_bins * n_time_frames
     
     # Step 3: Calculate the proportion of clicks
-    broadband_activity <- round((click_sum / total_cells) * 100, 1)
+    broadband_activity <- round((click_sum / total_cells) * 100, 3)
     
-    click_frames_prop <- round(click_time_frames / n_time_frames, 1)
+    click_frames_prop <- round(click_time_frames / n_time_frames, 3)
     
-    click_rate <- round(click_time_frames / total_duration, 1)
+    click_rate <- round(click_time_frames / total_duration, 3)
     
     n_clicks <- length(click_heights)
     
@@ -218,7 +198,12 @@ bbai <- function(wave,
       plot_data <- cbind(Frequency = freq_values, plot_data)
       
       # Reshape for ggplot
-      plot_data <- reshape2::melt(plot_data, id.vars = "Frequency", variable.name = "Time", value.name = "dB")
+      plot_data <- data.frame(
+        Frequency = rep(plot_data$Frequency, times = ncol(plot_data) - 1),
+        Time = rep(names(plot_data)[-1], each = nrow(plot_data)),
+        dB = unlist(plot_data[,-1])
+      )
+      # plot_data <- reshape2::melt(plot_data, id.vars = "Frequency", variable.name = "Time", value.name = "dB")
       plot_data$Time <- as.numeric(as.character(plot_data$Time))
       
       # Mark clicks as a separate layer in the data
@@ -272,8 +257,14 @@ bbai <- function(wave,
   
   # Calculate the index based on the stereo condition
   if (wave@stereo) {
+    
     if(channel == "each") {
+      
+      wave.left <- channel(wave, "left")
+      wave.right <- channel(wave, "right")
+      
       if (verbose) cat("Calculating Broadband Activity Index on 2 channels... \n")
+      
       bbai_left <- bbai_mono(wave.left,
                              hpf = hpf,
                              freq.res = freq.res,
@@ -341,7 +332,40 @@ bbai <- function(wave,
         
       }
       
-    } else if (channel %in% c("mix", "left", "right")) {
+    } else if (channel == "mix") {
+      
+      wave_mix <- mono(wave, "both")
+      
+      bbai_global <- bbai_mono(wave_mix,
+                               hpf = hpf,
+                               freq.res = freq.res,
+                               cutoff = cutoff,
+                               click.length = click.length,
+                               difference = difference,
+                               gap.allowance = gap.allowance,
+                               spectrogram = spectrogram,
+                               dark.plot = dark.plot,
+                               plot.title = plot.title)
+      
+      bbai_global$summary <- bbai_global$summary |>
+        # add_column(channel = "mix", .after = index)
+        mutate(channel = "mix") |>
+        relocate(channel, .after = index)
+      
+      print(bbai_global$summary)
+      
+      if(spectrogram){
+        invisible(list(summary = bbai_global$summary, 
+                       spectrogram = bbai_global$spectrogram))
+        
+      } else {
+        invisible(bbai_global$summary)
+      }
+      
+      
+    } else if (channel == "left") {
+      
+      wave_left <- channel(wave, which = "left")
 
       bbai_global <- bbai_mono(wave,
                                hpf = hpf,
@@ -355,8 +379,7 @@ bbai <- function(wave,
                                plot.title = plot.title)
       
       bbai_global$summary <- bbai_global$summary |>
-        # add_column(channel = channel, .after = index)
-        mutate(channel = channel) |>
+        mutate(channel = "left") |>
         relocate(channel, .after = index)
       
       print(bbai_global$summary)
@@ -370,10 +393,40 @@ bbai <- function(wave,
       }
       
       
-    } 
+    } else if (channel == "right") {
+      
+      wave_right <- channel(wave, which = "right")
+      
+      bbai_global <- bbai_mono(wave_right,
+                               hpf = hpf,
+                               freq.res = freq.res,
+                               cutoff = cutoff,
+                               click.length = click.length,
+                               difference = difference,
+                               gap.allowance = gap.allowance,
+                               spectrogram = spectrogram,
+                               dark.plot = dark.plot,
+                               plot.title = plot.title)
+      
+      bbai_global$summary <- bbai_global$summary |>
+        mutate(channel = "right") |>
+        relocate(channel, .after = index)
+
+      print(bbai_global$summary)
+      
+      if(spectrogram){
+        invisible(list(summary = bbai_global$summary, 
+                       spectrogram = bbai_global$spectrogram))
+        
+      } else {
+        invisible(bbai_global$summary)
+      } 
     
-  } else { # Mono file
-    bbai_global <- bbai_mono(wave,
+  }
+    
+    } else { # Mono file
+    wave_mono <- wave
+    bbai_global <- bbai_mono(wave_mono,
                              hpf = hpf,
                              freq.res = freq.res,
                              cutoff = cutoff,
@@ -385,8 +438,7 @@ bbai <- function(wave,
                              plot.title = plot.title)
     
     bbai_global$summary <- bbai_global$summary |>
-      # add_column(channel = channel, .after = index)
-      mutate(channel = channel) |>
+      mutate(channel = "mono") |>
       relocate(channel, .after = index)
     
     if(verbose){

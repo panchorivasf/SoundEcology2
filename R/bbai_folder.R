@@ -31,11 +31,8 @@
 #' @import seewave
 #' @import foreach 
 #' @importFrom tuneR readWave
-#' @importFrom dplyr bind_cols
-#' @importFrom tibble tibble
+#' @importFrom dplyr bind_cols tibble
 #' @importFrom parallel detectCores makeCluster
-#' @importFrom tibble tibble
-#' @importFrom lubridate seconds
 #'
 #' @examples 
 #' \dontrun{
@@ -102,7 +99,7 @@ bbai_folder <- function(folder = NULL,
     tibble::tibble(file_name = "filename") |> bind_cols(bbai1)
     
     timePerFile <-  Sys.time() - startTime
-    timePerFile <- timePerFile + as.numeric(seconds(2.2))
+    timePerFile <- timePerFile + 2.2
     
     rm(sound1)
     rm(bbai1)

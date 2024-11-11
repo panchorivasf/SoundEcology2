@@ -14,10 +14,11 @@
 #' @return Returns a binary matrix representing the spectrogram, where `1` represents amplitude above the cutoff and `0` represents amplitude below the cutoff.
 #' @export
 #'
-#' @import ggplot2
-#' @import reshape2
-#' @import tuneR
-#' @import seewave
+#' @importFrom seewave duration spectro rmoffset
+#' @importFrom tibble rownames
+#' @importFrom tidyr pivot_longer
+#' @importFrom dplyr mutate
+#' @import viridis
 #'
 #' @examples
 #' \dontrun{
@@ -33,10 +34,9 @@ spectrogram_binary <- function(wave,
                                cutoff = -50,
                                plot = FALSE,
                                plot.title = NULL,
-                               verbose = FALSE,
-                               ggplot = FALSE) {  # New argument
+                               ggplot = FALSE,
+                               verbose = FALSE) { 
 
-  require(reshape2)
 
   # Check if the wave is stereo
   if (wave@stereo) {
@@ -98,11 +98,22 @@ spectrogram_binary <- function(wave,
     time <- seq(0, seewave::duration(wave), length.out = ncol(spectrogram))
     freq <- freq_bins / 1000
 
-    binary_spectro_df <- melt(spectrogram)
-    binary_spectro_df$Frequency <- freq[binary_spectro_df$Var1]
-    binary_spectro_df$Time <- time[binary_spectro_df$Var2]
+    # binary_spectro_df <- melt(spectrogram)
+    # binary_spectro_df$Frequency <- freq[binary_spectro_df$Var1]
+    # binary_spectro_df$Time <- time[binary_spectro_df$Var2]
 
     if (ggplot) {
+      binary_spectro_df <- as.data.frame(spectrogram)|>
+        tibble::rownames_to_column("Var1")|>
+        tidyr::pivot_longer(cols = -Var1,
+                            names_to = "Var2",
+                            values_to = "value")|>
+        dplyr::mutate(
+          Var1 = as.numeric(Var1),
+          Var2 = as.numeric(stringr::str_remove(Var2, "V")),
+          Frequency = freq[Var1],
+          Time = time[Var2]
+        )
       # Use ggplot for plotting
       p <- ggplot(binary_spectro_df, aes(Time, Frequency, fill = value)) +
         geom_tile() +

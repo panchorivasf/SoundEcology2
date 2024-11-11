@@ -43,7 +43,7 @@ bbai <- function(wave,
     }
   } else {
     if (channel %in% c("right", "mix", "each")) {
-      stop("Invalid channel selected. Can't parse 'right', 'mix', or 'each' in a mono file.")
+      stop("Channel should be 'left' for mono files.")
     }
   }
   

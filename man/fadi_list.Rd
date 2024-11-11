@@ -6,6 +6,7 @@
 \usage{
 fadi_list(
   audiolist,
+  folder = NULL,
   save_csv = TRUE,
   csv_name = "fadi_results.csv",
   noise_file = NULL,
@@ -20,6 +21,8 @@ fadi_list(
 }
 \arguments{
 \item{audiolist}{a list of audio files to import.}
+
+\item{folder}{a path to the folder with audio files to import.}
 
 \item{save_csv}{logical. Whether to save a csv in the working directory.}
 

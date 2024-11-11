@@ -6,7 +6,7 @@
 #' @param channel Character. If the Wave is stereo, select a channel to analyze. Options are "left", "right", and "mix", which combines L and R channels into a single mono Wave. Default is "left".
 #' @param cutoff Numeric. The amplitude cutoff in dB above which the frequency bins are considered active. Default is 70 dB.
 #' @param freq.res Numeric. The frequency resolution to be used when selecting a window length for the FFT.
-#' @param plot Logical. If TRUE, the function will generate and display a plot of the binary spectrogram with the frequency bands marked. Default is TRUE.
+#' @param spectrogram Logical. If TRUE, the function will generate and display a plot of the binary spectrogram with the frequency bands marked. Default is TRUE.
 #' @param ggplot Logical. If TRUE, the plot is output is a ggplot object. If FALSE (default), the base plot function is used (faster rendering).
 #' @param plot.title Character. An optional title for the plot.
 #' @param lf.min Numeric. The minimum frequency (in Hz) for the low-frequency band. Default is 1 Hz.
@@ -15,31 +15,28 @@
 #' @param mf.max Numeric. The maximum frequency (in Hz) for the mid-frequency band. Default is 12000 Hz.
 #' @param hf.min Numeric. The minimum frequency (in Hz) for the high-frequency band. Default is 12000 Hz.
 #' @param hf.max Numeric. The maximum frequency (in Hz) for the high-frequency band. Default is 22000 Hz.
-#'
-#' @return A tibble containing the proportions of the spectrogram that exceed the amplitude cutoff for each of the low, mid, and high-frequency bands.
+#' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
+#' 
+#' @return A tibble and an optional spectrogram. 
 #' @export
-#' @import doParallel
-#' @import foreach
-#' @import parallel
-#' @import tuneR
-#' @import tidyverse
-#' @import seewave
-#' @import lubridate
-#' @import reshape2
+#' @import ggplot2
+#' @importFrom tuneR channel mono
+#' @importFrom seewave duration fir
+#' @importFrom tibble tibble
+#' @importFrom dplyr mutate relocate
 #'
 #' @examples
 #' \dontrun{
 #' # Assuming 'wave' is a Wave object
-#' results <- fc(wave, cutoff = 65, freq.res = 100,  plot = TRUE)
+#' results <- fci(wave, cutoff = 65, freq.res = 100,  spectrogram = TRUE)
 #' print(results)
 #' }
 fci <- function(wave,
                channel = 'left',
-               rm.offset = TRUE,
                hpf = 0,
                cutoff = -60,
                freq.res = 50,
-               plot = FALSE,
+               spectrogram = FALSE,
                ggplot = FALSE,
                plot.title = "Frequency Cover Analysis",
                sound.color = "#045E10",
@@ -81,12 +78,10 @@ fci <- function(wave,
 
 
   calculate_index <- function(wave,
-                              channel,
-                              rm.offset = rm.offset,
                               hpf = 0,
                               cutoff = cutoff,
                               freq.res = freq.res,
-                              plot = plot,
+                              spectrogram = spectrogram,
                               ggplot = ggplot,
                               plot.title = plot.title,
                               sound.color = sound.color,
@@ -100,13 +95,6 @@ fci <- function(wave,
                               uf.max = uf.max,
                               verbose = verbose){
 
-
-    # Remove DC offset
-    if (rm.offset) {
-      wave <- seewave::rmoffset(wave, output = "Wave")
-    }
-
-
     # Apply high-pass filter
     if (hpf > 0) {
       wave <- fir(wave, from=hpf, to = NULL, bandpass = TRUE, output = "Wave", wl = 1024)
@@ -116,7 +104,6 @@ fci <- function(wave,
 
     # Generate the amplitude spectrogram
     spectro_data <- spectrogram_binary(wave,
-                                       channel = channel,
                                        freq.res = freq.res,
                                        cutoff = cutoff,
                                        plot = FALSE)
@@ -144,7 +131,11 @@ fci <- function(wave,
     time <- seq(0, seewave::duration(wave), length.out = ncol(binary_spectro))
     freq <- freq_bins/1000
 
-    binary_spectro_df <- reshape2::melt(binary_spectro)
+    binary_spectro_df <- data.frame(
+      Var1 = rep(1:nrow(binary_spectro), ncol(binary_spectro)),
+      Var2 = rep(1:ncol(binary_spectro), each = nrow(binary_spectro)),
+      value = as.vector(binary_spectro)
+    )
     binary_spectro_df$Frequency <- freq[binary_spectro_df$Var1]
     binary_spectro_df$Time <- time[binary_spectro_df$Var2]
 
@@ -157,12 +148,14 @@ fci <- function(wave,
     hf.max <- hf.max / 1000
     uf.min <- uf.min / 1000
     uf.max <- uf.max / 1000
-
+    
+    if (verbose) {
     cat(paste("Frequency bands: \n",
               "Low Frequency: ", lf.min, "kHz", "- ", lf.max, " kHz \n",
               "Mid Frequency:  ", mf.min, "kHz", "- ", mf.max, " kHz \n",
               "High Frequency: ", hf.min, "kHz", "- ", hf.max, " kHz \n",
               "Ultra Frequency:", uf.min, "kHz", "-", uf.max, "kHz \n"))
+    }
 
     # Calculate the proportion of cells above the cutoff in each frequency band
     LFC <- round(sum(binary_spectro[low_freq_indices, ]) / (length(low_freq_indices) * ncol(binary_spectro)),6)
@@ -171,7 +164,7 @@ fci <- function(wave,
     UFC <- round(sum(binary_spectro[ultra_freq_indices, ]) / (length(ultra_freq_indices) * ncol(binary_spectro)),6)
 
     # Results tibble
-    results <- tibble(
+    summary <- tibble(
       index = c("lfc", "mfc", "hfc", "ufc"),
       value = c(LFC, MFC, HFC, UFC),
       par_cutoff = cutoff,
@@ -186,7 +179,7 @@ fci <- function(wave,
       par_uf_max = uf.max
     )
 
-    if (plot) {
+    if (spectrogram) {
       # Position of the labels on the x-axis
       xposition <- seewave::duration(wave) / 100
 
@@ -212,7 +205,11 @@ fci <- function(wave,
                    label = paste("UFC:", UFC), fill = "white", alpha = 0.9) +
           theme_light() +
           theme(legend.position = "none")
+        
+        print(summary)
         print(p)
+        
+        invisible(list(summary = summary, spectrogram = p))
 
 
       } else {
@@ -259,132 +256,30 @@ fci <- function(wave,
 
         # Add box around the plot
         box()
-
+        
+        return(list(summary = summary, spectrogram = NULL))
 
       }
+    } else {
+      return(list(summary = summary, spectrogram = NULL))
     }
-
-    invisible(results)
-
-
 
   }
-
-
-
-  # Calculate the index based on the stereo condition
-  if (channel == 'each') {
-    if(!wave@stereo){
-      stop("Can't select 'each' channel for a mono file.\n")
-    }
-
-    if (plot) {
-      stop("Plotting is not allowed when calculating FC over both channels.\n")
-    }
-
-
-    if (verbose) cat("Calculating Frequency Cover Index on 2 channels... \n")
-
-    fc_left <- calculate_index(wave.left,
-                               channel = 'left',
-                               rm.offset = rm.offset,
-                               hpf = 0,
-                               cutoff = cutoff,
-                               freq.res = freq.res,
-                               plot = plot,
-                               ggplot = ggplot,
-                               plot.title = plot.title,
-                               sound.color = sound.color,
-                               lf.min = lf.min,
-                               lf.max = lf.max,
-                               mf.min = mf.min,
-                               mf.max = mf.max,
-                               hf.min = hf.min,
-                               hf.max = hf.max,
-                               uf.min = uf.min,
-                               uf.max = uf.max,
-                               verbose = verbose)
-    fc_right <- calculate_index(wave.right,
-                                channel = 'left',
-                                rm.offset = rm.offset,
-                                hpf = 0,
-                                cutoff = cutoff,
-                                freq.res = freq.res,
-                                plot = plot,
-                                ggplot = ggplot,
-                                plot.title = plot.title,
-                                sound.color = sound.color,
-                                lf.min = lf.min,
-                                lf.max = lf.max,
-                                mf.min = mf.min,
-                                mf.max = mf.max,
-                                hf.min = hf.min,
-                                hf.max = hf.max,
-                                uf.min = uf.min,
-                                uf.max = uf.max,
-                                verbose = verbose)
-
-    fc_global <- tibble::tibble(
-      index = c("lfc", "mfc", "hfc", "ufc"),
-      value_l = c(fc_left$value[fc_left$index == "lfc"],
-                  fc_left$value[fc_left$index == "mfc"],
-                  fc_left$value[fc_left$index == "hfc"],
-                  fc_left$value[fc_left$index == "ufc"]),
-      value_r = c(fc_right$value[fc_right$index == "lfc"],
-                  fc_right$value[fc_right$index == "mfc"],
-                  fc_right$value[fc_right$index == "hfc"],
-                  fc_right$value[fc_right$index == "ufc"]),
-      value_avg  = c(
-        round((fc_left$value[fc_left$index == "lfc"] + fc_right$value[fc_right$index == "lfc"])/2, 3),
-        round((fc_left$value[fc_left$index == "mfc"] + fc_right$value[fc_right$index == "mfc"])/2, 3),
-        round((fc_left$value[fc_left$index == "hfc"] + fc_right$value[fc_right$index == "hfc"])/2, 3),
-        round((fc_left$value[fc_left$index == "ufc"] + fc_right$value[fc_right$index == "ufc"])/2, 3)
-      ),
-      par_cutoff = cutoff,
-      par_freq_res = freq.res,
-      par_lf_min = lf.min,
-      par_lf_max = lf.max,
-      par_mf_min = mf.min,
-      par_mf_max = mf.max,
-      par_hf_min = hf.min,
-      par_hf_max = hf.max
-    )
-
-
-    if(verbose){
-      print(fc_global)
-    }
-
-
-    invisible(fc_global)
-
-
-
-
-  } else {
-
-    if (verbose) {
-      if(channel == 'left'){
-        cat("Calculating Frequency Cover on the left channel... \n")
-
-      }else if(channel == 'right'){
-        cat("Calculating Frequency Cover on the right channel... \n")
-
-      }else if(channel == 'mix'){
-        cat("Calculating Frequency Cover on a mix of the two channels... \n")
-      }
-    }
-
-    # Calulate NBAI
-    fc_global <- calculate_index(wave,
-                                 channel = channel,
-                                 rm.offset = rm.offset,
+  
+  if (wave@stereo) {
+    
+    # Calculate the index based on the stereo condition
+    if (channel == 'each') {
+      
+      if (verbose) cat("Calculating Frequency Cover Index on 2 channels... \n")
+      
+      fc_left <- calculate_index(wave.left,
                                  hpf = 0,
                                  cutoff = cutoff,
                                  freq.res = freq.res,
-                                 plot = plot,
+                                 spectrogram = spectrogram,
                                  ggplot = ggplot,
-                                 plot.title = plot.title,
+                                 plot.title = paste0(plot.title, "_L"),
                                  sound.color = sound.color,
                                  lf.min = lf.min,
                                  lf.max = lf.max,
@@ -395,18 +290,170 @@ fci <- function(wave,
                                  uf.min = uf.min,
                                  uf.max = uf.max,
                                  verbose = verbose)
+      fc_right <- calculate_index(wave.right,
+                                  hpf = 0,
+                                  cutoff = cutoff,
+                                  freq.res = freq.res,
+                                  spectrogram = spectrogram,
+                                  ggplot = ggplot,
+                                  plot.title = paste0(plot.title, "_R"),
+                                  sound.color = sound.color,
+                                  lf.min = lf.min,
+                                  lf.max = lf.max,
+                                  mf.min = mf.min,
+                                  mf.max = mf.max,
+                                  hf.min = hf.min,
+                                  hf.max = hf.max,
+                                  uf.min = uf.min,
+                                  uf.max = uf.max,
+                                  verbose = verbose)
+      
+      fc_global <- tibble(
+        index = c("lfc", "mfc", "hfc", "ufc"),
+        channel = "each")
+      
+      fc_global <- fc_global |>
+        mutate(
+          value_l = fc_left$summary$value[match(index, fc_left$summary$index)],
+          value_r = fc_right$summary$value[match(index, fc_right$summary$index)],
+          value_avg = round((
+            fc_left$summary$value[match(index, fc_left$summary$index)] + 
+              fc_right$summary$value[match(index, fc_right$summary$index)]
+          )/2, 3),
+          par_cutoff = cutoff,
+          par_freq_res = freq.res,
+          par_lf_min = lf.min,
+          par_lf_max = lf.max,
+          par_mf_min = mf.min,
+          par_mf_max = mf.max,
+          par_hf_min = hf.min,
+          par_hf_max = hf.max
+        )
 
-    if(verbose){
       print(fc_global)
-
+    
+    if (spectrogram) {
+      invisible(list(summary = fc_global, 
+                     spectrogram_l = fc_left$spectrogram,
+                     spectrogram_r = fc_right$spectrogam))
+      
+    } else {
+      invisible(fc_global)
     }
+    
 
-    invisible(fc_global)
+  }  else if (channel %in% c("left", "right")) {
+    # Use one channel from the stereo file or a mix
 
+    if (verbose) {
+      if(channel == 'left'){
+        cat("Calculating Frequency Cover on the left channel... \n")
+      }else if(channel == 'right'){
+        cat("Calculating Frequency Cover on the right channel... \n")
+      }
+    }
+ 
+    results <- calculate_index(wave,
+                               hpf = 0,
+                               cutoff = cutoff,
+                               freq.res = freq.res,
+                               spectrogram = spectrogram,
+                               ggplot = ggplot,
+                               plot.title = plot.title,
+                               sound.color = sound.color,
+                               lf.min = lf.min,
+                               lf.max = lf.max,
+                               mf.min = mf.min,
+                               mf.max = mf.max,
+                               hf.min = hf.min,
+                               hf.max = hf.max,
+                               uf.min = uf.min,
+                               uf.max = uf.max)
+    
+    results$summary <- results$summary |>
+      mutate(channel = channel) |>
+      relocate(channel, .after = index)
 
+    print(results$summary)
+    
+    if (spectrogram) {
+      invisible(list(summary = results$summary, 
+                     spectrogram = results$spectrogram))
+    } else {
+    invisible(results$summary)
+    }
+  } else if(channel == 'mix'){
+    cat("Calculating Frequency Cover on a mix of the two channels... \n")
+    results <- calculate_index(wave,
+                               hpf = 0,
+                               cutoff = cutoff,
+                               freq.res = freq.res,
+                               spectrogram = spectrogram,
+                               ggplot = ggplot,
+                               plot.title = plot.title,
+                               sound.color = sound.color,
+                               lf.min = lf.min,
+                               lf.max = lf.max,
+                               mf.min = mf.min,
+                               mf.max = mf.max,
+                               hf.min = hf.min,
+                               hf.max = hf.max,
+                               uf.min = uf.min,
+                               uf.max = uf.max)
+    
+    results$summary <- results$summary |>
+      mutate(channel = "mix") |>
+      relocate(channel, .after = index)
+    
+    print(results$summary)
+    
+    if (spectrogram) {
+      invisible(list(summary = results$summary, 
+                     spectrogram = results$spectrogram))
+    } else {
+      invisible(results$summary)
+    }
+    
+    
   }
+    
+  } else {
+    if (verbose) {
+        cat("Calculating Frequency Cover on a mono file... \n")
+    }
+      # Calulate NBAI
+      results <- calculate_index(wave,
+                                   hpf = 0,
+                                   cutoff = cutoff,
+                                   freq.res = freq.res,
+                                   spectrogram = spectrogram,
+                                   ggplot = ggplot,
+                                   plot.title = plot.title,
+                                   sound.color = sound.color,
+                                   lf.min = lf.min,
+                                   lf.max = lf.max,
+                                   mf.min = mf.min,
+                                   mf.max = mf.max,
+                                   hf.min = hf.min,
+                                   hf.max = hf.max,
+                                   uf.min = uf.min,
+                                   uf.max = uf.max,
+                                   verbose = verbose)
+      
+      results$summary <- results$summary |>
+        mutate(channel = "mono") |>
+        relocate(channel, .after = index)
+        # add_column(channel = "mono", .after = index)
+      
+      print(results$summary)
 
-
+      if (spectrogram) {
+        invisible(list(summary = results$summary, 
+                       spectrogram = results$spectrogram))
+      } else {
+        invisible(results$summary)
+      }
+  }
 }
 
 

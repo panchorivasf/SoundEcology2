@@ -30,10 +30,8 @@ Imports:
     dplyr,
     lubridate,
     pracma,
-    reshape2,
     tibble,
     tidyr,
-    tidyverse,
     viridis,
     stats,
     utils,
@@ -41,6 +39,7 @@ Imports:
     grid,
     future,
     future.apply
+Suggests: knitr
 VignetteBuilder: knitr
 URL: https://github.com/panchorivasf/SoundEcology2
 BugReports: https://github.com/panchorivasf/SoundEcology2/issues 

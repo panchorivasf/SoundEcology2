@@ -6,6 +6,7 @@
 \usage{
 tai_list(
   audio.list,
+  folder = NULL,
   channel = "each",
   hpf = 0,
   rm.offset = TRUE,
@@ -21,6 +22,8 @@ tai_list(
 }
 \arguments{
 \item{audio.list}{a list of audio files to analyze}
+
+\item{folder}{Character. The path to the folder containing the WAV files to analyze.}
 
 \item{channel}{Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".}
 

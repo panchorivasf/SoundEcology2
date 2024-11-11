@@ -4,6 +4,8 @@
 #' before calculating the Acoustic Diversity Index and it doesn't use normalized spectrogram.
 #' Alternatively it can take a noise sample to reduce noise in the analyzed files.
 #' @param folder a path to the folder with audio files to import.
+#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
+#' files outside the list will be excluded. 
 #' @param save_csv logical. Whether to save a csv in the working directory.
 #' @param csv_name character vector. When 'save_csv' is TRUE, optionally provide a file name.
 #' @param noise_file An R object of class Wave containing noise-only information if needed. Default = NULL.
@@ -18,6 +20,9 @@
 #' @param gamma A positive number in dB for calculating the floating thresholds. Default = 13.
 #' @param props Logical; if TRUE, the energy proportion values for each frequency band
 #' and channel are added to the output tibble. Default = TRUE.
+#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. 
+#' Default is NULL (single-core processing).
+
 #'
 #' @return A tibble with the FADI value per channel, energy proportions, metadata, and parameters used.
 #' @export
@@ -38,7 +43,8 @@
 #' @examples
 #' fadi_folder(folder=pathB, "fadi_hydro_b.csv")
 
-fadi_folder <- function (folder,
+fadi_folder <- function (folder = NULL,
+                         list = NULL,
                          save_csv = TRUE,
                          csv_name = "fadi_results.csv",
                          noise_file = NULL,
@@ -48,96 +54,92 @@ fadi_folder <- function (folder,
                          threshold_fixed = -50,
                          freq_step = 1000,
                          gamma = 13,
-                         props = FALSE){
+                         props = FALSE,
+                         n.cores = -1){
+  
+  args_list <- list(noise_file=noise_file,NEM=NEM,min_freq=min_freq,
+                    max_freq = max_freq, threshold_fixed = threshold_fixed,
+                    freq_step = freq_step, gamma = gamma, props=props)
+  
 
   if(is.null(folder)){
     folder <- getwd()
   }
-
-  #  Quiet function from SimDesign package to run functions without printing
-  quiet <- function(..., messages=FALSE, cat=FALSE){
-    if(!cat){
-      tmpf <- tempfile()
-      sink(tmpf)
-      on.exit({sink(); file.remove(tmpf)})
-    }
-    out <- if(messages) eval(...) else suppressMessages(eval(...))
-    out
-  }
-
-  cat("Evaluating the job...\n")
-
   setwd(folder)
-  audiolist <- list.files(path=folder, pattern = ".wav|.WAV")
-
-  fileName <- tibble(file_name = audiolist)
-  nFiles <- length(audiolist)
-
-
-  args_list <- list(noise_file=noise_file,NEM=NEM,min_freq=min_freq,
-                    max_freq = max_freq, threshold_fixed = threshold_fixed,
-                    freq_step = freq_step, gamma = gamma, props=props)
-
-
-
-  # Evaluate the duration of the analysis
-  # Measure processing time for a single file
-  startTime <- Sys.time()
-
-  sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-  fadi1 <- quiet(fadi(sound1, args_list$noise_file, args_list$NEM,
-                     args_list$min_freq, args_list$max_freq, args_list$threshold_fixed,
-                     args_list$freq_step, args_list$gamma, args_list$props))
-
-  tibble(file_name = "filename") %>% bind_cols(fadi1)
-
-  rm(sound1)
-  rm(fadi1)
-
-  # Assess how long it takes to parse 1 file
-  timePerFile <-  Sys.time() - startTime
-
-  # Assess number of cores to be used (all but one of the available cores)
-  cores <- detectCores() - 1
-  # If the number of cores is larger than the number if files...
-  if (cores > nFiles){
-    cores <- nFiles
+  
+  if(is.null(list)){
+    audio.list <- list_waves()
+    
+  } else {
+    audio.list <- list
   }
-
-  # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(cores)
-  # Calculate the end time
-  expectedCompletionTime <- Sys.time() + estimatedTotalTime
-  # Setup parallel back-end
-  cl <- makeCluster(cores[1]) # Leave one core free
+  
+  nFiles <- length(audio.list)
+  
+  
+  if(is.null(n.cores)){
+    num_cores <- 1
+  }else if(n.cores == -1){
+    num_cores <- parallel::detectCores() - 1  
+  }else{
+    num_cores <- n.cores
+  }
+  if(nFiles < num_cores){
+    num_cores <- nFiles
+  }
+  cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
-
-
-  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-  cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-  cat("Analyzing", nFiles, type, "files using", cores, "cores... \n")
-
+  
+  if(nFiles>10){
+    cat("Evaluating the job...\n")
+    
+    startTime <- Sys.time()
+    
+    sound1 <- readWave(audio.list[1])
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    fadi1 <- quiet(fadi(sound1, args_list$noise_file, args_list$NEM,
+                        args_list$min_freq, args_list$max_freq, args_list$threshold_fixed,
+                        args_list$freq_step, args_list$gamma, args_list$props))
+    
+    tibble(file_name = "filename") |> bind_cols(fadi1)
+    
+    rm(sound1)
+    rm(fadi1)
+    
+    # Assess how long it takes to parse 1 file
+    timePerFile <-  Sys.time() - startTime
+    timePerFile <- timePerFile + 2.2 # Add overhead
+    
+    # Estimate total time accounting for parallel processing
+    estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
+    # Calculate the end time
+    expectedCompletionTime <- Sys.time() + estimatedTotalTime
+    
+    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+  } else {
+    sound1 <- readWave(audio.list[1], to = 2 , units ='seconds')
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+    rm(sound1)
+  }
+  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
+  
   # Start loop
-  results <- foreach(file = audiolist, .combine = rbind,
-                     .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
+  results <- foreach(file = audio.list, .combine = rbind,
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
 
-                       # Try to read the sound file, handle errors gracefully
                        sound <- tryCatch({
                          readWave(file)
                        }, error = function(e) {
                          message(paste("Error reading file:", file, "Skipping to the next file."))
-                         return(NULL) # Skip this iteration and continue with the next file
+                         return(NULL) 
                        })
-
-                       # Skip processing if the sound is NULL (i.e., readWave failed)
                        if (is.null(sound)) {
                          return(NULL)
                        }
 
-
                        # Calculate FADI and keep its default output columns
-                       fadi <- fadi(soundfile=sound,
+                       fadi_result <- fadi(soundfile=sound,
                                          args_list$noise_file,
                                          args_list$NEM,
                                          args_list$min_freq,
@@ -148,8 +150,8 @@ fadi_folder <- function (folder,
                                          args_list$props)
 
                        # Combine the results for each file into a single row
-                       tibble(file_name = file) %>%
-                         bind_cols(fadi)
+                       tibble(file_name = file) |>
+                         bind_cols(fadi_result)
                      }
 
   # Combine results with metadata and return

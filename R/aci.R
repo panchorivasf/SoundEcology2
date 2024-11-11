@@ -84,7 +84,6 @@ aci <- function(wave,
     stop(" j is not a number.")
   }
 
-
   #function that gets the difference of values
   get_d <- function(spectrum, freq_row, min_col, max_col){
     D = 0

@@ -7,7 +7,7 @@
 aci(
   wave,
   freq.res = 50,
-  w.fun = "hanning",
+  win.fun = "hanning",
   min.freq = NA,
   max.freq = NA,
   j = NA,
@@ -20,7 +20,7 @@ aci(
 
 \item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).}
 
-\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to use when calculating the value, in Hertz. Default = 0.}
 

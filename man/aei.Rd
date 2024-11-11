@@ -7,7 +7,7 @@
 aei(
   wave,
   freq.res = 50,
-  w.fun = "hanning",
+  win.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
   n.bands = 10,
@@ -23,7 +23,7 @@ aei(
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
 
-\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to compute the spectrogram.}
 

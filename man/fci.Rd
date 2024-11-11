@@ -7,11 +7,10 @@
 fci(
   wave,
   channel = "left",
-  rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
   freq.res = 50,
-  plot = FALSE,
+  spectrogram = FALSE,
   ggplot = FALSE,
   plot.title = "Frequency Cover Analysis",
   sound.color = "#045E10",
@@ -35,7 +34,7 @@ fci(
 
 \item{freq.res}{Numeric. The frequency resolution to be used when selecting a window length for the FFT.}
 
-\item{plot}{Logical. If TRUE, the function will generate and display a plot of the binary spectrogram with the frequency bands marked. Default is TRUE.}
+\item{spectrogram}{Logical. If TRUE, the function will generate and display a plot of the binary spectrogram with the frequency bands marked. Default is TRUE.}
 
 \item{ggplot}{Logical. If TRUE, the plot is output is a ggplot object. If FALSE (default), the base plot function is used (faster rendering).}
 
@@ -52,9 +51,11 @@ fci(
 \item{hf.min}{Numeric. The minimum frequency (in Hz) for the high-frequency band. Default is 12000 Hz.}
 
 \item{hf.max}{Numeric. The maximum frequency (in Hz) for the high-frequency band. Default is 22000 Hz.}
+
+\item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
 }
 \value{
-A tibble containing the proportions of the spectrogram that exceed the amplitude cutoff for each of the low, mid, and high-frequency bands.
+A tibble and an optional spectrogram.
 }
 \description{
 This function analyzes the spectral occupancy of 'low', 'mid', 'high', and 'ultra' frequency bands, which limits are defined by the user. It calculates the proportion of cells in each frequency band exceeding a specified dB cutoff and optionally plots the binary spectrogram with frequency bands delimited.
@@ -62,7 +63,7 @@ This function analyzes the spectral occupancy of 'low', 'mid', 'high', and 'ultr
 \examples{
 \dontrun{
 # Assuming 'wave' is a Wave object
-results <- fc(wave, cutoff = 65, freq.res = 100,  plot = TRUE)
+results <- fci(wave, cutoff = 65, freq.res = 100,  spectrogram = TRUE)
 print(results)
 }
 }

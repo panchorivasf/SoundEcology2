@@ -30,38 +30,18 @@
 tai <- function(wave,
                 channel = 'each',
                 hpf = 0,
-                rm.offset = TRUE,
                 cutoff = -60,
                 n.windows = 120,
                 freq.res = 100,
                 plot = FALSE,
                 plot.title = NULL,
-                verbose = FALSE) {
-
-
-  # Check if the wave is stereo
-  if (wave@stereo) {
-    if (channel == 'each') {
-      wave.left <- tuneR::channel(wave, 'left')
-      wave.right <- tuneR::channel(wave, 'right')
-    } else if (channel == 'left') {
-      wave <- tuneR::channel(wave, 'left')
-    } else if (channel == 'right') {
-      wave <- tuneR::channel(wave, 'right')
-    } else if (channel == 'mix'){
-      wave <- tuneR::mono(wave, "both")
-    } else {
-      stop("Invalid channel selected.")
-    }
-  }
+                verbose = TRUE) {
 
   total_duration <- seewave::duration(wave)
   samp_rate <- wave@samp.rate
 
   calculate_index <- function(wave,
-                              channel,
                               hpf,
-                              rm.offset,
                               cutoff,
                               n.windows,
                               freq.res,
@@ -69,9 +49,8 @@ tai <- function(wave,
                               plot.title,
                               verbose){
 
-    if(rm.offset){
-      wave <- seewave::rmoffset(wave, output = "Wave")
-    }
+    wave <- seewave::rmoffset(wave, output = "Wave")
+    
 
     # Apply high-pass filter
     if (hpf > 0) {
@@ -80,12 +59,9 @@ tai <- function(wave,
       stop("HPF should be either 0 or a positive number (in Hertz) \n")
     }
 
-
-    spectrogram <- spectrogram_cutoff(wave,
+    spectrogram <- quiet(spectrogram_cutoff(wave,
                                       freq.res = freq.res,
-                                      plot = FALSE)
-
-
+                                      plot = FALSE))
 
     trill_spectral <- matrix(nrow = nrow(spectrogram), ncol = ncol(spectrogram))
 
@@ -133,8 +109,8 @@ tai <- function(wave,
     percent_midf_noisy_frames <- round((time_frames_with_midf_noise *100)/ ncol(trill_spectral))
 
     trill_summary <- tibble(
-      index = "trill activity",
-      value = round(mean(trill_mean, na.rm = TRUE), 1),
+      index = "tai",
+      value = round(mean(trill_mean, na.rm = TRUE), 3),
       value.a2k = high_freq_mean,
       lowf.noise = percent_lowf_noisy_frames,
       midf.noise = percent_midf_noisy_frames,
@@ -195,103 +171,146 @@ tai <- function(wave,
 
     return(list(summary = trill_summary, spectral = trill_mean))
   }
-
-  # Calculate the index based on the stereo condition
-  if (channel == 'each') {
-    if(!wave@stereo){
-      stop("Can't select 'each' channel for a mono file.\n")
-    }
-
-    if (plot) {
-      stop("Plotting is not allowed when calculating TAI over both channels.\n")
-    }
-
-
-    if (verbose) cat("Calculating Trill Activity Index on 2 channels... \n")
-
-    tai_left <- calculate_index(wave.left,
-                                hpf = hpf,
-                                rm.offset = rm.offset,
-                                cutoff = cutoff,
-                                n.windows = n.windows,
-                                freq.res = freq.res,
-                                plot = FALSE,
-                                plot.title = NULL,
-                                verbose = FALSE)
-    tai_right <- calculate_index(wave.right,
-                                 hpf = hpf,
-                                 rm.offset = rm.offset,
-                                 cutoff = cutoff,
-                                 n.windows = n.windows,
-                                 freq.res = freq.res,
-                                 plot = FALSE,
-                                 plot.title = NULL,
-                                 verbose = FALSE)
-
-    tai_left_summary <- tai_left$summary
-    tai_right_summary <- tai_right$summary
-
-    tai_left_spectral <- tai_left$spectral
-    tai_right_spectral <- tai_right$spectral
-
-    tai_global <- tibble::tibble(
-      index = "tai",
-      value_l = tai_left_summary$value,
-      value_r = tai_right_summary$value,
-      value_avg = round((tai_left_summary$value + tai_right_summary$value) / 2, 3),
-      low_freq_noise_l = tai_left_summary$lowf.noise,
-      low_freq_noise_r = tai_right_summary$lowf.noise,
-      low_freq_noise_avg = round((tai_left_summary$lowf.noise + tai_right_summary$lowf.noise) / 2, 3),
-      mid_freq_noise_l = tai_left_summary$midf.noise,
-      mid_freq_noise_r = tai_right_summary$midf.noise,
-      mid_freq_noise_avg = round((tai_left_summary$midf.noise + tai_right_summary$midf.noise) / 2, 3)
-    )
-
-    if(verbose){
-      print(tai_global)
-    }
-
-
-    invisible(list(summary = tai_global, spectral_left = tai_left_spectral, spectral_right = tai_right_spectral))
-
-
-
-
-  } else {
-
-    if (verbose) {
-      if(channel == 'left'){
-        cat("Calculating Trill Activity Index on the left channel... \n")
-
-      }else if(channel == 'right'){
-        cat("Calculating Trill Activity Index on the right channel... \n")
-
-      }else if(channel == 'mix'){
-        cat("Calculating Trill Activity Index on a mix of the two channels... \n")
-      }
-    }
-
-    # Calulate NBAI
-    tai_global <- calculate_index(wave,
+  
+  if (wave@stereo){
+    
+    if (channel == 'each') {
+      
+      if (verbose) cat("Calculating Trill Activity Index on 2 channels... \n")
+      
+      wave_left <- tuneR::channel(wave, 'left')
+      wave_right <- tuneR::channel(wave, 'right')
+      
+      tai_left <- calculate_index(wave = wave_left,
                                   hpf = hpf,
-                                  rm.offset = rm.offset,
                                   cutoff = cutoff,
                                   n.windows = n.windows,
                                   freq.res = freq.res,
                                   plot = FALSE,
                                   plot.title = NULL,
                                   verbose = FALSE)
-
-    summary <- tai_global$summary
-    spectral <- tai_global$spectral
-
-    if(verbose){
-      print(summary)
-
+      tai_right <- calculate_index(wave = wave_right,
+                                   hpf = hpf,
+                                   cutoff = cutoff,
+                                   n.windows = n.windows,
+                                   freq.res = freq.res,
+                                   plot = FALSE,
+                                   plot.title = NULL,
+                                   verbose = FALSE)
+      
+      tai_left_summary <- tai_left$summary
+      tai_right_summary <- tai_right$summary
+      
+      tai_left_spectral <- tai_left$spectral
+      tai_right_spectral <- tai_right$spectral
+      
+      tai_global <- tibble::tibble(
+        index = "tai",
+        channel = "each",
+        value_l = tai_left_summary$value,
+        value_r = tai_right_summary$value,
+        value_avg = round((tai_left_summary$value + tai_right_summary$value) / 2, 3),
+        low_freq_noise_l = tai_left_summary$lowf.noise,
+        low_freq_noise_r = tai_right_summary$lowf.noise,
+        low_freq_noise_avg = round((tai_left_summary$lowf.noise + tai_right_summary$lowf.noise) / 2, 3),
+        mid_freq_noise_l = tai_left_summary$midf.noise,
+        mid_freq_noise_r = tai_right_summary$midf.noise,
+        mid_freq_noise_avg = round((tai_left_summary$midf.noise + tai_right_summary$midf.noise) / 2, 3)
+      )
+      
+      if(verbose){
+        print(tai_global)
+      }
+      
+      invisible(list(summary = tai_global, spectral_left = tai_left_spectral, spectral_right = tai_right_spectral))
+      
+      
+    } else if (channel == 'mix') {
+      wave_mix <- mono(wave, "both")
+      tai_mix <- calculate_index(wave = wave_mix,
+                                 hpf = hpf,
+                                 cutoff = cutoff,
+                                 n.windows = n.windows,
+                                 freq.res = freq.res,
+                                 plot = FALSE,
+                                 plot.title = NULL,
+                                 verbose = FALSE)
+      
+      tai_mix$summary <- tai_mix$summary |> 
+        mutate(channel = "mix") |> 
+        relocate(channel, .after = index)
+      
+      if(verbose){
+        print(tai_mix$summary)
+      }
+      
+      invisible(list(summary = tai_mix$summary, spectral = tai_mix$spectral))
+      
+    } else if (channel == 'left') {
+      wave_left <- channel(wave, "left")
+      tai_left <- calculate_index(wave = wave_left,
+                                 hpf = hpf,
+                                 cutoff = cutoff,
+                                 n.windows = n.windows,
+                                 freq.res = freq.res,
+                                 plot = FALSE,
+                                 plot.title = NULL,
+                                 verbose = FALSE)
+      
+      tai_left$summary <- tai_left$summary |> 
+        mutate(channel = "left") |> 
+        relocate(channel, .after = index)
+      
+      if(verbose){
+        print(tai_left$summary)
+      }
+      
+      invisible(list(summary = tai_left$summary, spectral = tai_left$spectral))
+      
+    } else if (channel == 'right') {
+      wave_right <- channel(wave, "right")
+      tai_right <- calculate_index(wave = wave_right,
+                                  hpf = hpf,
+                                  cutoff = cutoff,
+                                  n.windows = n.windows,
+                                  freq.res = freq.res,
+                                  plot = FALSE,
+                                  plot.title = NULL,
+                                  verbose = FALSE)
+      
+      tai_right$summary <- tai_right$summary |> 
+        mutate(channel = "right") |> 
+        relocate(channel, .after = index)
+      
+      if(verbose){
+        print(tai_right$summary)
+      }
+      
+      invisible(list(summary = tai_right$summary, spectral = tai_right$spectral))
+      
     }
-
-    invisible(list(summary = summary, spectral = spectral))
-
-
+    
+  } else  {
+    # MONO
+    tai_mono <- calculate_index(wave = wave,
+                                 hpf = hpf,
+                                 cutoff = cutoff,
+                                 n.windows = n.windows,
+                                 freq.res = freq.res,
+                                 plot = FALSE,
+                                 plot.title = NULL,
+                                 verbose = FALSE)
+    
+    tai_mono$summary <- tai_mono$summary |> 
+      mutate(channel = "mono") |> 
+      relocate(channel, .after = index)
+    
+    if(verbose){
+      print(tai_mono$summary)
+    }
+    
+    invisible(list(summary = tai_mono$summary, spectral = tai_mono$spectral))
+    
   }
+
 }

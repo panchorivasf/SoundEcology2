@@ -6,13 +6,13 @@
 \usage{
 fci_list(
   audio.list,
+  folder = NULL,
   output.csv = "fci_results.csv",
   channel = "each",
-  rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
   freq.res = 50,
-  plot = FALSE,
+  spectrogram = FALSE,
   ggplot = FALSE,
   plot.title = "Frequency Cover Analysis",
   sound.color = "#045E10",
@@ -30,11 +30,11 @@ fci_list(
 \arguments{
 \item{audio.list}{The list containing the WAV files to analyze.}
 
+\item{folder}{The folder containing the WAV files to analyze.}
+
 \item{output.csv}{The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".}
 
 \item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.}
-
-\item{rm.offset}{Logical. Whether to remove the DC offset from the signal. Default is TRUE.}
 
 \item{hpf}{High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.}
 
@@ -42,7 +42,7 @@ fci_list(
 
 \item{freq.res}{Frequency resolution of the spectrogram in Hz. Default is 100.}
 
-\item{plot}{Logical. Whether to generate plots for each file. Default is FALSE.}
+\item{spectrogram}{Logical. Whether to generate plots for each file. Default is FALSE.}
 
 \item{ggplot}{Logical. Whether to use ggplot2 for plotting (if plot is TRUE). Default is FALSE.}
 

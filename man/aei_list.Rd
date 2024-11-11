@@ -6,30 +6,34 @@
 \usage{
 aei_list(
   audio.list,
+  folder = NULL,
   save.csv = TRUE,
   csv.name = "aei_results.csv",
   freq.res = 50,
-  w.fun = "hanning",
+  win.fun = "hanning",
   min.freq = 0,
   max.freq = 10000,
   n.bands = 10,
-  cutoff = 5,
+  cutoff = -60,
   norm.spec = FALSE,
-  noise.red = 2,
+  noise.red = 0,
   rm.offset = TRUE,
   props = TRUE,
   prop.den = 1,
+  db.fs = TRUE,
   n.cores = -1
 )
 }
 \arguments{
 \item{audio.list}{a list with the audio files to import.}
 
+\item{folder}{a path to the folder with audio files to import.}
+
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 
 \item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to compute the spectrogram}
 

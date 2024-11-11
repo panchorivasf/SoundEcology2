@@ -6,6 +6,7 @@
 \usage{
 ndsi_list(
   audio.list,
+  folder = NULL,
   save.csv = TRUE,
   csv.name = "ndsi_results.csv",
   w.len = 50,
@@ -19,6 +20,8 @@ ndsi_list(
 }
 \arguments{
 \item{audio.list}{a list of audio files from the working directory.}
+
+\item{folder}{a path to the folder containing the audio files.}
 
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 

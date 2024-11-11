@@ -31,7 +31,7 @@ nbai <- function(wave,
                  spectrogram = FALSE,
                  dark.plot = TRUE,
                  plot.title = deparse(substitute(wave)),
-                 verbose = FALSE) {
+                 verbose = TRUE) {
   
   
   if (wave@stereo) {

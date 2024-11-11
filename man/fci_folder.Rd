@@ -5,16 +5,15 @@
 \title{Frequency Cover Indices on Multiple WAV Files in a Folder}
 \usage{
 fci_folder(
-  folder,
+  folder = NULL,
   output.csv = "fci_results.csv",
   channel = "each",
-  rm.offset = TRUE,
   hpf = 0,
   cutoff = -60,
   freq.res = 50,
-  plot = FALSE,
+  spectrogram = FALSE,
   ggplot = FALSE,
-  plot.title = "Frequency Cover Indices",
+  plot.title = "Frequency Cover Analysis",
   sound.color = "#045E10",
   lf.min = 0,
   lf.max = 1500,
@@ -34,15 +33,11 @@ fci_folder(
 
 \item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.}
 
-\item{rm.offset}{Logical. Whether to remove the DC offset from the signal. Default is TRUE.}
-
 \item{hpf}{High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.}
 
 \item{cutoff}{The amplitude threshold (in dB) below which frequencies will be considered inactive. Default is -60.}
 
 \item{freq.res}{Frequency resolution of the spectrogram in Hz. Default is 100.}
-
-\item{plot}{Logical. Whether to generate plots for each file. Default is FALSE.}
 
 \item{ggplot}{Logical. Whether to use ggplot2 for plotting (if plot is TRUE). Default is FALSE.}
 
@@ -67,6 +62,8 @@ fci_folder(
 \item{uf.max}{The maximum frequency (in Hz) for the ultra-high-frequency band. Default is 24000.}
 
 \item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+
+\item{plot}{Logical. Whether to generate plots for each file. Default is FALSE.}
 }
 \value{
 A tibble containing the frequency cover analysis results for each file.

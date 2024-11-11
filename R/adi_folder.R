@@ -5,6 +5,8 @@
 #' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
 #'
 #' @param folder a path to the folder with audio files to import.
+#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
+#' files outside the list will be excluded. 
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
@@ -41,21 +43,22 @@
 #' @examples
 #' adi_folder("path/to/folder")
 adi_folder <- function (folder = NULL,
-                      save.csv = TRUE,
-                      csv.name = "adi_results.csv",
-                      freq.res = 50,
-                      win.fun = "hanning",
-                      min.freq = 0,
-                      max.freq = 10000,
-                      n.bands = 10,
-                      cutoff = -60,
-                      norm.spec = FALSE,
-                      noise.red = 0,
-                      rm.offset = TRUE,
-                      props = FALSE,
-                      prop.den = 1,
-                      db.fs = TRUE,
-                      n.cores = -1){
+                        list = NULL,
+                        save.csv = TRUE,
+                        csv.name = "adi_results.csv",
+                        freq.res = 50,
+                        win.fun = "hanning",
+                        min.freq = 0,
+                        max.freq = 10000,
+                        n.bands = 10,
+                        cutoff = -60,
+                        norm.spec = FALSE,
+                        noise.red = 0,
+                        rm.offset = TRUE,
+                        props = FALSE,
+                        prop.den = 1,
+                        db.fs = TRUE,
+                        n.cores = -1){
   
   # Store the arguments
   args_list <- list(freq.res = freq.res,
@@ -75,8 +78,14 @@ adi_folder <- function (folder = NULL,
     folder <- getwd()
   }
   setwd(folder)
-
-  audio.list <- list_waves()
+  
+  if(is.null(list)){
+    audio.list <- list_waves()
+    
+  } else {
+    audio.list <- list
+  }
+  
   nFiles <- length(audio.list)
   
   if(is.null(n.cores)){
@@ -126,7 +135,7 @@ adi_folder <- function (folder = NULL,
     type <- ifelse(sound1@stereo, "stereo", "mono")
     rm(sound1)
   }
-
+  
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
   
   
@@ -144,7 +153,7 @@ adi_folder <- function (folder = NULL,
                        if (is.null(sound)) {
                          return(NULL)
                        }
-                    
+                       
                        # Calculate ADI and keep its default output columns
                        adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
                        
@@ -154,10 +163,8 @@ adi_folder <- function (folder = NULL,
                        
                      }
   
-  
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
-  
   
   stopCluster(cl)
   

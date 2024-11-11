@@ -6,6 +6,7 @@
 \usage{
 nbai_list(
   audio.list,
+  folder = NULL,
   channel = "each",
   hpf = 0,
   freq.res = 50,
@@ -18,6 +19,8 @@ nbai_list(
 }
 \arguments{
 \item{audio.list}{Character. A list containing the names of the wave audio.list to analyze.}
+
+\item{folder}{Character. The path to the folder containing the wave files to analyze.}
 
 \item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.}
 

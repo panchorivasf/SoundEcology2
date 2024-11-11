@@ -5,6 +5,8 @@
 #' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
 #'
 #' @param folder a path to the folder with audio files to import.
+#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
+#' files outside the list will be excluded. 
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param frew.res the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).
@@ -31,19 +33,17 @@
 #' Optimized to facilitate working with a list of audio files before importing them into R.
 #' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
 #'
-#' @import doParallel
+#' @import doParallel 
 #' @import foreach
-#' @import parallel
-#' @import tuneR
-#' @import tidyverse
 #' @import seewave
-#' @import lubridate
-
-
+#' @importFrom parallel detectCores makeCluster
+#' @importFrom tuneR readWave
+#' @importFrom dplyr bind_cols tibble
 #'
 #' @examples
 #' aei_folder("path/to/folder")
 aei_folder <- function (folder = NULL,
+                        list = NULL,
                         save.csv = TRUE,
                         csv.name = "aei_results.csv",
                         freq.res = 50,
@@ -60,110 +60,110 @@ aei_folder <- function (folder = NULL,
                         db.fs = TRUE,
                         n.cores = -1){
   
+  args_list <- list(freq.res = freq.res, win.fun = win.fun, min.freq = min.freq,
+                    max.freq = max.freq, n.bands = n.bands, cutoff = cutoff,
+                    norm.spec = norm.spec, noise.red = noise.red, rm.offset = rm.offset,
+                    props = props, prop.den = prop.den,  db.fs = db.fs)
+  
   if(is.null(folder)){
     folder <- getwd()
   }
   setwd(folder)
-
-  audio.list <- list_waves()
-  nFiles <- length(audio.list)
-
-  args_list <- list(freq.res = freq.res, win.fun = win.fun, min.freq = min.freq,
-                    max.freq = max.freq, n.bands = n.bands, cutoff = cutoff,
-                    norm.spec = norm.spec, noise.red = noise.red, rm.offset = rm.offset,
-                    props = props, prop.den = prop.den, db.fs = db.fs)
   
+  if(is.null(list)){
+    audio.list <- list_waves()
+    
+  } else {
+    audio.list <- list
+  }
   
-  # Set up parallel workers
+  n.files <- length(audio.list)
+  
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
-    num_cores <- parallel::detectCores() - 1  # Detect available cores
+    num_cores <- parallel::detectCores() - 1  
   }else{
     num_cores <- n.cores
   }
-  if(nFiles < num_cores){
-    num_cores <- nFiles
+  if(n.files < num_cores){
+    num_cores <- n.files
   }
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
-
-  if (length(files) > 10) {
+  
+  
+  if (n.files > 10){
     cat("Evaluating the job...\n\n")
     
-  startTime <- Sys.time()
-
-  sound1 <- readWave(audio.list[1])
-  type <- ifelse(sound1@stereo, "stereo", "mono")
-
-  aei1 <- quiet(do.call(aei, c(list(sound1), args_list)))
-
-  tibble(file_name = "filename") %>% bind_cols(aei1)
-
-  timePerFile <-  Sys.time() - startTime
-  # Add overhead per file
-  timePerFile <- timePerFile + as.numeric(seconds(2.2))
-
-  rm(sound1)
-  rm(aei1)
-
-  # Estimate total time accounting for parallel processing
-  estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
-  # Add overhead time
-  adjustedTotalTime <- estimatedTotalTime
-  # Calculate the end time
-  expectedCompletionTime <- Sys.time() + adjustedTotalTime
-
-  cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-  cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-  } else {
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    startTime <- Sys.time()
+    
+    sound1 <- readWave(audio.list[1])
     type <- ifelse(sound1@stereo, "stereo", "mono")
+    
+    aei1 <- quiet(do.call(aei, c(list(sound1), args_list)))
+    
+    tibble(file_name = "filename") |> bind_cols(aei1)
+    
+    timePerFile <-  Sys.time() - startTime
+    timePerFile <- timePerFile + 2.2
+    
     rm(sound1)
-}
-  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
+    rm(aei1)
+    
+    # Estimate total time accounting for parallel processing
+    estimatedTotalTime <- (timePerFile * n.files) / as.numeric(num_cores)
+    # Add overhead time
+    adjustedTotalTime <- estimatedTotalTime
+    # Calculate the end time
+    expectedCompletionTime <- Sys.time() + adjustedTotalTime
+    
+    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    
+  } else {
+    sound1 <- readWave(audio.list[1], to = 2, units = "seconds")
+    type <- ifelse(sound1@stereo, "stereo", "mono")
+  }
+  cat("Analyzing", n.files, type, "files using", num_cores, "cores... \n")
   
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
-
-                       # Try to read the sound file
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
+                       
                        sound <- tryCatch({
                          readWave(file)
                        }, error = function(e) {
-                         message(paste("Error reading file:", file, "Skipping to the next file."))
-                         return(NULL) # Skip this iteration and continue with the next file
+                         message(paste("Error reading file:", 
+                                       file, "Skipping to the next file."))
+                         return(NULL)
                        })
-                       # Skip processing if the sound is NULL (i.e., readWave failed)
                        if (is.null(sound)) {
                          return(NULL)
                        }
-
+                       
                        # Calculate AEI and keep its default output columns
-                       aei <- quiet(do.call(aei, c(list(sound), args_list)))
+                       aei_result <- quiet(do.call(aei, c(list(sound), args_list)))
                        
                        # Combine the results for each file into a single row
-                       tibble(file_name = file) %>%
-                         bind_cols(aei)
-
-
+                       tibble(file_name = file) |>
+                         bind_cols(aei_result)
+                       
                      }
-
-
+  
+  
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
-
-
+  
+  
   stopCluster(cl)
-
+  
   if(save.csv == TRUE){
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
   }
-
+  
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
-
+  
   return(resultsWithMetadata)
-
+  
 }
-

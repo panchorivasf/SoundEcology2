@@ -6,6 +6,7 @@
 \usage{
 bi_list(
   audio.list,
+  folder = NULL,
   save.csv = TRUE,
   csv.name = "bi_results.csv",
   w.len = 512,
@@ -20,6 +21,8 @@ bi_list(
 }
 \arguments{
 \item{audio.list}{a list of audio files to import.}
+
+\item{folder}{a path to the folder with audio files to import.}
 
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 

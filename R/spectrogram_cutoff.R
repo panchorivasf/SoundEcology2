@@ -10,12 +10,15 @@
 #' @param plot.title An optional string specifying the title of the plot. Defaults to `NULL`.
 #' @param ggplot A logical value indicating whether to use ggplot2 for plotting. If `FALSE`, base R plotting will be used to generate the plot. Defaults to `TRUE`.
 #' @param noise.red Character. Either NULL, 'rows' or 'cols'. Determins if and in which direction to apply noise reduction (mean subtraction).
+#' @param verbose Logical. If TRUE, ancillary messages are printed in the console. 
 #'
 #' @return Returns the spectrogram matrix with the cutoff applied. If `plot = TRUE`, a plot of the spectrogram is displayed.
 #' @export
 #'
-#' @importFrom seewave duration
-#' @importFrom seewave spectro
+#' @importFrom seewave duration spectro rmoffset
+#' @importFrom tibble rownames
+#' @importFrom tidyr pivot_longer
+#' @importFrom dplyr mutate
 #' @import viridis
 #'
 #' @examples
@@ -29,45 +32,47 @@ spectrogram_cutoff <- function(wave,
                                plot = FALSE,
                                plot.title = NULL,
                                ggplot = TRUE,
-                               noise.red = NULL){
+                               noise.red = NULL,
+                               verbose = FALSE){
   
   total_duration <- seewave::duration(wave)
   samp_rate <- wave@samp.rate
   wl <- samp_rate / freq.res
   if (wl %% 2 == 1) { wl <- wl + 1 }
-  cat("Automatic window length:", wl, "\n")
-  
+  if (verbose) {
+    cat("Automatic window length:", wl, "\n")
+  }
   # Remove DC offset
   wave <- rmoffset(wave, output = "Wave")
   
   if (is.null(noise.red)) {
     # Get the spectrogram matrix
-    spectro_res <- seewave::spectro(wave,
-                                    wl = wl,
-                                    norm = FALSE,
-                                    dB = NULL,
-                                    plot = FALSE,
-                                    scale = FALSE,
-                                    correction = "amplitude")
+    spectro_res <- spectro(wave,
+                           wl = wl,
+                           norm = FALSE,
+                           dB = NULL,
+                           plot = FALSE,
+                           scale = FALSE,
+                           correction = "amplitude")
     
   } else if (noise.red == "rows"){
-    spectro_res <- seewave::spectro(wave,
-                                    wl = wl,
-                                    norm = FALSE,
-                                    dB = NULL,
-                                    plot = FALSE,
-                                    scale = FALSE,
-                                    correction = "amplitude",
-                                    noisereduction = 1)
+    spectro_res <- spectro(wave,
+                           wl = wl,
+                           norm = FALSE,
+                           dB = NULL,
+                           plot = FALSE,
+                           scale = FALSE,
+                           correction = "amplitude",
+                           noisereduction = 1)
   } else if (noise.red == "cols"){
-    spectro_res <- seewave::spectro(wave,
-                                    wl = wl,
-                                    norm = FALSE,
-                                    dB = NULL,
-                                    plot = FALSE,
-                                    scale = FALSE,
-                                    correction = "amplitude",
-                                    noisereduction = 2)
+    spectro_res <- spectro(wave,
+                           wl = wl,
+                           norm = FALSE,
+                           dB = NULL,
+                           plot = FALSE,
+                           scale = FALSE,
+                           correction = "amplitude",
+                           noisereduction = 2)
     
   } else {
     stop("noise.red should be 'rows', 'columns', or 'NULL'. \n")
@@ -105,9 +110,21 @@ spectrogram_cutoff <- function(wave,
     
     if (ggplot) {
       # Convert the spectrogram matrix into a data frame for ggplot
-      spectro_df <- reshape2::melt(spectrogram)
-      spectro_df$Frequency <- freq[spectro_df$Var1]
-      spectro_df$Time <- time[spectro_df$Var2]
+      # spectro_df <- reshape2::melt(spectrogram)
+      # spectro_df$Frequency <- freq[spectro_df$Var1]
+      # spectro_df$Time <- time[spectro_df$Var2]
+      
+      spectro_df <- as.data.frame(spectrogram) |>
+        tibble::rownames_to_column("Var1") |>
+        tidyr::pivot_longer(cols = -Var1,
+                            names_to = "Var2",
+                            values_to = "value") |>
+        dplyr::mutate(
+          Var1 = as.numeric(Var1),
+          Var2 = as.numeric(stringr::str_remove(Var2, "V")),
+          Frequency = freq[Var1],
+          Time = time[Var2]
+        )
       
       # Use ggplot for plotting
       p <- ggplot(spectro_df, aes(x = Time, y = Frequency, fill = value)) +

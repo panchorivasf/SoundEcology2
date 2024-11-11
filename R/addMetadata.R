@@ -6,8 +6,8 @@
 #' @details
 #' The input data frame must contain a column called "file_name"
 #'
-#' @importFrom lubridate as_datetine date hour
-#' @import dplyr select
+#' @import lubridate
+#' @importFrom dplyr select
 #'
 #' @noRd
 #' @examples addMetadata(df)

@@ -92,7 +92,7 @@ ndsi_folder <- function (folder = NULL,
     sound1 <- readWave(audio.list[1])
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
-    ndsi1 <- quiet(do.call(nbai, c(list(sound1), args_list)))
+    ndsi1 <- quiet(do.call(ndsi, c(list(sound1), args_list)))
     
     tibble(file_name = "filename")  |>  bind_cols(ndsi1)
     

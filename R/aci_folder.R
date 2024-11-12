@@ -51,6 +51,7 @@ aci_folder <- function (folder = NULL,
                         noise.red = 2,
                         rm.offset = TRUE,
                         n.cores = -1){
+  cat("Working on it...\n")
   
   args_list <- list(freq.res = freq.res,
                     win.fun = win.fun,

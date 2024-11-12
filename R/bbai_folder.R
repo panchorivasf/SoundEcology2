@@ -64,6 +64,7 @@ bbai_folder <- function(folder = NULL,
                         verbose = FALSE,
                         output.csv = "bbai_results.csv",
                         n.cores = -1) {
+  cat("Working on it...\n")
   
   args_list <- list(channel = channel,
                     hpf = hpf,

@@ -57,7 +57,8 @@ bi_folder <- function (folder = NULL,
                        noise.red = 0,
                        rm.offset = TRUE,
                        n.cores = -1){
-
+  cat("Working on it...\n")
+  
   args_list <- list(w.len = w.len,
                     w.fun = w.fun,
                     min.freq = min.freq,

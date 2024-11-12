@@ -56,6 +56,7 @@ fadi_folder <- function (folder = NULL,
                          gamma = 13,
                          props = FALSE,
                          n.cores = -1){
+  cat("Working on it...\n")
   
   args_list <- list(noise_file=noise_file,NEM=NEM,min_freq=min_freq,
                     max_freq = max_freq, threshold_fixed = threshold_fixed,

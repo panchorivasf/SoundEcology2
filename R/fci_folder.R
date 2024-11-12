@@ -59,6 +59,7 @@ fci_folder <- function(folder = NULL,
                        uf.min = 18000,
                        uf.max = 24000,
                        n.cores = -1) {
+  cat("Working on it...\n")
   
   if(is.null(folder)){
     folder <- getwd()

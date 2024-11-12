@@ -48,7 +48,7 @@ nbai_folder <- function(folder = NULL,
                         output.csv = "nbai_results.csv",
                         n.cores = -1,
                         verbose = TRUE) {
-  cat("Working on it...\n\n")
+  cat("Working on it...\n")
   
   args_list <- list(channel = channel,
                     hpf = hpf,

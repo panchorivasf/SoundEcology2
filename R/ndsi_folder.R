@@ -24,13 +24,12 @@
 #' metadata
 #' @export
 #'
-#' @import doParallel
 #' @import foreach
-#' @import parallel
-#' @import tuneR
-#' @import tidyverse
+#' @importFrom parallel makeCluster
+#' @importFrom doParallel registerDoParallel
+#' @importFrom tuneR readWave
+#' @importFrom dplyr tibble bind_cols
 #' @import seewave
-#' @import lubridate
 #'
 #' @examples
 #' \dontrun{
@@ -48,6 +47,7 @@ ndsi_folder <- function (folder = NULL,
                          rm.offset = TRUE,
                          output.csv = "ndsi_results.csv",
                          n.cores = -1){
+  cat("Working on it...\n")
   
   args_list <- list(w.len = w.len,
                     anthro.min = anthro.min,
@@ -124,7 +124,7 @@ ndsi_folder <- function (folder = NULL,
   
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "tidyverse", "seewave")) %dopar% {
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
 
                        sound <- tryCatch({
                          readWave(file)

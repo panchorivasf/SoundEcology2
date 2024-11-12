@@ -59,6 +59,7 @@ adi_folder <- function (folder = NULL,
                         prop.den = 1,
                         db.fs = TRUE,
                         n.cores = -1){
+  cat("Working on it...\n")
   
   # Store the arguments
   args_list <- list(freq.res = freq.res,

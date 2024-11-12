@@ -59,6 +59,7 @@ aei_folder <- function (folder = NULL,
                         prop.den = 1,
                         db.fs = TRUE,
                         n.cores = -1){
+  cat("Working on it...\n")
   
   args_list <- list(freq.res = freq.res, win.fun = win.fun, min.freq = min.freq,
                     max.freq = max.freq, n.bands = n.bands, cutoff = cutoff,

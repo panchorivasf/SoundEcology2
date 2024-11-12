@@ -32,7 +32,6 @@ tai_folder <- function(folder = NULL,
                        list = NULL,
                        channel = 'each',
                        hpf = 0,
-                       rm.offset = TRUE,
                        cutoff = -60,
                        n.windows = 120,
                        freq.res = 100,
@@ -41,11 +40,11 @@ tai_folder <- function(folder = NULL,
                        verbose = TRUE,
                        output.csv = "tai_results.csv",
                        n.cores = -1) {
+  cat("Working on it...\n")
   
   args_list <- list(channel = channel,
                     hpf = hpf,
-                    rm.offset = rm.offset,
-                    cutoff = -cutoff,
+                    cutoff = cutoff,
                     n.windows = n.windows,
                     freq.res = freq.res,
                     plot = plot,
@@ -58,7 +57,7 @@ tai_folder <- function(folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- quiet(list_waves())
     
   } else {
     audio.list <- list

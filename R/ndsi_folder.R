@@ -39,7 +39,7 @@
 
 ndsi_folder <- function (folder = NULL,
                          list = NULL,
-                         w.len = 50,
+                         w.len = 512,
                          anthro.min = 1000,
                          anthro.max = 2000,
                          bio.min = 2000,

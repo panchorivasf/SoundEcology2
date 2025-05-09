@@ -34,6 +34,10 @@ plot_diel_indices <- function(data,
                               span = 0.3, 
                               scaling = "none") {
   
+  if (!scaling %in% c("none", "minmax", "maxabs", "zscore", "log", "robust")) {
+    stop("'scaling' can only be 'none', 'minmax', 'maxabs', 'zscore', 'log', or 'robust'")
+  }
+  
   # Ensure the datetime column is properly parsed as POSIXct
   data <- data |>
     mutate(datetime = as.POSIXct(datetime, format = "%Y-%m-%d %H:%M:%S"),

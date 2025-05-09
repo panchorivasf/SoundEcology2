@@ -45,7 +45,7 @@
 #' where the "whole community" equals to the cells above the decibel threshold 
 #' across the spectrogram (up to 'max_freq').
 #' Another important update is that now the spectrogram is not normalized by 
-#' default, which made recordings with different signal-to-noise ratio not comparable.
+#' default, which made recordings#' with different signal-to-noise ratio not comparable.
 #' @examples
 #' data(tropicalsound)
 #' adi(tropicalsound)
@@ -458,14 +458,14 @@ adi <- function(wave,
                               value_l = left_adi_return,
                               value_r = right_adi_return)
     
-    adiOutputStereo <- adiOutputStereo |>
+    adiOutputStereo <- adiOutputStereo %>%
       add_column(value_avg = ((adiOutputStereo$value_l+adiOutputStereo$value_r)/2), 
                  .after = "value_r")
     
     
     
     # Add metadata columns
-    adiOutputStereo <- adiOutputStereo |>
+    adiOutputStereo <- adiOutputStereo %>%
       add_column(w_len = wlen,
                  w_fun = win.fun,
                  cutoff = cutoff,
@@ -665,7 +665,7 @@ adi <- function(wave,
                             value = left_adi_return)
     
     # Add metadata columns
-    adiOutputMono <- adiOutputMono |>
+    adiOutputMono <- adiOutputMono %>%
       add_column(w_len = wlen,
                  w_fun = win.fun,
                  cutoff = cutoff,

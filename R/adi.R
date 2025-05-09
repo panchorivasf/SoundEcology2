@@ -350,7 +350,7 @@ adi <- function(wave,
       miny <- minspec + (j-1) * round((maxspec - minspec)/n.bands) # Calculate starting index of band
       maxy <- minspec + j * round((maxspec - minspec)/n.bands) -1 # Calculate ending index of band. -1 is crucial
       
-      #Ensure that the maxy does not exceed the maxspec, if it does, then maxy=maxspec
+      # If maxy exceeds maxspec, then force maxy=maxspec
       if(maxy > maxspec){
         maxy <- maxspec
       }
@@ -458,14 +458,14 @@ adi <- function(wave,
                               value_l = left_adi_return,
                               value_r = right_adi_return)
     
-    adiOutputStereo <- adiOutputStereo %>%
+    adiOutputStereo <- adiOutputStereo |>
       add_column(value_avg = ((adiOutputStereo$value_l+adiOutputStereo$value_r)/2), 
                  .after = "value_r")
     
     
     
     # Add metadata columns
-    adiOutputStereo <- adiOutputStereo %>%
+    adiOutputStereo <- adiOutputStereo |>
       add_column(w_len = wlen,
                  w_fun = win.fun,
                  cutoff = cutoff,
@@ -665,7 +665,7 @@ adi <- function(wave,
                             value = left_adi_return)
     
     # Add metadata columns
-    adiOutputMono <- adiOutputMono %>%
+    adiOutputMono <- adiOutputMono |>
       add_column(w_len = wlen,
                  w_fun = win.fun,
                  cutoff = cutoff,

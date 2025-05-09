@@ -17,7 +17,7 @@
 #' @param base The logarithm base used for calculating the Shannon index. Default is the natural logarithm (base `exp(1)`).
 #'
 #' @return A numeric vector of diversity index values for each site, sample, or group. Returns \code{NA} for any row or column containing all zero values.
-#' @export
+#' @noRd
 #'
 #' @examples
 #' # Example data: a matrix with species counts for different sites

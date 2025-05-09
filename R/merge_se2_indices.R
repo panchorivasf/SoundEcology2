@@ -28,7 +28,7 @@ merge_se2_indices <- function(folder_path = NULL, recursive = TRUE) {
       data <- utils::read.csv(.x)
 
       # Check if required columns ("file_name", "value_l", "value_r") are present
-      if (all(c("file_name", "value_l", "value_r") %in% names(data))) {
+      if (all(c("file_name", "value_l", "value_r", "value_avg") %in% names(data))) {
 
         # Select columns from "file_name" to "value_r" and filter out any "channel" column
         selected_data <- data |>
@@ -45,14 +45,15 @@ merge_se2_indices <- function(folder_path = NULL, recursive = TRUE) {
 
   # Pivot data longer for "value_l" and "value_r"
   pivoted_data <- merged_data |>
-    tidyr::pivot_longer(cols = c("value_l", "value_r"),
-                 names_to = "channel",     # Creating the "channel" column now
-                 values_to = "value") |>
-    # Convert "l" to "left" and "r" to "right"
-    dplyr::mutate(channel = case_when(
-      channel == "value_l" ~ "left",
-      channel == "value_r" ~ "right"
-    ))
+    tidyr::pivot_longer(cols = c("value_l", "value_r", "value_avg"),
+                 names_to = "channel",     # Create a "channel" column 
+                 values_to = "value") #|>
+    # rename channels
+    # dplyr::mutate(channel = case_when(
+    #   channel == "value_l" ~ "left",
+    #   channel == "value_r" ~ "right",
+    #   channel == "value_avg" ~ "mean"
+    # ))
 
   return(pivoted_data)
 }

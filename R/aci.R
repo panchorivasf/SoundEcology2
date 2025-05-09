@@ -52,11 +52,12 @@ aci <- function(wave,
     min.freq <- 0
   }
 
-  if (is.numeric(as.numeric(min.freq))){
+  if (!is.numeric(min.freq) || is.na(as.numeric(min.freq))) {
+    stop("min.freq is not a valid number.")
+  } else {
     min.freq <- as.numeric(min.freq)
-  } else{
-    stop(" min.freq is not a number.")
   }
+  
 
   if (is.numeric(as.numeric(max.freq))){
     max.freq <- as.numeric(max.freq)

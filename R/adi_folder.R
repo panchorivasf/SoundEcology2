@@ -20,6 +20,8 @@
 #' @param rmoff logical. Whether to remove DC offset before computing ADI (recommended) or not.
 #' @param props logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.
 #' @param prop.den numeric. Indicates how the energy proportion is calculated.
+#' @param db.fs logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.
+#' @param use.vegan logical; if TRUE, the diversity() function from the vegan package is called to compute Shannon's entropy. Default = FALSE.
 #' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
 #'
 #' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
@@ -58,6 +60,7 @@ adi_folder <- function (folder = NULL,
                         props = FALSE,
                         prop.den = 1,
                         db.fs = TRUE,
+                        use.vegan = FALSE,
                         n.cores = -1){
   cat("Working on it...\n")
   

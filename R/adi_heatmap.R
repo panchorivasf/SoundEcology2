@@ -20,11 +20,11 @@ adi_heatmap <- function(df, plot.title) {
   if (!any(names(df) == "noisered")) {
     df$noisered <- "none"
   }
-  df <- df %>% relocate(noisered, .after = "norm")
+  df <- df |> relocate(noisered, .after = "norm")
 
   # Extract settings
-  settings <- df %>% select(dbth, norm, noisered, propden, wlen, wfun) %>% distinct()
-  settings$dbth <- paste0("dbth.", settings$dbth)
+  settings <- df |> select(cutoff, norm, noisered, propden, wlen, wfun) |> distinct()
+  settings$cutoff <- paste0("cutoff.", settings$cutoff)
   settings$norm <- paste0("norm.", settings$norm)
   settings$noisered <- paste0("noisered.", settings$noisered)
   settings$propden <- paste0("prop.", settings$propden)
@@ -36,19 +36,19 @@ adi_heatmap <- function(df, plot.title) {
   df <- df[, relevant_cols]
 
   # mean ADI
-  df <- df %>%
-    rowwise() %>%
-    mutate(adi = mean(c(value_l, value_r))) %>%
+  df <- df |>
+    rowwise() |>
+    mutate(adi = mean(c(value_l, value_r))) |>
     select(-value_l, -value_r)
 
 
   # Convert wide format to long format, dynamically identifying frequency bands
-  df_long <- df %>%
+  df_long <- df |>
     pivot_longer(cols = starts_with("left_") | starts_with("right_"),
                  names_to = c(".value", "frequency_band"),
-                 names_pattern = "(left|right)_(.*)") %>%
-    rowwise() %>%
-    mutate(proportion = mean(c(left, right))) %>%
+                 names_pattern = "(left|right)_(.*)") |>
+    rowwise() |>
+    mutate(proportion = mean(c(left, right))) |>
     select(-left, -right)
 
   # Ordering frequency bands based on their appearance in the data frame

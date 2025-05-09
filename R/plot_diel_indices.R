@@ -35,7 +35,7 @@ plot_diel_indices <- function(data,
                               scaling = "none") {
   
   # Ensure the datetime column is properly parsed as POSIXct
-  data <- data %>%
+  data <- data |>
     mutate(datetime = as.POSIXct(datetime, format = "%Y-%m-%d %H:%M:%S"),
            hour = format(datetime, "%H")) # Extract hour for grouping
   
@@ -49,38 +49,38 @@ plot_diel_indices <- function(data,
   }
   
   # Convert index to uppercase and ensure no indices are missing
-  data <- data %>%
+  data <- data |>
     mutate(index = toupper(index))  # Convert to uppercase
   
   # Apply the selected scaling/transformation to the data
   if (scaling == "minmax") {
-    data <- data %>%
-      group_by(index) %>%
-      mutate(value_avg = (value_avg - min(value_avg)) / (max(value_avg) - min(value_avg))) %>%
+    data <- data |>
+      group_by(index) |>
+      mutate(value_avg = (value_avg - min(value_avg)) / (max(value_avg) - min(value_avg))) |>
       ungroup()
   } else if (scaling == "maxabs") {
-    data <- data %>%
-      group_by(index) %>%
-      mutate(value_avg = value_avg / max(abs(value_avg))) %>%
+    data <- data |>
+      group_by(index) |>
+      mutate(value_avg = value_avg / max(abs(value_avg))) |>
       ungroup()
   } else if (scaling == "zscore") {
-    data <- data %>%
-      group_by(index) %>%
-      mutate(value_avg = (value_avg - mean(value_avg)) / sd(value_avg)) %>%
+    data <- data |>
+      group_by(index) |>
+      mutate(value_avg = (value_avg - mean(value_avg)) / sd(value_avg)) |>
       ungroup()
   } else if (scaling == "log") {
-    data <- data %>%
+    data <- data |>
       mutate(value_avg = log(value_avg + 1))  # Apply log transformation (with +1 to avoid log(0))
   } else if (scaling == "robust") {
-    data <- data %>%
-      group_by(index) %>%
-      mutate(value_avg = (value_avg - median(value_avg)) / IQR(value_avg, na.rm = TRUE)) %>%
+    data <- data |>
+      group_by(index) |>
+      mutate(value_avg = (value_avg - median(value_avg)) / IQR(value_avg, na.rm = TRUE)) |>
       ungroup()
   }
   
   # If a specific sensor_id is provided, filter for that sensor
   if (!is.null(sensor_id)) {
-    data <- data %>%
+    data <- data |>
       filter(sensor_id == sensor_id)
     
     if (nrow(data) == 0) {
@@ -88,15 +88,15 @@ plot_diel_indices <- function(data,
     }
     
     # Group by hour and index only for the selected sensor
-    data_grouped <- data %>%
-      group_by(hour, index) %>%
-      summarise(value_avg = mean(value_avg, na.rm = TRUE)) %>%
+    data_grouped <- data |>
+      group_by(hour, index) |>
+      summarise(value_avg = mean(value_avg, na.rm = TRUE)) |>
       ungroup()
   } else {
     # Group by hour and index across all sensors
-    data_grouped <- data %>%
-      group_by(hour, index) %>%
-      summarise(value_avg = mean(value_avg, na.rm = TRUE)) %>%
+    data_grouped <- data |>
+      group_by(hour, index) |>
+      summarise(value_avg = mean(value_avg, na.rm = TRUE)) |>
       ungroup()
   }
   
@@ -109,7 +109,7 @@ plot_diel_indices <- function(data,
   
   # Loop through each unique index and add either raw or LOESS-smoothed lines
   for (idx in unique(data_grouped$index)) {
-    data_idx <- data_grouped %>% filter(index == idx)
+    data_idx <- data_grouped |> filter(index == idx)
     
     if (loess) {
       # Apply LOESS smoothing with interpolation to match the original 'hour' values
@@ -117,7 +117,7 @@ plot_diel_indices <- function(data,
       
       smoothed_values <- predict(loess_model, newdata = as.numeric(data_idx$hour))
       
-      plot <- plot %>%
+      plot <- plot |>
         add_trace(data = data_idx, x = ~hour, y = smoothed_values, 
                   type = 'scatter', mode = 'lines', 
                   name = idx, line = list(width = 3, shape = 'spline'),
@@ -126,7 +126,7 @@ plot_diel_indices <- function(data,
                                         'Value: %{y:.2f}<extra></extra>'))
     } else {
       # Plot raw lines
-      plot <- plot %>%
+      plot <- plot |>
         add_trace(data = data_idx, x = ~hour, y = ~value_avg, 
                   type = 'scatter', mode = 'lines', 
                   name = idx, line = list(width = 2,shape = 'spline'),
@@ -138,7 +138,7 @@ plot_diel_indices <- function(data,
   
   
   # Customize layout
-  plot <- plot %>%
+  plot <- plot |>
     layout(title = plot.title,
            xaxis = list(title = "Hour of the Day", tickangle = 90),
            yaxis = list(title = "Scaled Indices (0-1)"))

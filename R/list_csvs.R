@@ -23,6 +23,8 @@ list_csvs <- function(folder = NULL){
     setwd(folder)
   }
   
+  list <- list.files(pattern = "*.csv$")
+  
   print_list(list)
   
   invisible(list)

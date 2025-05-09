@@ -17,17 +17,17 @@
 #' adi_heatap(adi20230903, "ADI proportions")
 adi_heatmap <- function(df, plot.title) {
 
-  if (!any(names(df) == "noisered")) {
-    df$noisered <- "none"
+  if (!any(names(df) == "noise_red")) {
+    df$noise_red <- "none"
   }
-  df <- df |> relocate(noisered, .after = "norm")
+  df <- df |> relocate(noise_red, .after = "norm")
 
   # Extract settings
-  settings <- df |> select(cutoff, norm, noisered, propden, wlen, wfun) |> distinct()
+  settings <- df |> select(cutoff, norm, noise_red, prop_den, wlen, wfun) |> distinct()
   settings$cutoff <- paste0("cutoff.", settings$cutoff)
   settings$norm <- paste0("norm.", settings$norm)
-  settings$noisered <- paste0("noisered.", settings$noisered)
-  settings$propden <- paste0("prop.", settings$propden)
+  settings$noise_red <- paste0("noise_red.", settings$noise_red)
+  settings$prop_den <- paste0("prop.", settings$prop_den)
   settings$wlen <- paste0("wl.", settings$wlen)
   settings$wfun <- paste0("wf.", settings$wfun)
 

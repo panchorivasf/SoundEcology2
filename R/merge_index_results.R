@@ -22,8 +22,8 @@ merge_index_results <- function(folder_path) {
   file_list <- list.files(path = folder_path, pattern = "*results.csv", full.names = TRUE)
   
   # Import and merge the CSV files, keeping only the desired columns
-  merged_data <- file_list %>%
-    lapply(read.csv) %>%
+  merged_data <- file_list  |> 
+    lapply(read.csv)  |> 
     lapply(function(df) select(df, file_name, sensor_id, datetime, date, hour, index, value_avg)) %>%
     bind_rows()
   

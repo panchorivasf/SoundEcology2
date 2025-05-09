@@ -20,7 +20,7 @@ merge_se2_indices <- function(folder_path = NULL, recursive = TRUE) {
                       pattern = ".*results.csv$",
                       full.names = TRUE,
                       recursive = recursive)
-  cat("Detected files: /n")
+  cat("Detected files: \n")
   print(files)
 
   # Read, filter, and bind rows
@@ -46,10 +46,10 @@ merge_se2_indices <- function(folder_path = NULL, recursive = TRUE) {
     }, .id = NULL)  # This helps to safely skip files
 
   # Pivot data longer for "value_l" and "value_r"
-  pivoted_data <- merged_data |>
-    tidyr::pivot_longer(cols = c("value_l", "value_r", "value_avg"),
-                 names_to = "channel",     # Create a "channel" column 
-                 values_to = "value") #|>
+  # pivoted_data <- merged_data |>
+  #   tidyr::pivot_longer(cols = c("value_l", "value_r", "value_avg"),
+  #                names_to = "channel",     # Create a "channel" column 
+  #                values_to = "value") #|>
     # rename channels
     # dplyr::mutate(channel = case_when(
     #   channel == "value_l" ~ "left",
@@ -57,6 +57,6 @@ merge_se2_indices <- function(folder_path = NULL, recursive = TRUE) {
     #   channel == "value_avg" ~ "mean"
     # ))
 
-  return(pivoted_data)
+  return(merged_data)
 }
 

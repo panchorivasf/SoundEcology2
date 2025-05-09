@@ -5,21 +5,21 @@
 #'
 #' @return A new data frame with the harmonized columns.
 #' @export
-#' @importFrom magrittr %>%
+#' @importFrom magrittr |>
 #' @importFrom dplyr mutate
 #' 
 #'
 #' @examples harmonize_index(ndsi_original, "ndsi_original")
 harmonize_index <- function(data.frame, original.index = NULL){
-  data.frame <- data.frame %>%
+  data.frame <- data.frame |>
     rename(file_name = FILENAME,
            index = INDEX,
            value_l = LEFT_CHANNEL,
            value_r = RIGHT_CHANNEL,
-    ) %>%
+    ) |>
     mutate(value_avg = round(((data.frame$LEFT_CHANNEL + data.frame$RIGHT_CHANNEL)/2),3))
   
-  data.frame <- data.frame %>%
+  data.frame <- data.frame |>
     select(file_name, index, value_l, value_r, value_avg)
   
   data.frame <- addMetadata(data.frame)

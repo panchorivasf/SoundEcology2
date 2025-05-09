@@ -23,13 +23,13 @@ adi_heatmap <- function(df, plot.title) {
   df <- df |> relocate(noise_red, .after = "norm")
 
   # Extract settings
-  settings <- df |> select(cutoff, norm, noise_red, prop_den, wlen, wfun) |> distinct()
+  settings <- df |> select(cutoff, norm, noise_red, prop_den, w_len, w_fun) |> distinct()
   settings$cutoff <- paste0("cutoff.", settings$cutoff)
   settings$norm <- paste0("norm.", settings$norm)
   settings$noise_red <- paste0("noise_red.", settings$noise_red)
   settings$prop_den <- paste0("prop.", settings$prop_den)
-  settings$wlen <- paste0("wl.", settings$wlen)
-  settings$wfun <- paste0("wf.", settings$wfun)
+  settings$w_len <- paste0("wl.", settings$w_len)
+  settings$w_fun <- paste0("wf.", settings$w_fun)
 
   # Select relevant columns dynamically
   relevant_cols <- c("file_name", "datetime", "value_l", "value_r", grep("left_|right_", names(df), value = TRUE))

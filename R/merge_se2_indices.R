@@ -17,9 +17,11 @@ merge_se2_indices <- function(folder_path = NULL, recursive = TRUE) {
 
   # Get list of all files with pattern "*results.csv" (recursively if specified)
   files <- list.files(path = folder,
-                      pattern = ".*results\\.csv$",
+                      pattern = ".*results.csv$",
                       full.names = TRUE,
                       recursive = recursive)
+  cat("Detected files: /n")
+  print(files)
 
   # Read, filter, and bind rows
   merged_data <- files |>
@@ -32,7 +34,7 @@ merge_se2_indices <- function(folder_path = NULL, recursive = TRUE) {
 
         # Select columns from "file_name" to "value_r" and filter out any "channel" column
         selected_data <- data |>
-          dplyr::select(file_name:value_r) |>
+          dplyr::select(file_name:value_avg) |>
           dplyr::select(-matches("^channel$"))  # Remove original "channel" column if present
 
         return(selected_data)

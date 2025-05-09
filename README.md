@@ -47,7 +47,7 @@ In addition to the original indices (i.e., ADI, AEI, ACI, BI, and NDSI), SoundEc
     - The 'folder' function, index_folder(), takes the path to a directory and analyzes all the WAV files inside the folder.
 
 --- 
-Finally, we have added some helper functions to facilitate common tasks, including:
+Finally, we added some helper functions to facilitate common tasks, including:
 
 `list_waves`: A function to list all the WAV files in a directory.
 

@@ -145,7 +145,7 @@ adi <- function(wave,
   if(prop.den == 1){
     propdenom <- "within band"
   }else if(prop.den == 2){
-    propdenom <- "max.freq"
+    propdenom <- "whole spec"
   }
   # else if(prop.den == 3){
   #   propdenom <- "nyquist"

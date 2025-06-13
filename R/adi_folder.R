@@ -122,6 +122,10 @@ adi_folder <- function(folder = NULL,
                      .errorhandling = "pass") %dopar% {
                        
                        tryCatch({
+                         
+                         # Clean the file path right at the start
+                         file <- sub("^\\./", "", file)
+                         
                          # Attempt to read file
                          sound <- tryCatch({
                            readWave(file)

@@ -46,6 +46,7 @@
 #' adi_folder("path/to/folder")
 adi_folder <- function (folder = NULL,
                         list = NULL,
+                        recursive = FALSE,
                         save.csv = TRUE,
                         csv.name = "adi_results.csv",
                         freq.res = 50,
@@ -84,7 +85,9 @@ adi_folder <- function (folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    # audio.list <- list_waves()
+    audio.list <- list.files(pattern = ".wav",
+                             recursive = recursive)
     
   } else {
     audio.list <- list
@@ -95,7 +98,7 @@ adi_folder <- function (folder = NULL,
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
-    num_cores <- parallel::detectCores() - 1  # Detect available cores
+    num_cores <- parallel::detectCores() - 1  
   }else{
     num_cores <- n.cores
   }
@@ -147,6 +150,14 @@ adi_folder <- function (folder = NULL,
   results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
+                       
+                       # if(recursive && i > 1 && i %% 20 == 0){  # Adjust 20 based on processing speed
+                       #   start_pause <- Sys.time()
+                       #   while(Sys.time() - start_pause < 30){  # Pause for 30 seconds
+                       #   }
+                       # }
+                       # 
+                       
                        sound <- tryCatch({
                          readWave(file)
                        }, error = function(e) {
@@ -170,12 +181,26 @@ adi_folder <- function (folder = NULL,
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
   
+  sensor_id <- unique(resultsWithMetadata$sensor_id)
+  
   stopCluster(cl)
   
   if(save.csv == TRUE){
     # Convert POSIXct column to character format to retain zeros
     resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
-    write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
+    
+    
+    if(recursive){
+      # Move up one directory level
+      parent_dir <- dirname(folder)
+      csv_path <- file.path(parent_dir, paste0(sensor_id, "_", csv.name))
+    } else {
+      csv_path <- paste0(sensor_id, "_", csv.name)
+    }
+    
+    write.csv(resultsWithMetadata, csv_path, paste0(sensor_id, "_", csv.name), row.names = FALSE)
+    
+    
   }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
@@ -183,3 +208,4 @@ adi_folder <- function (folder = NULL,
   return(resultsWithMetadata)
   
 }
+

@@ -135,7 +135,8 @@ adi_folder <- function (folder = NULL,
     expectedCompletionTime <- Sys.time() + adjustedTotalTime
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", 
+        format(expectedCompletionTime, "%H:%M"),"\n\n")
     
   } else {
     sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
@@ -150,14 +151,6 @@ adi_folder <- function (folder = NULL,
   results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
-                       
-                       # if(recursive && i > 1 && i %% 20 == 0){  # Adjust 20 based on processing speed
-                       #   start_pause <- Sys.time()
-                       #   while(Sys.time() - start_pause < 30){  # Pause for 30 seconds
-                       #   }
-                       # }
-                       # 
-                       
                        sound <- tryCatch({
                          readWave(file)
                        }, error = function(e) {
@@ -170,7 +163,8 @@ adi_folder <- function (folder = NULL,
                        }
                        
                        # Calculate ADI and keep its default output columns
-                       adi_result <- quiet(do.call(adi, c(list(sound), args_list)))
+                       adi_result <- quiet(do.call(adi, 
+                                                   c(list(sound), args_list)))
                        
                        # Combine the results for each file into a single row
                        result <- tibble(file_name = file) |>
@@ -187,8 +181,8 @@ adi_folder <- function (folder = NULL,
   
   if(save.csv == TRUE){
     # Convert POSIXct column to character format to retain zeros
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
-    
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, 
+                                           "%Y-%m-%d %H:%M:%S")
     
     if(recursive){
       # Move up one directory level
@@ -198,12 +192,11 @@ adi_folder <- function (folder = NULL,
       csv_path <- paste0(sensor_id, "_", csv.name)
     }
     
-    write.csv(resultsWithMetadata, csv_path, paste0(sensor_id, "_", csv.name), row.names = FALSE)
-    
-    
+    write.csv(resultsWithMetadata, file = csv_path, row.names = FALSE)
   }
   
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", 
+            format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
   return(resultsWithMetadata)
   

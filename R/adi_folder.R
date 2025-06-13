@@ -44,25 +44,25 @@
 #'
 #' @examples
 #' adi_folder("path/to/folder")
-adi_folder <- function (folder = NULL,
-                        list = NULL,
-                        recursive = FALSE,
-                        save.csv = TRUE,
-                        csv.name = "adi_results.csv",
-                        freq.res = 50,
-                        win.fun = "hanning",
-                        min.freq = 0,
-                        max.freq = 10000,
-                        n.bands = 10,
-                        cutoff = -60,
-                        norm.spec = FALSE,
-                        noise.red = 0,
-                        rm.offset = TRUE,
-                        props = FALSE,
-                        prop.den = 1,
-                        db.fs = TRUE,
-                        use.vegan = FALSE,
-                        n.cores = -1){
+adi_folder <- function(folder = NULL,
+                       list = NULL,
+                       recursive = FALSE,
+                       save.csv = TRUE,
+                       csv.name = "adi_results.csv",
+                       freq.res = 50,
+                       win.fun = "hanning",
+                       min.freq = 0,
+                       max.freq = 10000,
+                       n.bands = 10,
+                       cutoff = -60,
+                       norm.spec = FALSE,
+                       noise.red = 0,
+                       rm.offset = TRUE,
+                       props = FALSE,
+                       prop.den = 1,
+                       db.fs = TRUE,
+                       use.vegan = FALSE,
+                       n.cores = -1) {
   cat("Working on it...\n")
   
   # Store the arguments
@@ -79,113 +79,109 @@ adi_folder <- function (folder = NULL,
                     prop.den = prop.den,
                     db.fs = db.fs)
   
-  if(is.null(folder)){
+  if(is.null(folder)) {
     folder <- getwd()
   }
   setwd(folder)
   
-  if(is.null(list)){
-    # audio.list <- list_waves()
-    audio.list <- list.files(pattern = ".wav",
-                             recursive = recursive)
-    
+  if(is.null(list)) {
+    audio.list <- list.files(pattern = "\\.wav$",
+                             recursive = recursive,
+                             full.names = TRUE)
   } else {
     audio.list <- list
   }
   
   nFiles <- length(audio.list)
   
-  if(is.null(n.cores)){
+  if(nFiles == 0) {
+    stop("No WAV files found in the specified directory")
+  }
+  
+  # Setup parallel processing
+  if(is.null(n.cores)) {
     num_cores <- 1
-  }else if(n.cores == -1){
+  } else if(n.cores == -1) {
     num_cores <- parallel::detectCores() - 1  
-  }else{
+  } else {
     num_cores <- n.cores
   }
-  if(nFiles < num_cores){
+  if(nFiles < num_cores) {
     num_cores <- nFiles
   }
+  
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
   
-  # Evaluate the duration of the analysis if nFiles > 10
-  if(nFiles>10){
-    cat("Evaluating the job...\n\n")
-    
-    startTime <- Sys.time()
-    
-    sound1 <- readWave(audio.list[1])
-    type <- ifelse(sound1@stereo, "stereo", "mono")
-    
-    adi1 <- quiet(do.call(adi, c(list(sound1), args_list)))
-    
-    tibble(file_name = "filename") |> bind_cols(adi1)
-    
-    timePerFile <-  Sys.time() - startTime
-    timePerFile <- timePerFile + 2.2
-    
-    rm(adi1)
-    rm(sound1)
-    
-    # Estimate total time accounting for parallel processing
-    estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
-    # Add overhead time
-    adjustedTotalTime <- estimatedTotalTime
-    # Calculate the end time
-    expectedCompletionTime <- Sys.time() + adjustedTotalTime
-    
-    cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", 
-        format(expectedCompletionTime, "%H:%M"),"\n\n")
-    
-  } else {
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
-    type <- ifelse(sound1@stereo, "stereo", "mono")
-    rm(sound1)
-  }
+  # Initialize skipped files log
+  skipped_files <- character(0)
   
-  cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
-  
-  
-  # Start loop
+  # Start processing
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
+                     .packages = c("tuneR", "dplyr", "seewave"),
+                     .errorhandling = "pass") %dopar% {
                        
-                       sound <- tryCatch({
-                         readWave(file)
+                       tryCatch({
+                         # Attempt to read file
+                         sound <- tryCatch({
+                           readWave(file)
+                         }, error = function(e) {
+                           message(paste("Error reading file:", file, "-", e$message))
+                           skipped_files <<- c(skipped_files, file)
+                           return(NULL)
+                         })
+                         
+                         if(is.null(sound)) return(NULL)
+                         
+                         # Validate the wave object
+                         if(length(sound@left) == 0) {
+                           message(paste("Empty audio file:", file))
+                           skipped_files <<- c(skipped_files, file)
+                           return(NULL)
+                         }
+                         
+                         # Calculate ADI
+                         adi_result <- tryCatch({
+                           quiet(do.call(adi, c(list(sound), args_list)))
+                         }, error = function(e) {
+                           message(paste("Error processing file:", file, "-", e$message))
+                           skipped_files <<- c(skipped_files, file)
+                           return(NULL)
+                         })
+                           
+                           if(is.null(adi_result)) return(NULL)
+                           
+                           # Return successful result
+                           tibble(file_name = file) |> bind_cols(adi_result)
+                           
                        }, error = function(e) {
-                         message(paste("Error reading file:", 
-                                       file, "Skipping to the next file."))
+                         message(paste("Unexpected error with file:", file, "-", e$message))
+                         skipped_files <<- c(skipped_files, file)
                          return(NULL)
                        })
-                       if (is.null(sound)) {
-                         return(NULL)
-                       }
-                       
-                       # Calculate ADI and keep its default output columns
-                       adi_result <- quiet(do.call(adi, 
-                                                   c(list(sound), args_list)))
-                       
-                       # Combine the results for each file into a single row
-                       result <- tibble(file_name = file) |>
-                         bind_cols(adi_result)
-                       
                      }
-  
-  # Combine results with metadata and return
-  resultsWithMetadata <- addMetadata(results)
-  
-  sensor_id <- unique(resultsWithMetadata$sensor_id)
   
   stopCluster(cl)
   
-  if(save.csv == TRUE){
-    # Convert POSIXct column to character format to retain zeros
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, 
-                                           "%Y-%m-%d %H:%M:%S")
+  # Report skipped files
+  if(length(skipped_files) > 0) {
+    cat("\nThe following files were skipped due to errors:\n")
+    cat(paste(skipped_files, collapse = "\n"))
+    cat("\n\n")
+  }
+  
+  # Process results
+  if(is.null(results) || nrow(results) == 0) {
+    stop("No files could be processed successfully")
+  }
+  
+  resultsWithMetadata <- addMetadata(results)
+  sensor_id <- unique(resultsWithMetadata$sensor_id)
+  
+  if(save.csv) {
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     
-    if(recursive){
-      # Move up one directory level
+    if(recursive) {
       parent_dir <- dirname(folder)
       csv_path <- file.path(parent_dir, paste0(sensor_id, "_", csv.name))
     } else {
@@ -195,10 +191,9 @@ adi_folder <- function (folder = NULL,
     write.csv(resultsWithMetadata, file = csv_path, row.names = FALSE)
   }
   
-  cat(paste("Done!\nTime of completion:", 
-            format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nProcessed", nFiles - length(skipped_files), "of", nFiles, "files\n"))
+  cat(paste("Time of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
   return(resultsWithMetadata)
-  
 }
 

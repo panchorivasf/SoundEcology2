@@ -9,7 +9,7 @@
 #' \dontrun{
 #' list_waves(folder)
 #' }
-list_waves <- function(folder = NULL){
+list_waves <- function(folder = NULL, recursive = FALSE){
   
   print_list <- function(list){
     for (i in seq_along(list)) {
@@ -24,7 +24,7 @@ list_waves <- function(folder = NULL){
   }
   
 
-  list <- list.files(pattern = "*.wav$")
+  list <- list.files(pattern = "*.wav$", recursive = recursive)
   
   print_list(list)
 

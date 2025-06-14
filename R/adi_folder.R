@@ -63,6 +63,8 @@ adi_folder <- function(folder = NULL,
                        db.fs = TRUE,
                        use.vegan = FALSE,
                        n.cores = -1) {
+  
+  start_time <- Sys.time()
   cat("Working on it...\n")
   
   # Store the arguments
@@ -82,12 +84,15 @@ adi_folder <- function(folder = NULL,
   if(is.null(folder)) {
     folder <- getwd()
   }
+  original_wd <- getwd()
   setwd(folder)
   
   if(is.null(list)) {
     audio.list <- list.files(pattern = "\\.wav$",
                              recursive = recursive,
                              full.names = TRUE)
+    # Normalize paths
+    audio.list <- normalizePath(audio.list, winslash = "/")
   } else {
     audio.list <- list
   }
@@ -113,68 +118,69 @@ adi_folder <- function(folder = NULL,
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
   
-  # Initialize skipped files log
+  # Initialize progress tracking
+  processed_count <- 0
   skipped_files <- character(0)
+  cat(sprintf("Processing %d files...\n", nFiles))
   
   # Start processing
   results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "dplyr", "seewave"),
                      .errorhandling = "pass") %dopar% {
                        
+                       clean_file <- basename(file)  # Store just filename without path
+                       full_path <- file
+                       
                        tryCatch({
-                         
-                         # Clean the file path right at the start
-                         file <- sub("^\\./", "", file)
-                         
-                         # Attempt to read file
                          sound <- tryCatch({
-                           readWave(file)
+                           readWave(full_path)
                          }, error = function(e) {
-                           message(paste("Error reading file:", file, "-", e$message))
-                           skipped_files <<- c(skipped_files, file)
+                           message(paste("Error reading file:", clean_file, "-", e$message))
+                           skipped_files <<- c(skipped_files, clean_file)
                            return(NULL)
                          })
                          
                          if(is.null(sound)) return(NULL)
                          
-                         # Validate the wave object
-                         if(length(sound@left) == 0) {
-                           message(paste("Empty audio file:", file))
-                           skipped_files <<- c(skipped_files, file)
-                           return(NULL)
-                         }
-                         
-                         # Calculate ADI
                          adi_result <- tryCatch({
                            quiet(do.call(adi, c(list(sound), args_list)))
                          }, error = function(e) {
-                           message(paste("Error processing file:", file, "-", e$message))
-                           skipped_files <<- c(skipped_files, file)
+                           message(paste("Error processing file:", clean_file, "-", e$message))
+                           skipped_files <<- c(skipped_files, clean_file)
                            return(NULL)
                          })
                            
                            if(is.null(adi_result)) return(NULL)
                            
-                           # Return successful result
-                           tibble(file_name = file) |> bind_cols(adi_result)
+                           # Update progress (thread-safe)
+                           processed_count <<- processed_count + 1
+                           if (processed_count %% max(1, floor(nFiles/10)) == 0) {
+                             cat(sprintf("..%d/%d (%.0f%%) \n", 
+                                         processed_count, nFiles, 
+                                         processed_count/nFiles*100))
+                           }
+                           
+                           tibble(file_name = clean_file) |> 
+                             bind_cols(adi_result)
                            
                        }, error = function(e) {
-                         message(paste("Unexpected error with file:", file, "-", e$message))
-                         skipped_files <<- c(skipped_files, file)
+                         message(paste("Unexpected error with file:", clean_file, "-", e$message))
+                         skipped_files <<- c(skipped_files, clean_file)
                          return(NULL)
                        })
                      }
   
   stopCluster(cl)
+  setwd(original_wd)  # Restore original working directory
   
   # Report skipped files
   if(length(skipped_files) > 0) {
-    cat("\nThe following files were skipped due to errors:\n")
-    cat(paste(skipped_files, collapse = "\n"))
+    cat("\nSkipped", length(skipped_files), "files due to errors:\n")
+    cat(paste(head(skipped_files, 10), collapse = "\n"))
+    if(length(skipped_files) > 10) cat("\n... (", length(skipped_files)-10, "more)")
     cat("\n\n")
   }
   
-  # Process results
   if(is.null(results) || nrow(results) == 0) {
     stop("No files could be processed successfully")
   }
@@ -185,18 +191,28 @@ adi_folder <- function(folder = NULL,
   if(save.csv) {
     resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
     
-    if(recursive) {
-      parent_dir <- dirname(folder)
-      csv_path <- file.path(parent_dir, paste0(sensor_id, "_", csv.name))
+    csv_path <- if(recursive) {
+      file.path(dirname(folder), paste0(sensor_id, "_", csv.name))
     } else {
-      csv_path <- paste0(sensor_id, "_", csv.name)
+      file.path(folder, paste0(sensor_id, "_", csv.name))
+    }
+    
+    # Ensure directory exists
+    if(!dir.exists(dirname(csv_path))) {
+      dir.create(dirname(csv_path), recursive = TRUE)
     }
     
     write.csv(resultsWithMetadata, file = csv_path, row.names = FALSE)
+    cat("Results saved to:", normalizePath(csv_path), "\n")
   }
   
-  cat(paste("Done!\nProcessed", nFiles - length(skipped_files), "of", nFiles, "files\n"))
-  cat(paste("Time of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste(
+    sprintf("\nDone! Processed %d/%d files (%.1f%%)", 
+            nFiles - length(skipped_files), nFiles,
+            100*(nFiles - length(skipped_files))/nFiles),
+    paste("\nTime elapsed:", format(round(Sys.time() - start_time, 1))),
+    "\n"
+  ))
   
   return(resultsWithMetadata)
 }

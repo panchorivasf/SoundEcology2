@@ -7,6 +7,7 @@
 #' frequencies of the clicks.
 #'
 #' @param folder Character. The path to a folder with the wave files to analyze.
+#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either 
@@ -50,6 +51,7 @@
 #' }  
 
 bbai_folder <- function(folder = NULL,
+                        recursive = TRUE,
                         list = NULL,
                         channel = 'each',
                         hpf = 0,
@@ -84,7 +86,7 @@ bbai_folder <- function(folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- list_waves(recursive = recursive)
     
   } else {
     audio.list <- list

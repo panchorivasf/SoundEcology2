@@ -33,6 +33,9 @@
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
 #' @param output.csv Character. Name for the csv file. Default is "bbai_results.csv".
 #' @param n.cores Numeric. Number of cores to be used in parallel. Use -1 (Default) to use all but one. 
+#' @param drop.size.threshold Numeric. Drop files which size is smaller than the
+#' median file size by this threshold, in KB. This is intended to filter out 
+#' corrupted wave files.
 #' 
 #' @return A tibble.
 
@@ -50,22 +53,24 @@
 #' bbai_folder(path/to/folder)
 #' }  
 
-bbai_folder <- function(folder = NULL,
-                        recursive = TRUE,
-                        list = NULL,
-                        channel = 'each',
-                        hpf = 0,
-                        freq.res = 50,
-                        cutoff = -60,
-                        click.length = 10,
-                        difference = 10,
-                        gap.allowance = 2,
-                        spectrogram = FALSE,
-                        dark.plot = FALSE,
-                        plot.title = "",
-                        verbose = FALSE,
-                        output.csv = "bbai_results.csv",
-                        n.cores = -1) {
+bbai_folder2 <- function(folder = NULL,
+                         recursive = TRUE,
+                         list = NULL,
+                         channel = 'each',
+                         hpf = 0,
+                         freq.res = 50,
+                         cutoff = -60,
+                         click.length = 10,
+                         difference = 10,
+                         gap.allowance = 2,
+                         spectrogram = FALSE,
+                         dark.plot = FALSE,
+                         plot.title = "",
+                         verbose = FALSE,
+                         output.csv = "bbai_results.csv",
+                         n.cores = -1,
+                         drop.size.threshold = 200) {  # KB below mode to ignore
+  
   cat("Working on it...\n")
   
   args_list <- list(channel = channel,
@@ -87,12 +92,39 @@ bbai_folder <- function(folder = NULL,
   
   if(is.null(list)){
     audio.list <- list_waves(recursive = recursive)
-    
   } else {
     audio.list <- list
   }
   
+  # Calculate mode of file sizes and filter
+  if (length(audio.list) > 0) {
+    file_sizes_kb <- file.info(audio.list)$size / 1024
+    
+    # Function to calculate mode
+    get_mode <- function(x) {
+      ux <- unique(x)
+      ux[which.max(tabulate(match(x, ux)))]
+    }
+    
+    size_mode <- get_mode(round(file_sizes_kb / 50) * 50)  # Round to nearest 50KB for more robust mode
+    threshold <- size_mode - drop.size.threshold
+    
+    valid_files <- file_sizes_kb >= threshold
+    audio.list <- audio.list[valid_files]
+    n_removed <- sum(!valid_files)
+    
+    if (verbose && n_removed > 0) {
+      cat(sprintf("File size mode: %.1f KB\n", size_mode))
+      cat(sprintf("Ignored %d files smaller than %.1f KB (mode - %d KB)\n", 
+                  n_removed, threshold, drop.size.threshold))
+    }
+  }
+  
   nFiles <- length(audio.list)
+  
+  if (nFiles == 0) {
+    stop("No valid audio files found after filtering.")
+  }
   
   if(is.null(n.cores)){
     num_cores <- 1
@@ -133,7 +165,7 @@ bbai_folder <- function(folder = NULL,
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
-
+    
   } else {
     sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
     type <- ifelse(sound1@stereo, "stereo", "mono")
@@ -169,8 +201,14 @@ bbai_folder <- function(folder = NULL,
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(combined_results)
+  # Mode info 
+  if (exists("size_mode")) {
+    attr(combined_results, "size_mode") <- size_mode
+    attr(combined_results, "size_threshold") <- threshold
+    attr(combined_results, "files_removed") <- n_removed
+  }
   
+  return(combined_results)
 }
 
 

@@ -50,7 +50,7 @@
 #'
 #' @examples 
 #' \dontrun{
-#' bbai_folder(path/to/folder)
+#' bbai_folder2(path/to/folder)
 #' }
 
 bbai_folder2 <- function(folder = NULL,

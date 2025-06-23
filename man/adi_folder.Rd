@@ -7,6 +7,7 @@
 adi_folder(
   folder = NULL,
   list = NULL,
+  recursive = FALSE,
   save.csv = TRUE,
   csv.name = "adi_results.csv",
   freq.res = 50,
@@ -21,6 +22,7 @@ adi_folder(
   props = FALSE,
   prop.den = 1,
   db.fs = TRUE,
+  use.vegan = FALSE,
   n.cores = -1
 )
 }
@@ -53,6 +55,10 @@ files outside the list will be excluded.}
 \item{props}{logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.}
 
 \item{prop.den}{numeric. Indicates how the energy proportion is calculated.}
+
+\item{db.fs}{logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.}
+
+\item{use.vegan}{logical; if TRUE, the diversity() function from the vegan package is called to compute Shannon's entropy. Default = FALSE.}
 
 \item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
 

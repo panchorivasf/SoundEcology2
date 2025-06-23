@@ -4,10 +4,12 @@
 \alias{list_csvs}
 \title{List the CSV files in a directory}
 \usage{
-list_csvs(folder = NULL)
+list_csvs(folder = NULL, recursive = TRUE)
 }
 \arguments{
 \item{folder}{Directory to search. If NULL (default), the current working directory will be used.}
+
+\item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 }
 \value{
 A list with the csv files in the chosen directory.

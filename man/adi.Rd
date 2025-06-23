@@ -16,16 +16,19 @@ adi(
   noise.red = 0,
   rm.offset = TRUE,
   props = TRUE,
-  prop.den = 1,
-  db.fs = TRUE
+  prop.den = 2,
+  db.fs = TRUE,
+  use.vegan = FALSE
 )
 }
 \arguments{
 \item{wave}{an object of class Wave imported with the \emph{readWave} function of the \emph{tuneR} package.}
 
-\item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
+\item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and,
+therefore, the window length to be used (sampling rate / frequency resolution).}
 
-\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming",
+"hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to compute the spectrogram.}
 
@@ -35,17 +38,24 @@ adi(
 
 \item{cutoff}{dB threshold to calculate energy proportions.}
 
-\item{norm.spec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).}
+\item{norm.spec}{logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended
+because normalized spectrograms with different SNR are not comparable).}
 
-\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
+\item{noise.red}{numeric; controls the application of noise reduction. If set to 1, noise reduction is applied
+to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each
+column similarly. If set to 0, noise reduction is not applied.}
 
 \item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
 
-\item{props}{logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.}
+\item{props}{logical; if set to TRUE, the function stores the energy proportion values for each frequency band
+and channel. Default = TRUE.}
 
 \item{prop.den}{numeric; indicates how the energy proportion is calculated.}
 
 \item{db.fs}{logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.}
+
+\item{use.vegan}{logical; if TRUE, the diversity() function from the vegan package is called to compute Shannon's entropy. This is
+only intended for when the user wants to obtain a result equivalent to the original soundecology package. Default = FALSE.}
 }
 \value{
 A tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
@@ -59,9 +69,14 @@ The new version allows the user to choose between different ways to compute
 the proportions before calculating the Shannon, among other new parameter options (see Details).
 }
 \details{
-Options for the 'prop.den' parameter: 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band. 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max_freq'). 3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
-Another important update is that now the spectrogram is not normalized by default, which made recordings
-with different signal-to-noise ratio not comparable.
+Options for the 'prop.den' parameter: 1 = The original calculation from the
+"soundecology" package is applied.
+The denominator of the proportion equals to all the cells in the same
+frequency band. 2 = A "true Shannon" proportion is calculated,
+where the "whole community" equals to the cells above the decibel threshold
+across the spectrogram (up to 'max_freq').
+Another important update is that now the spectrogram is not normalized by
+default, which made recordings#' with different signal-to-noise ratio not comparable.
 }
 \examples{
 data(tropicalsound)

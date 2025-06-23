@@ -4,7 +4,7 @@
 \alias{adi_heatmap}
 \title{ADI Heatmap}
 \usage{
-adi_heatmap(df, plot.title)
+adi_heatmap(df, plot.title = "")
 }
 \arguments{
 \item{df}{A data frame with ADI data for 1 day}

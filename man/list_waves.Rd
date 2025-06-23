@@ -4,10 +4,12 @@
 \alias{list_waves}
 \title{List wave files in a directory}
 \usage{
-list_waves(folder = NULL)
+list_waves(folder = NULL, recursive = FALSE)
 }
 \arguments{
 \item{folder}{Character. The path to the folder where the WAV files are stored.}
+
+\item{recursive}{Logical. Whether to search in subfolders. Default is FALSE.}
 }
 \value{
 A list of wave files

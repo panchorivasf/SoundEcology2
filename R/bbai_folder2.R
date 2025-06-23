@@ -123,7 +123,7 @@ bbai_folder2 <- function(folder = NULL,
     sound1 <- readWave(audio.list[1])
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
-    bbai1 <- quiet(do.call(bbai, c(list(sound1), args_list))
+    bbai1 <- quiet(do.call(bbai, c(list(sound1), args_list)))
                    tibble::tibble(file_name = "filename") |> bind_cols(bbai1)
                    
                    timePerFile <-  Sys.time() - startTime
@@ -158,7 +158,7 @@ bbai_folder2 <- function(folder = NULL,
                          
                          # Check file size
                          file_size_kb <- file.info(file)$size / 1024
-                         median_size <- median(file.info(audio.list)$size / 1024
+                         median_size <- median(file.info(audio.list)$size) / 1024
                                                threshold <- median_size - drop.size.threshold
                                                
                                                if (file_size_kb < threshold) {

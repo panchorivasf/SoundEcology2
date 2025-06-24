@@ -20,8 +20,7 @@ bbai_folder(
   plot.title = "",
   verbose = FALSE,
   output.csv = "bbai_results.csv",
-  n.cores = -1,
-  drop.size.threshold = 200
+  n.cores = -1
 )
 }
 \arguments{
@@ -62,10 +61,6 @@ Default is \code{2}. Gaps larger than this value will split clicks.}
 \item{output.csv}{Character. Name for the csv file. Default is "bbai_results.csv".}
 
 \item{n.cores}{Numeric. Number of cores to be used in parallel. Use -1 (Default) to use all but one.}
-
-\item{drop.size.threshold}{Numeric. Drop files which size is smaller than the
-median file size by this threshold, in KB. This is intended to filter out
-corrupted wave files.}
 
 \item{click.height}{Numeric. The minimum height (in frequency bins) for a detected click to be kept.
 Default is \code{10}.}

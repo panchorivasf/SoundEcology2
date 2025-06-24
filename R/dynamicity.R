@@ -41,7 +41,6 @@
 #' @importFrom seewave meanspec
 #' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradientn 
 #'   scale_x_continuous scale_y_continuous labs theme_minimal
-#' @importFrom stats expand.grid
 dynamicity <- function(wave, 
                        fun = "mean",
                        segment_l = 5,

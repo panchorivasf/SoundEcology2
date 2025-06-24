@@ -5,10 +5,8 @@
 #'
 #' @return A new data frame with the harmonized columns.
 #' @export
-#' @importFrom magrittr |>
 #' @importFrom dplyr mutate
 #' 
-#'
 #' @examples harmonize_index(ndsi_original, "ndsi_original")
 harmonize_index <- function(data.frame, original.index = NULL){
   data.frame <- data.frame |>

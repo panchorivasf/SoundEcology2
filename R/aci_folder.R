@@ -3,6 +3,11 @@
 #' @param folder a path to the folder with audio files to import.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
+#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine 
@@ -41,6 +46,9 @@
 
 aci_folder <- function (folder = NULL,
                         list = NULL,
+                        start = 0,
+                        end = 1,
+                        unit = "minutes",
                         save.csv = TRUE,
                         csv.name = "aci_results.csv",
                         freq.res = 50,
@@ -95,7 +103,10 @@ aci_folder <- function (folder = NULL,
     
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1],
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     aci1 <- quiet(do.call(aci, c(list(sound1), args_list)))
@@ -121,7 +132,10 @@ aci_folder <- function (folder = NULL,
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     
   } else {
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    sound1 <- readWave(audio.list[1], 
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     rm(sound1)
   }
@@ -133,7 +147,10 @@ aci_folder <- function (folder = NULL,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
                        sound <- tryCatch({
-                         readWave(file)
+                         readWave(file,
+                                  from = start,
+                                  to = end,
+                                  units = unit)
                        }, error = function(e) {
                          message(paste("Error reading file:", file, "Skipping to the next file."))
                          return(NULL) 

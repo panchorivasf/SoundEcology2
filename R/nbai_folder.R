@@ -5,8 +5,12 @@
 #' acoustic indices).
 #'
 #' @param folder Character. The path to the folder containing the wave files to analyze.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
+#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
+#' @param list An optional list (subset) of files in the folder to analyze. 
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right"
 #'  to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), 
 #'  results are returned for each channel.
@@ -39,7 +43,11 @@
 #' }
 
 nbai_folder <- function(folder = NULL,
+                        recursive = FALSE,
                         list = NULL,
+                        start = 0,
+                        end = 1,
+                        unit = "minutes",
                         channel = "each",
                         hpf = 0,
                         freq.res = 50,
@@ -91,7 +99,11 @@ nbai_folder <- function(folder = NULL,
     
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1],
+                       from = start,
+                       to = end,
+                       units = unit)
+    
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     nbai1 <- quiet(do.call(nbai, c(list(sound1), args_list)))
@@ -127,7 +139,10 @@ nbai_folder <- function(folder = NULL,
   results <- foreach(file = audio.list,
                      .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
                        filename <- basename(file)  
-                       sound <- readWave(file)
+                       sound <- readWave(file,
+                                         from = start,
+                                         to = end,
+                                         units = unit)
                        result_list <- list()
                        
                        nbai_result <- quiet(do.call(nbai, c(list(sound), args_list)))$summary

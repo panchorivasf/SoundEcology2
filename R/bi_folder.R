@@ -8,8 +8,13 @@
 #' directly comparable to the original code in the paper.
 #'
 #' @param folder a path to the folder with audio files to import.
+#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
@@ -46,6 +51,10 @@
 #' bi_folder(path/to/folder)
 
 bi_folder <- function (folder = NULL,
+                       recursive = FALSE,
+                       start = 0,
+                       end = 1,
+                       unit = "minutes",
                        list = NULL,
                        save.csv = TRUE,
                        csv.name = "bi_results.csv",
@@ -73,7 +82,7 @@ bi_folder <- function (folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- list_waves(recursive = recursive)
     
   } else {
     audio.list <- list
@@ -100,7 +109,10 @@ bi_folder <- function (folder = NULL,
     
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1],
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     bi1 <- quiet(do.call(bi, c(list(sound1), args_list)))
@@ -138,7 +150,10 @@ bi_folder <- function (folder = NULL,
                      .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
                        
                        sound <- tryCatch({
-                         readWave(file)
+                         readWave(file,
+                                  from = start,
+                                  to = end,
+                                  units = unit)
                        }, error = function(e) {
                          message(paste("Error reading file:", file, "Skipping to the next file."))
                          return(NULL) 

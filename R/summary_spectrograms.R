@@ -1,8 +1,9 @@
 #' Generate and Save Summary Spectrograms
 #'
-#' This function generates and saves spectrogram images for various summary categories (mean, max, min, 
-#' median, mode) for each recording in the input data frame. Spectrograms are created for specific wave 
-#' files as indicated in the data, with options to normalize and remove DC offset.
+#' This function generates and saves spectrogram images for various summary 
+#' statistics (mean, max, min, median, mode) for each recording in the input 
+#' data frame. Spectrograms are created for specific wave files as indicated in 
+#' the data, with options to normalize and remove DC offset.
 #'
 #' @param summary_df A data frame containing summary statistics of recordings. It should include 
 #' columns `sensor_id`, `channel`, `index`, and columns named `closest_to_<stat>` for categories `mean`,

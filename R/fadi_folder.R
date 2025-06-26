@@ -4,8 +4,13 @@
 #' before calculating the Acoustic Diversity Index and it doesn't use normalized spectrogram.
 #' Alternatively it can take a noise sample to reduce noise in the analyzed files.
 #' @param folder a path to the folder with audio files to import.
+#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param save_csv logical. Whether to save a csv in the working directory.
 #' @param csv_name character vector. When 'save_csv' is TRUE, optionally provide a file name.
 #' @param noise_file An R object of class Wave containing noise-only information if needed. Default = NULL.
@@ -44,7 +49,11 @@
 #' fadi_folder(folder=pathB, "fadi_hydro_b.csv")
 
 fadi_folder <- function (folder = NULL,
+                         recursive = recursive,
                          list = NULL,
+                         start = 0,
+                         end = 1,
+                         unit = "minutes",
                          save_csv = TRUE,
                          csv_name = "fadi_results.csv",
                          noise_file = NULL,
@@ -69,7 +78,7 @@ fadi_folder <- function (folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- list_waves(recursive = recursive)
     
   } else {
     audio.list <- list
@@ -96,7 +105,10 @@ fadi_folder <- function (folder = NULL,
     
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1],
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     fadi1 <- quiet(fadi(sound1, args_list$noise_file, args_list$NEM,
                         args_list$min_freq, args_list$max_freq, args_list$threshold_fixed,
@@ -130,7 +142,10 @@ fadi_folder <- function (folder = NULL,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
 
                        sound <- tryCatch({
-                         readWave(file)
+                         readWave(file,
+                                  from = start,
+                                  to = end,
+                                  units = unit)
                        }, error = function(e) {
                          message(paste("Error reading file:", file, "Skipping to the next file."))
                          return(NULL) 

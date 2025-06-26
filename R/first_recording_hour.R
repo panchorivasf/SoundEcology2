@@ -4,12 +4,12 @@
 #'
 #' @return a data frame with the subsetted observations (1 per hour).
 #' @export
-#' @import tidyverse
+#' @importFrom dplyr group_by slice_min ungroup
 #'
 #' @examples first_recording_hour(dataframe)
 first_recording_hour <- function(data) {
-  data %>%
-    group_by(sensor_id, date, hour) %>%
-    slice_min(order_by = datetime, with_ties = FALSE) %>%
-    ungroup()
+  data  |> 
+    dplyr::group_by(sensor_id, date, hour)  |> 
+    dplyr::slice_min(order_by = datetime, with_ties = FALSE)  |> 
+    dplyr::ungroup()
 }

@@ -3,8 +3,13 @@
 #' This function calculates the trill index of an sound wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
 #'
 #' @param folder Character. The path to the folder containing the WAV files to analyze.
+#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
 #' @param wave A wave object to be analyzed.
 #' @param channel Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".
@@ -29,7 +34,11 @@
 #' }
 
 tai_folder <- function(folder = NULL,
+                       recursive = FALSE,
                        list = NULL,
+                       start = 0,
+                       end = 1,
+                       unit = "minutes",
                        channel = 'each',
                        hpf = 0,
                        cutoff = -60,
@@ -57,7 +66,7 @@ tai_folder <- function(folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- quiet(list_waves())
+    audio.list <- quiet(list_waves(recursive = recursive))
     
   } else {
     audio.list <- list
@@ -85,7 +94,10 @@ tai_folder <- function(folder = NULL,
     
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1],
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     tai1 <- quiet(do.call(tai, c(list(sound1), args_list))$summary)
@@ -111,7 +123,10 @@ tai_folder <- function(folder = NULL,
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     
   } else {
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    sound1 <- readWave(audio.list[1], 
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     rm(sound1)
   }
@@ -124,7 +139,10 @@ tai_folder <- function(folder = NULL,
     filename <- basename(file)  
     
     sound <- tryCatch({
-      readWave(file)
+      readWave(file,
+               from = start,
+               to = end,
+               units = unit)
     }, error = function(e) {
       message(paste("Error reading file:", file, "Skipping to the next file."))
       return(NULL) 

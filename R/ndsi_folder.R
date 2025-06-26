@@ -1,14 +1,18 @@
 #' Normalized Difference Soundscape Index - folder input
 #' @description
-#' Normalized Difference Soundscape Index (NDSI) from REAL and Kasten,
+#' Normalized Difference Soundscape Index (NDSI) from Kasten et al.,
 #' et al. 2012. The NDSI seeks to "estimate the level of anthropogenic
 #' disturbance on the soundscape by computing the ratio of human-generated
 #' (anthrophony) to biological (biophony) acoustic components found in field
 #' collected sound samples" (Kasten, et al. 2012).
 #' This version is optimized to work with a path to the folder containing the audio files.
 #' @param folder a path to the folder containing the audio files.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
+#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
+#' @param list An optional list (subset) of files in the folder to analyze. 
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param output.csv character vector. When 'save.csv' is TRUE, optionally provide a file name. 
 #' Default name is "ndsi_results.csv"
 #' @param w.len numeric. Window length for the FFT (sampling rate / frequency resolution).
@@ -38,7 +42,11 @@
 #' }
 
 ndsi_folder <- function (folder = NULL,
+                         recursive = recursive,
                          list = NULL,
+                         start = 0,
+                         end = 1,
+                         unit = "minutes",
                          w.len = 512,
                          anthro.min = 1000,
                          anthro.max = 2000,
@@ -62,7 +70,7 @@ ndsi_folder <- function (folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- list_waves(recursive = recursive)
     
   } else {
     audio.list <- list
@@ -89,7 +97,10 @@ ndsi_folder <- function (folder = NULL,
     
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1],
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     ndsi1 <- quiet(do.call(ndsi, c(list(sound1), args_list)))
@@ -115,7 +126,10 @@ ndsi_folder <- function (folder = NULL,
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     
   } else {
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    sound1 <- readWave(audio.list[1], 
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     rm(sound1)
   }
@@ -127,7 +141,10 @@ ndsi_folder <- function (folder = NULL,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
 
                        sound <- tryCatch({
-                         readWave(file)
+                         readWave(file,
+                                  from = start,
+                                  to = end,
+                                  units = unit)
                        }, error = function(e) {
                          message(paste("Error reading file:", file, "Skipping to the next file."))
                          return(NULL) 

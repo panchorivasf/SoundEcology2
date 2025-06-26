@@ -19,7 +19,7 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  A
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -27,7 +27,13 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  A
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -37,7 +43,7 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  A
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Acoustic Evenness Index - folder input</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/aei_folder.R" class="external-link"><code>R/aei_folder.R</code></a></small>
     <div class="hidden name"><code>aei_folder.Rd</code></div>
     </div>
 
@@ -49,11 +55,12 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  A
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">aei_folder</span><span class="op">(</span></span>
-<span>  <span class="va">folder</span>,</span>
+<span>  folder <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  list <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  save.csv <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  csv.name <span class="op">=</span> <span class="st">"aei_results.csv"</span>,</span>
 <span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
-<span>  w.fun <span class="op">=</span> <span class="st">"hanning"</span>,</span>
+<span>  win.fun <span class="op">=</span> <span class="st">"hanning"</span>,</span>
 <span>  min.freq <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  max.freq <span class="op">=</span> <span class="fl">10000</span>,</span>
 <span>  n.bands <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -76,6 +83,11 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  A
 <dd><p>a path to the folder with audio files to import.</p></dd>
 
 
+<dt id="arg-list">list<a class="anchor" aria-label="anchor" href="#arg-list"></a></dt>
+<dd><p>An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.</p></dd>
+
+
 <dt id="arg-save-csv">save.csv<a class="anchor" aria-label="anchor" href="#arg-save-csv"></a></dt>
 <dd><p>logical. Whether to save a csv in the working directory.</p></dd>
 
@@ -84,7 +96,7 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  A
 <dd><p>character vector. When 'save.csv' is TRUE, optionally provide a file name.</p></dd>
 
 
-<dt id="arg-w-fun">w.fun<a class="anchor" aria-label="anchor" href="#arg-w-fun"></a></dt>
+<dt id="arg-win-fun">win.fun<a class="anchor" aria-label="anchor" href="#arg-win-fun"></a></dt>
 <dd><p>window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".</p></dd>
 
 
@@ -150,8 +162,7 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) Ap
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">aei_folder</span><span class="op">(</span><span class="st">"path/to/folder"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Evaluating the job...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Working on it...</span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in setwd(folder):</span> cannot change working directory</span>
 </code></pre></div>
     </div>
@@ -167,7 +178,7 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) Ap
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

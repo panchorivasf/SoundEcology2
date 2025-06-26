@@ -5,7 +5,7 @@ Major updates include:
 
 ### Spectrogram settings: 
 
-Using the ***seewave*** package's `spectro()` function, the spectrogram settings are now fully customizable. The first version of the package was developed when the `spectro()` function from the seewave package did not normalize spectrograms by default. In one of the early seewave updates, this behavior changed, and spectrograms began to be normalized by the maximum value within the recording, which is problematic when comparing metrics based on non-focal recordings (i.e., soundscape recordings). SoundEcology2 uses non-normalized spectrograms by default. 
+The spectrogram settings are now fully customizable. The first version of the package was developed when the `spectro()` function from the seewave package did not normalize spectrograms by default. In one of the early seewave updates, this behavior changed, and spectrograms began to be normalized by the maximum value within the recording, which is problematic when comparing metrics based on non-focal recordings (i.e., soundscape recordings). SoundEcology2 uses non-normalized spectrograms by default. 
 
 ### dB scale: 
 
@@ -25,8 +25,9 @@ These indices now allow users to specify how the proportions in each frequency b
 - Option '2' calculates the proportion over the entire range of frequencies selected by the user for analysis, which is closer to "real Shannon's diversity".
 
 
-- Option '3' uses all the frequencies in the spectrogram (up to the Nyquist frequency), which can be useful for detecting unusual activities, such as heavy rain.
-Output format: The output of each index calculation is now a long-format tibble (data frame).
+### Output format: 
+
+The output of each index calculation is now a long-format tibble (data frame).
 
 ### Channel selection: 
 
@@ -38,13 +39,10 @@ In addition to the original indices (i.e., ADI, AEI, ACI, BI, and NDSI), SoundEc
 
 *Low-Frequency Cover (LFC), Mid-Frequency Cover (MFC), High-Frequency Cover (HFC), and Ultra-Frequency Cover (HFC)* with user-defined frequency bands. The calculation of these indices differ from Towsey (2017) in that we don't apply noise reduction to the spectrogram, which may alter the original energy distribution of target signals. Instead, we use a binary spectrogram, where only the cells above the cutoff threshold are considered. Three unpublished acoustic indices are introduced: 1) Narrow-band Activity Index (NBAI): summarizes the percentage of active cells in each frequency bin, allowing to monitor persistent sound sources (e.g., crickets, cicadas); 2) Broad-band Activity Index (BBAI): summarizes the active cells along each time frame, allowing to monitor the activity of 'noisy' insects (e.g., cicadas and some katydids) and their effect on other indices, as well as geophonic noise sources such as rain and heavy wind which are generally outliers. 3) Trill Activity Index (TAI), similar to ACI, summarizes the variability in sound energy across frequency bins, being more sensitive to stridulations such as those of bush-crickets and katydids. These indices can also be extracted as spectral indices (i.e., a vector of length = number of frequency bins), which can be used to craft False-color Spectrograms. 
 
-- Three function types for each index:
+- Two function types for each index (here 'index' replaces the name of each index):
 
     - The basic function index() allows users to try the index with a single file.
-
-    - The 'list' function, index_list(), accepts a list of WAV file names in the working directory, enabling users to experiment with small batches of files.
-
-    - The 'folder' function, index_folder(), takes the path to a directory and analyzes all the WAV files inside the folder.
+    - The 'folder' function, index_folder(), takes the path to a directory and analyzes all the WAV files inside the folder. Alternatively, a list with selected files in the current working directory can be provided.
 
 --- 
 Finally, we added some helper functions to facilitate common tasks, including:

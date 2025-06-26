@@ -22,7 +22,7 @@ the proportions before calculating the Gini, among other new parameter options (
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -30,7 +30,13 @@ the proportions before calculating the Gini, among other new parameter options (
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -40,7 +46,7 @@ the proportions before calculating the Gini, among other new parameter options (
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Acoustic Evenness Index</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/aei.R" class="external-link"><code>R/aei.R</code></a></small>
     <div class="hidden name"><code>aei.Rd</code></div>
     </div>
 
@@ -57,7 +63,7 @@ the proportions before calculating the Gini, among other new parameter options (
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">aei</span><span class="op">(</span></span>
 <span>  <span class="va">wave</span>,</span>
 <span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
-<span>  w.fun <span class="op">=</span> <span class="st">"hanning"</span>,</span>
+<span>  win.fun <span class="op">=</span> <span class="st">"hanning"</span>,</span>
 <span>  min.freq <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  max.freq <span class="op">=</span> <span class="fl">10000</span>,</span>
 <span>  n.bands <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -79,7 +85,7 @@ the proportions before calculating the Gini, among other new parameter options (
 <dd><p>an object of class Wave imported with the <em>readWave</em> function of the <em>tuneR</em> package.</p></dd>
 
 
-<dt id="arg-w-fun">w.fun<a class="anchor" aria-label="anchor" href="#arg-w-fun"></a></dt>
+<dt id="arg-win-fun">win.fun<a class="anchor" aria-label="anchor" href="#arg-win-fun"></a></dt>
 <dd><p>window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".</p></dd>
 
 
@@ -135,7 +141,7 @@ the proportions before calculating the Gini, among other new parameter options (
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">aei</span><span class="op">(</span><span class="va">tropicalsound</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in aei(tropicalsound):</span> object 'tropicalsound' not found</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'tropicalsound' not found</span>
 </code></pre></div>
     </div>
   </div>
@@ -150,7 +156,7 @@ the proportions before calculating the Gini, among other new parameter options (
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

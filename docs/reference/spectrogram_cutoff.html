@@ -19,7 +19,7 @@ ggplot2 or base R plotting functions."><!-- mathjax --><script src="https://cdnj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -27,7 +27,13 @@ ggplot2 or base R plotting functions."><!-- mathjax --><script src="https://cdnj
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -37,7 +43,7 @@ ggplot2 or base R plotting functions."><!-- mathjax --><script src="https://cdnj
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Generate a Spectrogram with Energy Cutoff</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/spectrogram_cutoff.R" class="external-link"><code>R/spectrogram_cutoff.R</code></a></small>
     <div class="hidden name"><code>spectrogram_cutoff.Rd</code></div>
     </div>
 
@@ -54,7 +60,9 @@ ggplot2 or base R plotting functions.</p>
 <span>  freq.res <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  plot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot.title <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ggplot <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  ggplot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  noise.red <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,6 +88,14 @@ ggplot2 or base R plotting functions.</p>
 
 <dt id="arg-ggplot">ggplot<a class="anchor" aria-label="anchor" href="#arg-ggplot"></a></dt>
 <dd><p>A logical value indicating whether to use ggplot2 for plotting. If <code>FALSE</code>, base R plotting will be used to generate the plot. Defaults to <code>TRUE</code>.</p></dd>
+
+
+<dt id="arg-noise-red">noise.red<a class="anchor" aria-label="anchor" href="#arg-noise-red"></a></dt>
+<dd><p>Character. Either NULL, 'rows' or 'cols'. Determins if and in which direction to apply noise reduction (mean subtraction).</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Logical. If TRUE, ancillary messages are printed in the console.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -107,7 +123,7 @@ ggplot2 or base R plotting functions.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

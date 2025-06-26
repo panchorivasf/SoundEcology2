@@ -19,6 +19,8 @@
 <url><loc>/reference/bi.html</loc></url>
 <url><loc>/reference/bi_folder.html</loc></url>
 <url><loc>/reference/bi_list.html</loc></url>
+<url><loc>/reference/diel_spectrogram.html</loc></url>
+<url><loc>/reference/dynamicity.html</loc></url>
 <url><loc>/reference/fadi.html</loc></url>
 <url><loc>/reference/fadi_folder.html</loc></url>
 <url><loc>/reference/fadi_list.html</loc></url>
@@ -33,9 +35,13 @@
 <url><loc>/reference/import_kaleidoscope_batch.html</loc></url>
 <url><loc>/reference/import_stereo_mix.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/index_ts.html</loc></url>
+<url><loc>/reference/indices_summary.html</loc></url>
+<url><loc>/reference/list_csvs.html</loc></url>
 <url><loc>/reference/list_waves.html</loc></url>
 <url><loc>/reference/mean_spectrum_flip.html</loc></url>
 <url><loc>/reference/merge_index_results.html</loc></url>
+<url><loc>/reference/merge_se2_indices.html</loc></url>
 <url><loc>/reference/nbai.html</loc></url>
 <url><loc>/reference/nbai_folder.html</loc></url>
 <url><loc>/reference/nbai_list.html</loc></url>
@@ -50,6 +56,7 @@
 <url><loc>/reference/spectrogram_binary.html</loc></url>
 <url><loc>/reference/spectrogram_cutoff.html</loc></url>
 <url><loc>/reference/spectrogram_plotly.html</loc></url>
+<url><loc>/reference/summary_spectrograms.html</loc></url>
 <url><loc>/reference/tai.html</loc></url>
 <url><loc>/reference/tai_folder.html</loc></url>
 <url><loc>/reference/tai_list.html</loc></url>

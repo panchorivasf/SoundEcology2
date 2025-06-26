@@ -22,7 +22,7 @@ directly comparable to the original code in the paper."><!-- mathjax --><script 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -30,7 +30,13 @@ directly comparable to the original code in the paper."><!-- mathjax --><script 
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -40,7 +46,7 @@ directly comparable to the original code in the paper."><!-- mathjax --><script 
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Bioacoustic Index - folder input</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/bi_folder.R" class="external-link"><code>R/bi_folder.R</code></a></small>
     <div class="hidden name"><code>bi_folder.Rd</code></div>
     </div>
 
@@ -55,7 +61,8 @@ directly comparable to the original code in the paper.</p>
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">bi_folder</span><span class="op">(</span></span>
-<span>  <span class="va">folder</span>,</span>
+<span>  folder <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  list <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  save.csv <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  csv.name <span class="op">=</span> <span class="st">"bi_results.csv"</span>,</span>
 <span>  w.len <span class="op">=</span> <span class="fl">512</span>,</span>
@@ -77,6 +84,11 @@ directly comparable to the original code in the paper.</p>
 <dd><p>a path to the folder with audio files to import.</p></dd>
 
 
+<dt id="arg-list">list<a class="anchor" aria-label="anchor" href="#arg-list"></a></dt>
+<dd><p>An optional list (subset) of files in the folder to analyze. If provided,
+files outside the list will be excluded.</p></dd>
+
+
 <dt id="arg-save-csv">save.csv<a class="anchor" aria-label="anchor" href="#arg-save-csv"></a></dt>
 <dd><p>logical. Whether to save a csv in the working directory.</p></dd>
 
@@ -90,7 +102,8 @@ directly comparable to the original code in the paper.</p>
 
 
 <dt id="arg-w-fun">w.fun<a class="anchor" aria-label="anchor" href="#arg-w-fun"></a></dt>
-<dd><p>window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".</p></dd>
+<dd><p>window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop",
+"hamming", "hanning", or "rectangle".</p></dd>
 
 
 <dt id="arg-min-freq">min.freq<a class="anchor" aria-label="anchor" href="#arg-min-freq"></a></dt>
@@ -102,11 +115,14 @@ directly comparable to the original code in the paper.</p>
 
 
 <dt id="arg-norm-spec">norm.spec<a class="anchor" aria-label="anchor" href="#arg-norm-spec"></a></dt>
-<dd><p>logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).</p></dd>
+<dd><p>logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended
+because normalized spectrograms with different SNR are not comparable).</p></dd>
 
 
 <dt id="arg-noise-red">noise.red<a class="anchor" aria-label="anchor" href="#arg-noise-red"></a></dt>
-<dd><p>numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0 (Default), noise reduction is not applied.</p></dd>
+<dd><p>numeric; controls the application of noise reduction. If set to 1, noise reduction is applied
+to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each
+column similarly. If set to 0 (Default), noise reduction is not applied.</p></dd>
 
 
 <dt id="arg-rm-offset">rm.offset<a class="anchor" aria-label="anchor" href="#arg-rm-offset"></a></dt>
@@ -114,12 +130,14 @@ directly comparable to the original code in the paper.</p>
 
 
 <dt id="arg-n-cores">n.cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
-<dd><p>The number of cores to use for parallel processing. Use <code>n.cores = -1</code> to use all but one core. Default is NULL (single-core processing).</p></dd>
+<dd><p>The number of cores to use for parallel processing. Use <code>n.cores = -1</code> to use all but one core.
+Default is NULL (single-core processing).</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used for the calculation.</p>
+    <p>A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used
+for the calculation.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -131,7 +149,8 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) Ap
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">bi_folder</span><span class="op">(</span><span class="va">path</span><span class="op">/</span><span class="va">to</span><span class="op">/</span><span class="va">folder</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in bi_folder(path/to/folder):</span> object 'path' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Working on it...</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'path' not found</span>
 </code></pre></div>
     </div>
   </div>
@@ -146,7 +165,7 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) Ap
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

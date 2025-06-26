@@ -22,7 +22,7 @@ the proportions before calculating the Shannon, among other new parameter option
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -30,7 +30,13 @@ the proportions before calculating the Shannon, among other new parameter option
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -40,7 +46,7 @@ the proportions before calculating the Shannon, among other new parameter option
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Acoustic Diversity Index</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/adi.R" class="external-link"><code>R/adi.R</code></a></small>
     <div class="hidden name"><code>adi.Rd</code></div>
     </div>
 
@@ -57,7 +63,7 @@ the proportions before calculating the Shannon, among other new parameter option
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">adi</span><span class="op">(</span></span>
 <span>  <span class="va">wave</span>,</span>
 <span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
-<span>  w.fun <span class="op">=</span> <span class="st">"hanning"</span>,</span>
+<span>  win.fun <span class="op">=</span> <span class="st">"hanning"</span>,</span>
 <span>  min.freq <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  max.freq <span class="op">=</span> <span class="fl">10000</span>,</span>
 <span>  n.bands <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -66,8 +72,9 @@ the proportions before calculating the Shannon, among other new parameter option
 <span>  noise.red <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  rm.offset <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  props <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  prop.den <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  db.fs <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  prop.den <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  db.fs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  use.vegan <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,11 +87,13 @@ the proportions before calculating the Shannon, among other new parameter option
 
 
 <dt id="arg-freq-res">freq.res<a class="anchor" aria-label="anchor" href="#arg-freq-res"></a></dt>
-<dd><p>Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).</p></dd>
+<dd><p>Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and,
+therefore, the window length to be used (sampling rate / frequency resolution).</p></dd>
 
 
-<dt id="arg-w-fun">w.fun<a class="anchor" aria-label="anchor" href="#arg-w-fun"></a></dt>
-<dd><p>window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".</p></dd>
+<dt id="arg-win-fun">win.fun<a class="anchor" aria-label="anchor" href="#arg-win-fun"></a></dt>
+<dd><p>window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming",
+"hanning", or "rectangle".</p></dd>
 
 
 <dt id="arg-min-freq">min.freq<a class="anchor" aria-label="anchor" href="#arg-min-freq"></a></dt>
@@ -104,11 +113,14 @@ the proportions before calculating the Shannon, among other new parameter option
 
 
 <dt id="arg-norm-spec">norm.spec<a class="anchor" aria-label="anchor" href="#arg-norm-spec"></a></dt>
-<dd><p>logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended because normalized spectrograms with different SNR are not comparable).</p></dd>
+<dd><p>logical; if TRUE, the spectrogram is normalized, scaled by its maximum value (not recommended
+because normalized spectrograms with different SNR are not comparable).</p></dd>
 
 
 <dt id="arg-noise-red">noise.red<a class="anchor" aria-label="anchor" href="#arg-noise-red"></a></dt>
-<dd><p>numeric; controls the application of noise reduction. If set to 1, noise reduction is applied to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.</p></dd>
+<dd><p>numeric; controls the application of noise reduction. If set to 1, noise reduction is applied
+to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each
+column similarly. If set to 0, noise reduction is not applied.</p></dd>
 
 
 <dt id="arg-rm-offset">rm.offset<a class="anchor" aria-label="anchor" href="#arg-rm-offset"></a></dt>
@@ -116,7 +128,8 @@ the proportions before calculating the Shannon, among other new parameter option
 
 
 <dt id="arg-props">props<a class="anchor" aria-label="anchor" href="#arg-props"></a></dt>
-<dd><p>logical; if set to TRUE, the function stores the energy proportion values for each frequency band and channel. Default = TRUE.</p></dd>
+<dd><p>logical; if set to TRUE, the function stores the energy proportion values for each frequency band
+and channel. Default = TRUE.</p></dd>
 
 
 <dt id="arg-prop-den">prop.den<a class="anchor" aria-label="anchor" href="#arg-prop-den"></a></dt>
@@ -126,6 +139,11 @@ the proportions before calculating the Shannon, among other new parameter option
 <dt id="arg-db-fs">db.fs<a class="anchor" aria-label="anchor" href="#arg-db-fs"></a></dt>
 <dd><p>logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.</p></dd>
 
+
+<dt id="arg-use-vegan">use.vegan<a class="anchor" aria-label="anchor" href="#arg-use-vegan"></a></dt>
+<dd><p>logical; if TRUE, the diversity() function from the vegan package is called to compute Shannon's entropy. This is
+only intended for when the user wants to obtain a result equivalent to the original soundecology package. Default = FALSE.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -133,9 +151,14 @@ the proportions before calculating the Shannon, among other new parameter option
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>Options for the 'prop.den' parameter: 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band. 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max_freq'). 3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
-Another important update is that now the spectrogram is not normalized by default, which made recordings
-with different signal-to-noise ratio not comparable.</p>
+    <p>Options for the 'prop.den' parameter: 1 = The original calculation from the
+"soundecology" package is applied.
+The denominator of the proportion equals to all the cells in the same
+frequency band. 2 = A "true Shannon" proportion is calculated,
+where the "whole community" equals to the cells above the decibel threshold
+across the spectrogram (up to 'max_freq').
+Another important update is that now the spectrogram is not normalized by
+default, which made recordings#' with different signal-to-noise ratio not comparable.</p>
     </div>
 
     <div id="ref-examples">
@@ -143,7 +166,7 @@ with different signal-to-noise ratio not comparable.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tropicalsound</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>data set 'tropicalsound' not found</span>
 <span class="r-in"><span><span class="fu">adi</span><span class="op">(</span><span class="va">tropicalsound</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in adi(tropicalsound):</span> object 'tropicalsound' not found</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'tropicalsound' not found</span>
 </code></pre></div>
     </div>
   </div>
@@ -158,7 +181,7 @@ with different signal-to-noise ratio not comparable.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

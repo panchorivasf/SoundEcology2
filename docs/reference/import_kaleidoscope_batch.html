@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -25,7 +25,13 @@
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -35,7 +41,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Batch Import and Process Kaleidoscope Files in Parallel</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/import_kaleidoscope_batch.R" class="external-link"><code>R/import_kaleidoscope_batch.R</code></a></small>
     <div class="hidden name"><code>import_kaleidoscope_batch.Rd</code></div>
     </div>
 
@@ -86,11 +92,8 @@
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Assuming there are Excel files in the working directory:</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">import_kaleidoscope_batch</span><span class="op">(</span>new.col.name <span class="op">=</span> <span class="st">"treatment"</span>, new.col.value <span class="op">=</span> <span class="st">"test"</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>package 'doParallel' was built under R version 4.2.3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: foreach</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>package 'foreach' was built under R version 4.2.3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: iterators</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>package 'iterators' was built under R version 4.2.3</span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in import_kaleidoscope_batch(new.col.name = "treatment", new.col.value = "test"):</span> No Excel files found in the specified directory.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Specifying a list of files and a custom path:</span></span></span>
@@ -111,7 +114,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

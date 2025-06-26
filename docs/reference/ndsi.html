@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -25,7 +25,13 @@
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -35,7 +41,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Normalized Difference Soundscape Index</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/ndsi.R" class="external-link"><code>R/ndsi.R</code></a></small>
     <div class="hidden name"><code>ndsi.Rd</code></div>
     </div>
 
@@ -46,7 +52,7 @@
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ndsi</span><span class="op">(</span></span>
 <span>  <span class="va">wave</span>,</span>
-<span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>  w.len <span class="op">=</span> <span class="fl">512</span>,</span>
 <span>  anthro.min <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  anthro.max <span class="op">=</span> <span class="fl">2000</span>,</span>
 <span>  bio.min <span class="op">=</span> <span class="fl">2000</span>,</span>
@@ -63,8 +69,8 @@
 <dd><p>an object of class Wave imported with the <em>readWave</em> function of the <em>tuneR</em> package.</p></dd>
 
 
-<dt id="arg-freq-res">freq.res<a class="anchor" aria-label="anchor" href="#arg-freq-res"></a></dt>
-<dd><p>numeric. The frequency resolution to use (Hz per bin) which will determine the window length for the FFT (sampling rate / frequency resolution).</p></dd>
+<dt id="arg-w-len">w.len<a class="anchor" aria-label="anchor" href="#arg-w-len"></a></dt>
+<dd><p>numeric. The window length for the FFT (sampling rate / frequency resolution).</p></dd>
 
 
 <dt id="arg-anthro-min">anthro.min<a class="anchor" aria-label="anchor" href="#arg-anthro-min"></a></dt>
@@ -95,7 +101,7 @@
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">ndsi</span><span class="op">(</span><span class="va">tropicalsound</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ndsi(tropicalsound):</span> object 'tropicalsound' not found</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'tropicalsound' not found</span>
 </code></pre></div>
     </div>
   </div>
@@ -110,7 +116,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -25,7 +25,13 @@
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -35,7 +41,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Broadband Activity Index</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/bbai.R" class="external-link"><code>R/bbai.R</code></a></small>
     <div class="hidden name"><code>bbai.Rd</code></div>
     </div>
 
@@ -48,7 +54,6 @@
 <span>  <span class="va">wave</span>,</span>
 <span>  channel <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  hpf <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  rm.offset <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>  cutoff <span class="op">=</span> <span class="op">-</span><span class="fl">60</span>,</span>
 <span>  click.length <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -75,10 +80,6 @@
 
 <dt id="arg-hpf">hpf<a class="anchor" aria-label="anchor" href="#arg-hpf"></a></dt>
 <dd><p>Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals of interest are below that threshold.</p></dd>
-
-
-<dt id="arg-rm-offset">rm.offset<a class="anchor" aria-label="anchor" href="#arg-rm-offset"></a></dt>
-<dd><p>Logical. Should the DC offset be removed from the audio signal? Defaults to <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-freq-res">freq.res<a class="anchor" aria-label="anchor" href="#arg-freq-res"></a></dt>
@@ -119,17 +120,13 @@
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A tibble containing the following columns:</p><ul><li><p><code>index</code>: The name of the index. Useful later when merging data with other indices.</p></li>
-<li><p><code>value</code>: The number of clicks detected in the recording.</p></li>
-<li><p><code>mean</code>: The mean click height (in frequency bins).</p></li>
-<li><p><code>variance</code>: The variance of the click height.</p></li>
-<li><p><code>sd</code>: The standard deviation of the click height.</p></li>
-</ul></div>
+    <p>A tibble and optional spectrogram.</p>
+    </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">bbai</span><span class="op">(</span><span class="va">wave</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in bbai(wave):</span> object 'wave' not found</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'wave' not found</span>
 </code></pre></div>
     </div>
   </div>
@@ -144,7 +141,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

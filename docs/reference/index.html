@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -25,7 +25,13 @@
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -48,11 +54,7 @@
       </tr><tr><td>
           <p><code><a href="aci_folder.html">aci_folder()</a></code> </p>
         </td>
-        <td><p>Acoustic Complexity Index - folder input</p></td>
-      </tr><tr><td>
-          <p><code><a href="aci_list.html">aci_list()</a></code> </p>
-        </td>
-        <td><p>Calculate Acoustic Complexity Index on a List of Wave Files</p></td>
+        <td><p>Acoustic Complexity Index - Batch process</p></td>
       </tr><tr><td>
           <p><code><a href="add_replicate_id.html">add_replicate_id()</a></code> </p>
         </td>
@@ -70,10 +72,6 @@
         </td>
         <td><p>ADI Heatmap</p></td>
       </tr><tr><td>
-          <p><code><a href="adi_list.html">adi_list()</a></code> </p>
-        </td>
-        <td><p>Calculate the Acoustic Diversity Index on the Files in a List</p></td>
-      </tr><tr><td>
           <p><code><a href="aei.html">aei()</a></code> </p>
         </td>
         <td><p>Acoustic Evenness Index</p></td>
@@ -81,10 +79,6 @@
           <p><code><a href="aei_folder.html">aei_folder()</a></code> </p>
         </td>
         <td><p>Acoustic Evenness Index - folder input</p></td>
-      </tr><tr><td>
-          <p><code><a href="aei_list.html">aei_list()</a></code> </p>
-        </td>
-        <td><p>Acoustic Evenness Index - list input</p></td>
       </tr><tr><td>
           <p><code><a href="bbai.html">bbai()</a></code> </p>
         </td>
@@ -94,10 +88,6 @@
         </td>
         <td><p>Calculate BBAI for all the Files in a Folder</p></td>
       </tr><tr><td>
-          <p><code><a href="bbai_list.html">bbai_list()</a></code> </p>
-        </td>
-        <td><p>Calculate BBAI for all the Files in a List</p></td>
-      </tr><tr><td>
           <p><code><a href="bi.html">bi()</a></code> </p>
         </td>
         <td><p>Bioacoustic Index</p></td>
@@ -106,9 +96,13 @@
         </td>
         <td><p>Bioacoustic Index - folder input</p></td>
       </tr><tr><td>
-          <p><code><a href="bi_list.html">bi_list()</a></code> </p>
+          <p><code><a href="diel_spectrogram.html">diel_spectrogram()</a></code> </p>
         </td>
-        <td><p>Bioacoustic Index - list input</p></td>
+        <td><p>Generate a Diel Spectrogram from multiple Audio Recordings</p></td>
+      </tr><tr><td>
+          <p><code><a href="dynamicity.html">dynamicity()</a></code> </p>
+        </td>
+        <td><p>Calculate Soundscape Dynamicity</p></td>
       </tr><tr><td>
           <p><code><a href="fadi.html">fadi()</a></code> </p>
         </td>
@@ -118,10 +112,6 @@
         </td>
         <td><p>Frequency-dependent Acoustic Diversity Index - folder input</p></td>
       </tr><tr><td>
-          <p><code><a href="fadi_list.html">fadi_list()</a></code> </p>
-        </td>
-        <td><p>Frequency-dependent Acoustic Diversity Index - list input</p></td>
-      </tr><tr><td>
           <p><code><a href="fci.html">fci()</a></code> </p>
         </td>
         <td><p>Frequency Cover Indices (FCI)</p></td>
@@ -129,10 +119,6 @@
           <p><code><a href="fci_folder.html">fci_folder()</a></code> </p>
         </td>
         <td><p>Frequency Cover Indices on Multiple WAV Files in a Folder</p></td>
-      </tr><tr><td>
-          <p><code><a href="fci_list.html">fci_list()</a></code> </p>
-        </td>
-        <td><p>Frequency Cover Indices on Multiple WAV Files in a List</p></td>
       </tr><tr><td>
           <p><code><a href="first_recording_hour.html">first_recording_hour()</a></code> </p>
         </td>
@@ -162,6 +148,18 @@
         </td>
         <td><p>Import a Stereo Wave File as Mono and Optionally Remove DC Offset</p></td>
       </tr><tr><td>
+          <p><code><a href="index_ts.html">index_ts()</a></code> </p>
+        </td>
+        <td><p>Create time series analysis and visualization for acoustic index data</p></td>
+      </tr><tr><td>
+          <p><code><a href="indices_summary.html">indices_summary()</a></code> </p>
+        </td>
+        <td><p>Summary of Acoustic Indices</p></td>
+      </tr><tr><td>
+          <p><code><a href="list_csvs.html">list_csvs()</a></code> </p>
+        </td>
+        <td><p>List the CSV files in a directory</p></td>
+      </tr><tr><td>
           <p><code><a href="list_waves.html">list_waves()</a></code> </p>
         </td>
         <td><p>List wave files in a directory</p></td>
@@ -174,6 +172,10 @@
         </td>
         <td><p>Merge Index Results from CSV Files</p></td>
       </tr><tr><td>
+          <p><code><a href="merge_se2_indices.html">merge_se2_indices()</a></code> </p>
+        </td>
+        <td><p>Merge CSV outputs of several indices calculated with SoundEcology2</p></td>
+      </tr><tr><td>
           <p><code><a href="nbai.html">nbai()</a></code> </p>
         </td>
         <td><p>Narrow-Band Activity Index</p></td>
@@ -181,10 +183,6 @@
           <p><code><a href="nbai_folder.html">nbai_folder()</a></code> </p>
         </td>
         <td><p>Narrow-Band Activity Index for Files in a Folder</p></td>
-      </tr><tr><td>
-          <p><code><a href="nbai_list.html">nbai_list()</a></code> </p>
-        </td>
-        <td><p>Narrow-Band Activity Index for audio.list in a List</p></td>
       </tr><tr><td>
           <p><code><a href="ndsi.html">ndsi()</a></code> </p>
         </td>
@@ -194,17 +192,9 @@
         </td>
         <td><p>Normalized Difference Soundscape Index - folder input</p></td>
       </tr><tr><td>
-          <p><code><a href="ndsi_list.html">ndsi_list()</a></code> </p>
-        </td>
-        <td><p>Normalized Difference Soundscape Index - list imput</p></td>
-      </tr><tr><td>
           <p><code><a href="plot_diel_indices.html">plot_diel_indices()</a></code> </p>
         </td>
         <td><p>Plot Diel Indices with Optional LOESS Smoothing and Scaling Transformations</p></td>
-      </tr><tr><td>
-          <p><code><a href="print_list.html">print_list()</a></code> </p>
-        </td>
-        <td><p>Print a list vertically</p></td>
       </tr><tr><td>
           <p><code><a href="spectral_dynamics.html">spectral_dynamics()</a></code> </p>
         </td>
@@ -230,6 +220,10 @@
         </td>
         <td><p>Plot Spectrogram Using Plotly</p></td>
       </tr><tr><td>
+          <p><code><a href="summary_spectrograms.html">summary_spectrograms()</a></code> </p>
+        </td>
+        <td><p>Generate and Save Summary Spectrograms</p></td>
+      </tr><tr><td>
           <p><code><a href="tai.html">tai()</a></code> </p>
         </td>
         <td><p>Trill Activity Index</p></td>
@@ -237,14 +231,6 @@
           <p><code><a href="tai_folder.html">tai_folder()</a></code> </p>
         </td>
         <td><p>Calculate Trill Activity Index for all the Files in a Folder</p></td>
-      </tr><tr><td>
-          <p><code><a href="tai_list.html">tai_list()</a></code> </p>
-        </td>
-        <td><p>Calculate Trill Activity Index for all the Files in a List</p></td>
-      </tr><tr><td>
-          <p><code><a href="wave_integrity.html">wave_integrity()</a></code> </p>
-        </td>
-        <td><p>Check the Integrity of a Wave File Dataset</p></td>
       </tr><tr><td>
           <p><code><a href="wave_integrity_batch.html">wave_integrity_batch()</a></code> </p>
         </td>
@@ -262,7 +248,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

@@ -7,6 +7,12 @@
 #' @param folder a path to the folder with audio files to import.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
+#' @param recursive logical. Whether to search Wave files in subfolders. Default
+#' is TRUE.
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param save.csv logical. Whether to save a csv in the working directory.
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
@@ -37,7 +43,6 @@
 #' Options for propden:
 #' 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
 #' 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
-#' 3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
 #' It uses parallel processing with all but one of the available cores.
 #' Optimized to facilitate working with a list of audio files before importing them into R.
 #' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
@@ -47,6 +52,9 @@
 adi_folder <- function(folder = NULL,
                        list = NULL,
                        recursive = FALSE,
+                       start = 0,
+                       end = 1,
+                       unit = "minutes",
                        save.csv = TRUE,
                        csv.name = "adi_results.csv",
                        freq.res = 50,
@@ -133,7 +141,11 @@ adi_folder <- function(folder = NULL,
                        
                        tryCatch({
                          sound <- tryCatch({
-                           readWave(full_path)
+                           readWave(full_path, 
+                                    from = start,
+                                    to = end,
+                                    units = unit
+                                    )
                          }, error = function(e) {
                            message(paste("Error reading file:", clean_file, "-", e$message))
                            skipped_files <<- c(skipped_files, clean_file)

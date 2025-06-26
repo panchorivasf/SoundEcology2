@@ -8,6 +8,9 @@ adi_folder(
   folder = NULL,
   list = NULL,
   recursive = FALSE,
+  start = 0,
+  end = 1,
+  unit = "minutes",
   save.csv = TRUE,
   csv.name = "adi_results.csv",
   freq.res = 50,
@@ -31,6 +34,16 @@ adi_folder(
 
 \item{list}{An optional list (subset) of files in the folder to analyze. If provided,
 files outside the list will be excluded.}
+
+\item{recursive}{logical. Whether to search Wave files in subfolders. Default
+is TRUE.}
+
+\item{start}{numerical. Where to start reading the Wave.}
+
+\item{end}{numerical. Where to end reading the Wave.}
+
+\item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
+'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
 \item{save.csv}{logical. Whether to save a csv in the working directory.}
 
@@ -76,7 +89,6 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  A
 Options for propden:
 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
-3 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
 It uses parallel processing with all but one of the available cores.
 Optimized to facilitate working with a list of audio files before importing them into R.
 Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024

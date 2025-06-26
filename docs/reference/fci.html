@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SoundEcology2</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.11</span>
       </span>
     </div>
 
@@ -25,7 +25,13 @@
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/panchorivasf/SoundEcology2/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -35,7 +41,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Frequency Cover Indices (FCI)</h1>
-
+    <small class="dont-index">Source: <a href="https://github.com/panchorivasf/SoundEcology2/blob/HEAD/R/fci.R" class="external-link"><code>R/fci.R</code></a></small>
     <div class="hidden name"><code>fci.Rd</code></div>
     </div>
 
@@ -47,11 +53,10 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">fci</span><span class="op">(</span></span>
 <span>  <span class="va">wave</span>,</span>
 <span>  channel <span class="op">=</span> <span class="st">"left"</span>,</span>
-<span>  rm.offset <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  hpf <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  cutoff <span class="op">=</span> <span class="op">-</span><span class="fl">60</span>,</span>
 <span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
-<span>  plot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  spectrogram <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ggplot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot.title <span class="op">=</span> <span class="st">"Frequency Cover Analysis"</span>,</span>
 <span>  sound.color <span class="op">=</span> <span class="st">"#045E10"</span>,</span>
@@ -87,7 +92,7 @@
 <dd><p>Numeric. The frequency resolution to be used when selecting a window length for the FFT.</p></dd>
 
 
-<dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
+<dt id="arg-spectrogram">spectrogram<a class="anchor" aria-label="anchor" href="#arg-spectrogram"></a></dt>
 <dd><p>Logical. If TRUE, the function will generate and display a plot of the binary spectrogram with the frequency bands marked. Default is TRUE.</p></dd>
 
 
@@ -122,17 +127,21 @@
 <dt id="arg-hf-max">hf.max<a class="anchor" aria-label="anchor" href="#arg-hf-max"></a></dt>
 <dd><p>Numeric. The maximum frequency (in Hz) for the high-frequency band. Default is 22000 Hz.</p></dd>
 
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Logical. If TRUE, details of dynamic range will be printed on the console.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A tibble containing the proportions of the spectrogram that exceed the amplitude cutoff for each of the low, mid, and high-frequency bands.</p>
+    <p>A tibble and an optional spectrogram.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># Assuming 'wave' is a Wave object</span></span></span>
-<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">fc</span><span class="op">(</span><span class="va">wave</span>, cutoff <span class="op">=</span> <span class="fl">65</span>, freq.res <span class="op">=</span> <span class="fl">100</span>,  plot <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">fci</span><span class="op">(</span><span class="va">wave</span>, cutoff <span class="op">=</span> <span class="fl">65</span>, freq.res <span class="op">=</span> <span class="fl">100</span>,  spectrogram <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
@@ -149,7 +158,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>

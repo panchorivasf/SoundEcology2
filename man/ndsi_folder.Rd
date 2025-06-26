@@ -6,7 +6,11 @@
 \usage{
 ndsi_folder(
   folder = NULL,
+  recursive = recursive,
   list = NULL,
+  start = 0,
+  end = 1,
+  unit = "minutes",
   w.len = 512,
   anthro.min = 1000,
   anthro.max = 2000,
@@ -20,8 +24,16 @@ ndsi_folder(
 \arguments{
 \item{folder}{a path to the folder containing the audio files.}
 
-\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
-files outside the list will be excluded.}
+\item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
+
+\item{list}{An optional list (subset) of files in the folder to analyze.}
+
+\item{start}{numerical. Where to start reading the Wave.}
+
+\item{end}{numerical. Where to end reading the Wave.}
+
+\item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
+'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
 \item{w.len}{numeric. Window length for the FFT (sampling rate / frequency resolution).}
 
@@ -46,7 +58,7 @@ a wide format tibble with NDSI values per channel (if stereo), parameters used a
 metadata
 }
 \description{
-Normalized Difference Soundscape Index (NDSI) from REAL and Kasten,
+Normalized Difference Soundscape Index (NDSI) from Kasten et al.,
 et al. 2012. The NDSI seeks to "estimate the level of anthropogenic
 disturbance on the soundscape by computing the ratio of human-generated
 (anthrophony) to biological (biophony) acoustic components found in field

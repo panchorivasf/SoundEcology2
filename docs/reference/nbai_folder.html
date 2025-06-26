@@ -56,7 +56,11 @@ acoustic indices).</p>
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">nbai_folder</span><span class="op">(</span></span>
 <span>  folder <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  recursive <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  list <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  start <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  end <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  unit <span class="op">=</span> <span class="st">"minutes"</span>,</span>
 <span>  channel <span class="op">=</span> <span class="st">"each"</span>,</span>
 <span>  hpf <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  freq.res <span class="op">=</span> <span class="fl">50</span>,</span>
@@ -76,9 +80,25 @@ acoustic indices).</p>
 <dd><p>Character. The path to the folder containing the wave files to analyze.</p></dd>
 
 
+<dt id="arg-recursive">recursive<a class="anchor" aria-label="anchor" href="#arg-recursive"></a></dt>
+<dd><p>Logical. Whether to search in subfolders. Default is TRUE.</p></dd>
+
+
 <dt id="arg-list">list<a class="anchor" aria-label="anchor" href="#arg-list"></a></dt>
-<dd><p>An optional list (subset) of files in the folder to analyze. If provided,
-files outside the list will be excluded.</p></dd>
+<dd><p>An optional list (subset) of files in the folder to analyze.</p></dd>
+
+
+<dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
+<dd><p>numerical. Where to start reading the Wave.</p></dd>
+
+
+<dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>
+<dd><p>numerical. Where to end reading the Wave.</p></dd>
+
+
+<dt id="arg-unit">unit<a class="anchor" aria-label="anchor" href="#arg-unit"></a></dt>
+<dd><p>character. Unit of measurement for 'start' and 'end'. Options are
+'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.</p></dd>
 
 
 <dt id="arg-channel">channel<a class="anchor" aria-label="anchor" href="#arg-channel"></a></dt>

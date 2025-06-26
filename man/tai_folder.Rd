@@ -6,7 +6,11 @@
 \usage{
 tai_folder(
   folder = NULL,
+  recursive = FALSE,
   list = NULL,
+  start = 0,
+  end = 1,
+  unit = "minutes",
   channel = "each",
   hpf = 0,
   cutoff = -60,
@@ -22,8 +26,17 @@ tai_folder(
 \arguments{
 \item{folder}{Character. The path to the folder containing the WAV files to analyze.}
 
+\item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
+
 \item{list}{An optional list (subset) of files in the folder to analyze. If provided,
 files outside the list will be excluded.}
+
+\item{start}{numerical. Where to start reading the Wave.}
+
+\item{end}{numerical. Where to end reading the Wave.}
+
+\item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
+'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
 \item{channel}{Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".}
 

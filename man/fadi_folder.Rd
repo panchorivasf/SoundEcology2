@@ -6,7 +6,11 @@
 \usage{
 fadi_folder(
   folder = NULL,
+  recursive = recursive,
   list = NULL,
+  start = 0,
+  end = 1,
+  unit = "minutes",
   save_csv = TRUE,
   csv_name = "fadi_results.csv",
   noise_file = NULL,
@@ -23,8 +27,17 @@ fadi_folder(
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
 
+\item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
+
 \item{list}{An optional list (subset) of files in the folder to analyze. If provided,
 files outside the list will be excluded.}
+
+\item{start}{numerical. Where to start reading the Wave.}
+
+\item{end}{numerical. Where to end reading the Wave.}
+
+\item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
+'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
 \item{save_csv}{logical. Whether to save a csv in the working directory.}
 

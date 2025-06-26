@@ -62,6 +62,10 @@ directly comparable to the original code in the paper.</p>
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">bi_folder</span><span class="op">(</span></span>
 <span>  folder <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  recursive <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  start <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  end <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  unit <span class="op">=</span> <span class="st">"minutes"</span>,</span>
 <span>  list <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  save.csv <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  csv.name <span class="op">=</span> <span class="st">"bi_results.csv"</span>,</span>
@@ -82,6 +86,23 @@ directly comparable to the original code in the paper.</p>
 
 <dl><dt id="arg-folder">folder<a class="anchor" aria-label="anchor" href="#arg-folder"></a></dt>
 <dd><p>a path to the folder with audio files to import.</p></dd>
+
+
+<dt id="arg-recursive">recursive<a class="anchor" aria-label="anchor" href="#arg-recursive"></a></dt>
+<dd><p>Logical. Whether to search in subfolders. Default is TRUE.</p></dd>
+
+
+<dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
+<dd><p>numerical. Where to start reading the Wave.</p></dd>
+
+
+<dt id="arg-end">end<a class="anchor" aria-label="anchor" href="#arg-end"></a></dt>
+<dd><p>numerical. Where to end reading the Wave.</p></dd>
+
+
+<dt id="arg-unit">unit<a class="anchor" aria-label="anchor" href="#arg-unit"></a></dt>
+<dd><p>character. Unit of measurement for 'start' and 'end'. Options are
+'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.</p></dd>
 
 
 <dt id="arg-list">list<a class="anchor" aria-label="anchor" href="#arg-list"></a></dt>

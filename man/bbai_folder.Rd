@@ -8,6 +8,9 @@ bbai_folder(
   folder = NULL,
   recursive = TRUE,
   list = NULL,
+  start = 0,
+  end = 1,
+  unit = "minutes",
   channel = "each",
   hpf = 0,
   freq.res = 50,
@@ -30,6 +33,13 @@ bbai_folder(
 
 \item{list}{An optional list (subset) of files in the folder to analyze. If provided,
 files outside the list will be excluded.}
+
+\item{start}{numerical. Where to start reading the Wave.}
+
+\item{end}{numerical. Where to end reading the Wave.}
+
+\item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
+'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
 \item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either
 "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix".

@@ -32,9 +32,10 @@ generating spectrograms. Defaults to \code{TRUE}.}
 None. Spectrogram images are saved in the specified output directory.
 }
 \description{
-This function generates and saves spectrogram images for various summary categories (mean, max, min,
-median, mode) for each recording in the input data frame. Spectrograms are created for specific wave
-files as indicated in the data, with options to normalize and remove DC offset.
+This function generates and saves spectrogram images for various summary
+statistics (mean, max, min, median, mode) for each recording in the input
+data frame. Spectrograms are created for specific wave files as indicated in
+the data, with options to normalize and remove DC offset.
 }
 \examples{
 \dontrun{

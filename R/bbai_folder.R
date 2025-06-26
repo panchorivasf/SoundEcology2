@@ -8,6 +8,10 @@
 #'
 #' @param folder Character. The path to a folder with the wave files to analyze.
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
+#' @param start numerical. Where to start reading the Wave. 
+#' @param end numerical. Where to end reading the Wave.
+#' @param unit character. Unit of measurement for 'start' and 'end'. Options are
+#' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either 
@@ -51,21 +55,24 @@
 #' }  
 
 bbai_folder <- function(folder = NULL,
-                         recursive = TRUE,
-                         list = NULL,
-                         channel = 'each',
-                         hpf = 0,
-                         freq.res = 50,
-                         cutoff = -60,
-                         click.length = 10,
-                         difference = 10,
-                         gap.allowance = 2,
-                         spectrogram = FALSE,
-                         dark.plot = FALSE,
-                         plot.title = "",
-                         verbose = FALSE,
-                         output.csv = "bbai_results.csv",
-                         n.cores = -1) { 
+                        recursive = TRUE,
+                        list = NULL,
+                        start = 0,
+                        end = 1,
+                        unit = "minutes",
+                        channel = 'each',
+                        hpf = 0,
+                        freq.res = 50,
+                        cutoff = -60,
+                        click.length = 10,
+                        difference = 10,
+                        gap.allowance = 2,
+                        spectrogram = FALSE,
+                        dark.plot = FALSE,
+                        plot.title = "",
+                        verbose = FALSE,
+                        output.csv = "bbai_results.csv",
+                        n.cores = -1) { 
   
   cat("Working on it...\n")
   
@@ -91,7 +98,7 @@ bbai_folder <- function(folder = NULL,
   } else {
     audio.list <- list
   }
-
+  
   nFiles <- length(audio.list)
   
   if (nFiles == 0) {
@@ -149,7 +156,11 @@ bbai_folder <- function(folder = NULL,
   results <- foreach(file = audio.list,
                      .packages = c("tuneR", "seewave", "tibble")) %dopar% {
                        filename <- basename(file)
-                       sound <- readWave(file)
+                       sound <- readWave(file,
+                                         from = start,
+                                         to = end,
+                                         units = unit
+                                         )
                        result_list <- list()
                        
                        results <- quiet(do.call(bbai, c(list(sound), args_list)))
@@ -173,7 +184,7 @@ bbai_folder <- function(folder = NULL,
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-
+  
   return(combined_results)
 }
 

@@ -4,7 +4,7 @@
 #' It processes each sound file in parallel (if specified) and saves the results in a CSV file.
 #'
 #' @param folder The folder containing the WAV files to analyze.
-#' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
+#' @param recursive Logical. Whether to search in subfolders. Default is FALSE.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
 #' @param start numerical. Where to start reading the Wave. 
@@ -12,7 +12,7 @@
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param output.csv The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
-#' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.
+#' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'each'.
 #' @param hpf High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.
 #' @param cutoff The amplitude threshold (in dB) below which frequencies will be considered inactive. Default is -60.
 #' @param freq.res Frequency resolution of the spectrogram in Hz. Default is 100.

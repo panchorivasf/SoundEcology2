@@ -6,7 +6,7 @@
 \usage{
 bbai_folder(
   folder = NULL,
-  recursive = TRUE,
+  recursive = FALSE,
   list = NULL,
   start = 0,
   end = 1,

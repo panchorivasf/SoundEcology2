@@ -7,10 +7,11 @@
 import_kaleidoscope(file)
 }
 \arguments{
-\item{data}{An excel}
+\item{data}{An excelfile}
 }
 \value{
-a data frame with the following columns 'file_name', 'sensor_id', 'datetime', 'date', 'hour', 'value_l', 'value_r', 'value_avg'
+a data frame with the following columns 'file_name', 'sensor_id',
+'datetime', 'date', 'hour', 'value_l', 'value_r', 'value_avg'
 }
 \description{
 Import tidy dataset from Kaleidoscope

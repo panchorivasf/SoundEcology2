@@ -19,39 +19,50 @@ fadi(
 \arguments{
 \item{soundfile}{A wave object imported with readWave().}
 
-\item{noise_file}{An R object of class Wave containing noise-only information if needed. Default = NULL.}
+\item{noise_file}{An R object of class Wave containing noise-only information
+if needed. Default = NULL.}
 
 \item{NEM}{Numeric. Options are 1 or 2.
 When NEM = 1, floating thresholds are estimated based on noise_file.
 When NEM = 2, floating thresholds are calculated based on sound file using an
-automatic noise level estimation method (median of each row in the spectrogram). Default = 2.}
+automatic noise level estimation method (median of each row in the
+spectrogram). Default = 2.}
 
-\item{min_freq}{Minimum frequency in Hertz when calculating the global threshold. Default = 200.}
+\item{min_freq}{Minimum frequency in Hertz when calculating the global
+threshold. Default = 200.}
 
-\item{max_freq}{Maximum frequency in Hertz when calculating the FADI value. Default = 10000.}
+\item{max_freq}{Maximum frequency in Hertz when calculating the FADI value.
+Default = 10000.}
 
-\item{threshold_fixed}{A negative number in dB for calculating the global threshold. Default = −50.}
+\item{threshold_fixed}{A negative number in dB for calculating the global
+threshold. Default = −50.}
 
 \item{freq_step}{Bandwidth of each frequency band, in Hertz. Default = 1000.}
 
-\item{gamma}{A positive number in dB for calculating the floating thresholds. Default = 13.}
+\item{gamma}{A positive number in dB for calculating the floating thresholds.
+Default = 13.}
 
-\item{props}{Logical; if TRUE, the energy proportion values for each frequency band
-and channel are added to the output tibble. Default = TRUE.}
+\item{props}{Logical; if TRUE, the energy proportion values for each
+frequency ban and channel are added to the output tibble. Default = TRUE.}
 }
 \value{
-A tibble with the FADI value per channel, energy proportions, metadata, and parameters used.
+A tibble with the FADI value per channel, energy proportions,
+metadata, and parameters used.
 }
 \description{
-The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains a floating noise profile
-before calculating the Acoustic Diversity Index and it doesn't use normalized spectrogram.
-Alternatively it can take a noise sample to reduce noise from the analyzed files.
+The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains
+a floating noise profile before calculating the Acoustic Diversity Index and
+it doesn't use normalized spectrogram. Alternatively it can take a noise
+sample to reduce noise from the analyzed files.
 }
 \details{
-Modified version of the Frequency-dependent Acoustic Diversity Index by Xu et al. (2023).
-FADI was introduced in: https://www.sciencedirect.com/science/article/pii/S1470160X23010828.
-This version returns a wide format (one row per audio file) tibble as output instead of a nested list.
-To see the original version as in the paper, use the \emph{frequency_dependent_acoustic_diversity()} function.
+Modified version of the Frequency-dependent Acoustic Diversity Index by Xu
+et al. (2023).FADI was introduced in:
+https://www.sciencedirect.com/science/article/pii/S1470160X23010828.
+This version returns a wide format (one row per audio file) tibble as output
+instead of a nested list.
+To see the original version as in the paper, use the
+\emph{frequency_dependent_acoustic_diversity()} function.
 }
 \examples{
 fadi(tropicalsound)

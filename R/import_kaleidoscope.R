@@ -1,8 +1,9 @@
 #' Import tidy dataset from Kaleidoscope
 #'
-#' @param data An excel
+#' @param data An excelfile
 #'
-#' @return a data frame with the following columns 'file_name', 'sensor_id', 'datetime', 'date', 'hour', 'value_l', 'value_r', 'value_avg'
+#' @return a data frame with the following columns 'file_name', 'sensor_id', 
+#' 'datetime', 'date', 'hour', 'value_l', 'value_r', 'value_avg'
 #' @import dplyr
 #' @import tidyr
 #' @export

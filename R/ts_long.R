@@ -35,10 +35,10 @@
 #' @examples
 #' \dontrun{
 #' # Basic usage
-#' result <- index_ts(acoustic_data)
+#' result <- ts_long(acoustic_data)
 #' 
 #' # With custom parameters
-#' result <- index_ts(acoustic_data, 
+#' result <- ts_long(acoustic_data, 
 #'                   index_name = "ndsi",
 #'                   extra_title = "Forest Site A",
 #'                   start = "2023-01-01",
@@ -52,7 +52,7 @@
 #' @importFrom stats predict loess median na.exclude
 #' @export
 
-index_ts <- function(data, 
+ts_long <- function(data, 
                      index_name = "adi",
                      extra_title = "",
                      start = NULL, 

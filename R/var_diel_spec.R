@@ -1,4 +1,4 @@
-#' Generate a Diel Spectrogram from multiple Audio Recordings
+#' Generate a Variance Diel Spectrogram from multiple Audio Recordings
 #'
 #' Creates a spectrogram visualization of daily acoustic patterns using 
 #' multiple recordings, with options for noise floor clipping and parallel 
@@ -57,8 +57,7 @@
 #' This function parses files in a folder or list and groups them by date, 
 #' creating a single diel spectrogram for each. To parse a subset range of dates 
 #' contained in a folder, use seq().
-#' Example: target_dates = seq(as.Date("2022-10-20"), as.Date("2022-10-25), "days")
-diel_spectrogram <- function(folder = NULL,
+var_diel_spec <- function(folder = NULL,
                              recursive = TRUE,
                              list = NULL,
                              title = "",

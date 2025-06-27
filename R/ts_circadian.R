@@ -1,4 +1,4 @@
-#' Plot Diel Indices with Optional LOESS Smoothing and Scaling Transformations
+#' Plot Circadian Time-Series with LOESS Smoothing and Scaling Transformations
 #'
 #' This function takes a dataset containing datetime and index values and creates 
 #' an interactive plot of the scaled indices over time. Optionally, LOESS smoothing
@@ -24,15 +24,15 @@
 #' @examples
 #' \dontrun{
 #'   # Assuming `data` is a data frame with the necessary columns
-#'   plot_diel_indices(data, loess = TRUE, scaling = "log")
+#'   ts_circadian(data, loess = TRUE, scaling = "log")
 #' }
 
-plot_diel_indices <- function(data, 
-                              sensor_id = NULL, 
-                              plot.title = "Circadian Indices", 
-                              loess = TRUE, 
-                              span = 0.3, 
-                              scaling = "none") {
+ts_circadian <- function(data, 
+                    sensor_id = NULL, 
+                    plot.title = "Circadian Indices", 
+                    loess = TRUE, 
+                    span = 0.3, 
+                    scaling = "none") {
   
   if (!scaling %in% c("none", "minmax", "maxabs", "zscore", "log", "robust")) {
     stop("'scaling' can only be 'none', 'minmax', 'maxabs', 'zscore', 'log', or 'robust'")

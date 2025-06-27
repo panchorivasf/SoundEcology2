@@ -2,7 +2,7 @@ pandoc: '3.4'
 pkgdown: 2.1.0
 pkgdown_sha: ~
 articles: {}
-last_built: 2025-06-27T05:10Z
+last_built: 2025-06-27T06:00Z
 urls:
   reference: https://panchorivasf.github.io/SoundEcology2/reference
   article: https://panchorivasf.github.io/SoundEcology2/articles

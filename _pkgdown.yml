@@ -3,6 +3,5 @@ template:
   bootstrap: 5
   light-switch: true
   bootswatch: minty
-development:
-  mode: auto
+
 

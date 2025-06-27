@@ -1,4 +1,4 @@
-IMPORTANT: THIS PACKAGE IS STILL IN DEVELOPMENT!
+WARNING: THIS PACKAGE IS STILL IN DEVELOPMENT!
 
 Full documentation can be found in our Github Page: <https://panchorivasf.github.io/SoundEcology2/>
 

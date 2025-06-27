@@ -24,7 +24,9 @@ list_waves <- function(folder = NULL, recursive = FALSE){
   }
   
 
-  list <- list.files(pattern = "*.wav$", recursive = recursive)
+  list <- list.files(pattern = "*.wav$", 
+                     ignore.case = TRUE,
+                     recursive = recursive)
   
   return(list)
 

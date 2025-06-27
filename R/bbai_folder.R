@@ -55,7 +55,7 @@
 #' }  
 
 bbai_folder <- function(folder = NULL,
-                        recursive = TRUE,
+                        recursive = FALSE,
                         list = NULL,
                         start = 0,
                         end = 1,
@@ -130,7 +130,7 @@ bbai_folder <- function(folder = NULL,
     tibble::tibble(file_name = "filename") |> bind_cols(bbai1)
     
     timePerFile <-  Sys.time() - startTime
-    timePerFile <- timePerFile + 2.2
+    timePerFile <- timePerFile + 3
     
     rm(sound1)
     rm(bbai1)

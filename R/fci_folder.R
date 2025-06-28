@@ -186,9 +186,11 @@ fci_folder <- function(folder = NULL,
   
   combined_results <- addMetadata(combined_results)
   
+  sensor <- unique(combined_results$sensor_id)
+  
   # Export results to CSV
   combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
-  write.csv(combined_results, file = output.csv, row.names = FALSE)
+  write.csv(combined_results, file = paste0(sensor,"_",output.csv), row.names = FALSE)
   
   # Stop parallel cluster
   stopCluster(cl)

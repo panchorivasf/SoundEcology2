@@ -1,0 +1,23 @@
+---
+title: "Spectrograms"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Spectrograms}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(SoundEcology2)
+```
+
+## Spectrograms
+
+The soundecology documentation says that the decibel threshold–a cutoff to classify spectrogram cells between active or inactive in ADI-is measured in decibels Full-Scale (dBFS). This is inaccurate, probably due to an unnoticed update in a dependency. The `soundecology` package uses the `spectro()` function from the `seewave` package to create the spectrograms. Early versions of `seewave` did not normalize the spectrogram. In December 2012, an update in this package introduced modifications to `spectro()`, one of the most relevant being the normalization by default. Although useful in bioacoustics, normalizing spectrograms of soundscape recordings might make their comparisons less valid. Moreover, the normalization used here is referenced to the maximum amplitude in each recording, meaning there will always be a maximum of zero in the range of amplitudes. Thus, the resulting scale is not really dBFS. To obtain dBFS we must work with not-normalized spectrograms, and the scale must be referenced to the theoretical maximum, which is determined by the *bit rate* used. This is handled internally by the new functions in `SoundEcology2`.

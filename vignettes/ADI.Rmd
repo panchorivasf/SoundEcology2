@@ -1,0 +1,53 @@
+---
+title: "Acoustic Diversity Index"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Acoustic Diversity Index}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(SoundEcology2)
+```
+
+The Acoustic Diversity Index (ADI; Villanueva-Rivera et al. 2011) is a summary index intended to quantify the occupancy across frequency bands. In simple terms, it takes a spectrogram, divides it in *frequency bands* (by default 10, each 1 kHz tall), calculates the *proportion of* *active cells* in each band, and then calculates the *Shannon Diversity* on those proportions. ADI was made available in the first version of the `soundecology` package (Villanueva-Rivera & Pijanowski 2011). Note that the original documentation says that the spectrogram is divided in *bins*, which is imprecise. By convention, a *frequency bin* refers to each of the rows in the spectrogram matrix. The total number of bins in a spectrogram is defined by the FFT window size; the larger the window, the higher the number of bins. In contrast, a *frequency band* is an arbitrary division of the spectrogram, and each *band* usually encompasses dozens to hundreds frequency *bins*. Besides this small technicality, there are at least two issues with this original implementation:
+
+1.  The original ADI was calculated (unintentionally?) on normalized spectrograms. In this normalization, the maximum reference value (0 dB) is assigned to the peak amplitude in a recording. As a consequence, the absolute amplitude cutoff was different for all recordings–regardless of having a 'fixed' value in the `db_threshold` argument–because it was actually relative to the maximum amplitude in each sound file. This is fixed in `SoundEcology2` (see the "Spectrograms" article).
+
+2.  The original ADI calculates the proportion of activity in each frequency band in a way that is not fully compatible with how Shannon diversity is used in ecology. Specifically, the `acoustic_diversity()` function calculates the proportion of active cells over the total number of cells in the same frequency bin. Thus, the denominator is fixed. In contrast, when ecologists calculate the Shannon diversity of species in a community, they use the total community population in the denominator. In a spectrogram matrix, this is equivalent to all the active cells encompassed between the minimum and the maximum frequencies determined by the user. We added the `prop.den` (proportion denominator) argument in the `adi()` function to allow the user to choose which approach to use. To use the 'real Shannon' calculation, set `prop.den = 2.`
+
+To obtain the same result as in the original `soundecology` package, the user must set the parameters as follows:
+
+```{r}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(CGSsounds)
+data("birds_tanzania")
+
+adi(birds_tanzania,
+    freq.res = 10,
+    cutoff = -50,
+    norm.spec = TRUE,
+    prop.den = 1,
+    rm.offset = FALSE,
+    db.fs = FALSE,
+    use.vegan = TRUE)
+```
+
+However, we recommend to remove the DC offset (`rm.offset = TRUE`), use the 'true Shannon' option (`prop.den = TRUE`), use the dBFS (`db.fs = TRUE`, `norm.spec = FALSE`), and a better resolution tradeoff (e.g., `freq.res = 50`). While we set the default cutoff threshold to -50 dBFS, this parameter depends on the general soundscape energy and the gain settings used in the recording unit. To estimate a proper cutoff value, a sensitivity analysis is recommended. One way of doing this is to select 1 day's worth of recordings (e.g., 144 recordings for a 1-min on, 9-min off duty cycle) and calculate ADI with different cutoff values (e.g., -80, -70, -60, -50, -40, -30), and plot the time-series together. Values that are too high or too low will tend to flatten-off the time-series line, whereas more sensitive thresholds will show a distinct cyrcadian pattern. Once the mid-point values are identified, you can fine-tune the analysis (e.g., use 5 dBFS steps between -70 and -40 dBFS), and choose the value that fits in the middle area of the time-series lines along the Y-axis.
+
+`SoundEcology2` also includes the **Frequency-dependent Acoustic Diversity Index (FADI)**, proposed by Xu et al. (2023). This implementation improves the use of ADI as a proxy for animal diversity by reducing the influence of constant noise. Specifically, the FADI uses a "floating threshold", which is computed over of each frequency bin. For each bin, the mean power is calculated and referenced as "noise floor". Then, the SNR threshold (lowest SNR required) is defined with the `alpha` argument. By default, this SNR is set to 13 dB. Finally, these two values are added together to obtain the floating threshold used to calculate the binary spectrogram. For example, if the mean power value of a bin is -20 dB, then the active cells in that bin will be those above -20+13 = -7 dB. The authors of this implementation warn that if one wants to measure insect activity, the default values in the function will cause these constant sounds to be ignored in the binary spectrogram. In those situations, they recommend setting NEM = 1 and providing a Wave file with only background noise (excluding insects). Such noise profile must be similar to the background noise in the study site, ideally, extracted from one of the files in the study period.
+
+### References
+
+**Villanueva-Rivera, L. J., Pijanowski, B. C., Doucette, J., & Pekin, B. (2011).** A primer of acoustic analysis for landscape ecologists. *Landscape ecology*, *26*, 1233-1246.
+
+**Xu, Z. Y., Chen, L., Pijanowski, B. C., & Zhao, Z. (2023).** A frequency-dependent acoustic diversity index: A revision to a classic acoustic index for soundscape ecological research. *Ecological Indicators*, *155*, 110940.

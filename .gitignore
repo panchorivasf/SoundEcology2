@@ -6,3 +6,4 @@
 .quarto
 .Rprofile
 docs
+inst/doc

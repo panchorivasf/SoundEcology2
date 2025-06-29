@@ -158,10 +158,10 @@ fci_folder <- function(folder = NULL,
   
   # Define parallel computation
   results <- foreach(file = audio.list, .combine = rbind,
-                     .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
-                       # filename <- basename(file)  # Get file name without path
-                       
+                       clean_file <- basename(file)  # Store just filename without path
+                       full_path <- file
                        # Try to read the sound file, handle errors gracefully
                        sound <- tryCatch({
                          readWave(file, 
@@ -178,26 +178,14 @@ fci_folder <- function(folder = NULL,
                          return(NULL)
                        }
                        
-                       # Initialize an empty tibble for the results
-                       # result_list <- list()
-                       
                        fci_result <- quiet(do.call(fci, c(list(sound), args_list)))
                        
-                       
-                       
-                       
-                       # result_list <- list(
-                       tibble(file_name = file)|> 
+                       tibble(file_name = clean_file)|> 
                          bind_cols(fci_result)
-                       # )
-                       # 
-                       # return(fci_results)
-                       # return(do.call(rbind, result_list))
+                       
                      }
   
 
-  # Combine all the results into a single tibble
-  # resultsWithMetadata <- do.call(rbind, results)
   
   resultsWithMetadata <- addMetadata(results)
   stopCluster(cl)

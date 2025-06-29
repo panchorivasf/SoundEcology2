@@ -70,8 +70,7 @@ fci_folder <- function(folder = NULL,
                        n.cores = -1) {
   cat("Working on it...\n")
   
-  args_list <- list(wave = sound,
-                    channel = channel,
+  args_list <- list(channel = channel,
                     hpf = hpf,
                     cutoff = cutoff,
                     freq.res = freq.res,

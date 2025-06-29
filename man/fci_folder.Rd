@@ -34,7 +34,7 @@ fci_folder(
 \arguments{
 \item{folder}{The folder containing the WAV files to analyze.}
 
-\item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
+\item{recursive}{Logical. Whether to search in subfolders. Default is FALSE.}
 
 \item{list}{An optional list (subset) of files in the folder to analyze. If provided,
 files outside the list will be excluded.}
@@ -48,7 +48,7 @@ files outside the list will be excluded.}
 
 \item{output.csv}{The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".}
 
-\item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'left'.}
+\item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'each'.}
 
 \item{hpf}{High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.}
 

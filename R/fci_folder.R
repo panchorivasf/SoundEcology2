@@ -76,7 +76,7 @@ fci_folder <- function(folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- list_waves(recursive = recursive)
     
   } else {
     audio.list <- list
@@ -100,7 +100,10 @@ fci_folder <- function(folder = NULL,
     cat("Evaluating the job...\n")
     startTime <- Sys.time()
     
-    sound1 <- readWave(audio.list[1])
+    sound1 <- readWave(audio.list[1], 
+                       from = start,
+                       to = end,
+                       units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
     fci1 <- quiet(fci(sound1, channel = 'each'))
@@ -139,7 +142,10 @@ fci_folder <- function(folder = NULL,
     
     # Try to read the sound file, handle errors gracefully
     sound <- tryCatch({
-      readWave(file)
+      readWave(file, 
+               from = start,
+               to = end,
+               units = units)
     }, error = function(e) {
       message(paste("Error reading file:", file, "Skipping to the next file."))
       return(NULL) 

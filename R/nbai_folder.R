@@ -71,7 +71,7 @@ nbai_folder <- function(folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- list_waves(recursive = recursive)
     
   } else {
     audio.list <- list
@@ -129,7 +129,7 @@ nbai_folder <- function(folder = NULL,
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
     
   } else {
-    sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
+    sound1 <- readWave(audio.list[1], from = start, to = end , units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     rm(sound1)
   }

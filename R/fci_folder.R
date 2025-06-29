@@ -167,7 +167,7 @@ fci_folder <- function(folder = NULL,
                          readWave(file, 
                                   from = start,
                                   to = end,
-                                  units = units)
+                                  units = unit)
                        }, error = function(e) {
                          message(paste("Error reading file:", file, "Skipping to the next file."))
                          return(NULL) 
@@ -189,15 +189,13 @@ fci_folder <- function(folder = NULL,
   
   resultsWithMetadata <- addMetadata(results)
   stopCluster(cl)
-  
   sensor <- unique(resultsWithMetadata$sensor_id)
   
   # Export results to CSV
   resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
   write.csv(resultsWithMetadata, file = paste0(sensor,"_",output.csv), row.names = FALSE)
   
-  # Stop parallel cluster
-  stopCluster(cl)
+
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   

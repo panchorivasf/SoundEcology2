@@ -112,7 +112,7 @@ fci_folder <- function(folder = NULL,
     # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
     # Add overhead per file
-    timePerFile <- timePerFile + 2.2
+    timePerFile <- timePerFile + 3
     
     rm(sound1)
     rm(fci1)
@@ -128,7 +128,8 @@ fci_folder <- function(folder = NULL,
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
   } else {
-    sound1 <- readWave(audio.list[1], to = 2, units = "seconds")
+    sound1 <- readWave(audio.list[1], from = start,
+                       to = end, units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     rm(sound1)
   }

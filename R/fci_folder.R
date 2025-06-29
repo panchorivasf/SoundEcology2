@@ -70,6 +70,25 @@ fci_folder <- function(folder = NULL,
                        n.cores = -1) {
   cat("Working on it...\n")
   
+  args_list <- list(wave = sound,
+                    channel = channel,
+                    hpf = hpf,
+                    cutoff = cutoff,
+                    freq.res = freq.res,
+                    spectrogram = FALSE,
+                    ggplot = FALSE,
+                    plot.title = NULL,
+                    sound.color = "#045E10",
+                    lf.min = lf.min,
+                    lf.max = lf.max,
+                    mf.min = mf.min,
+                    mf.max = mf.max,
+                    hf.min = hf.min,
+                    hf.max = hf.max,
+                    uf.min = uf.min,
+                    uf.max = uf.max,
+                    verbose = FALSE)
+  
   if(is.null(folder)){
     folder <- getwd()
   }
@@ -106,8 +125,10 @@ fci_folder <- function(folder = NULL,
                        units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
     
-    fci1 <- quiet(fci(sound1, channel = 'each'))
-    tibble::tibble(file_name = "filename") |> bind_cols(fci1)
+    fci1 <- quiet(do.call(fci, c(list(sound1), channel = 'each')))
+    # 
+    # fci1 <- quiet(fci(sound1, channel = 'each'))
+    tibble(file_name = "filename") |> bind_cols(fci1)
     
     # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
@@ -137,73 +158,62 @@ fci_folder <- function(folder = NULL,
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
   
   # Define parallel computation
-  results <- foreach(file = audio.list, .packages = c("tuneR", "seewave", "tibble")) %dopar% {
-    
-    filename <- basename(file)  # Get file name without path
-    
-    # Try to read the sound file, handle errors gracefully
-    sound <- tryCatch({
-      readWave(file, 
-               from = start,
-               to = end,
-               units = units)
-    }, error = function(e) {
-      message(paste("Error reading file:", file, "Skipping to the next file."))
-      return(NULL) 
-    })
-    
-    # Skip processing if the sound is NULL (i.e., readWave failed)
-    if (is.null(sound)) {
-      return(NULL)
-    }
-    
-    # Initialize an empty tibble for the results
-    result_list <- list()
-    
-    results <- fci(wave = sound,
-                   channel = channel,
-                   hpf = hpf,
-                   cutoff = cutoff,
-                   freq.res = freq.res,
-                   spectrogram = FALSE,
-                   ggplot = FALSE,
-                   plot.title = NULL,
-                   sound.color = "#045E10",
-                   lf.min = lf.min,
-                   lf.max = lf.max,
-                   mf.min = mf.min,
-                   mf.max = mf.max,
-                   hf.min = hf.min,
-                   hf.max = hf.max,
-                   uf.min = uf.min,
-                   uf.max = uf.max,
-                   verbose = FALSE)
-    
-    
-    result_list <- list(
-      tibble(file_name = filename, results)
-    )
-    
-    
-    return(do.call(rbind, result_list))
-  }
+  results <- foreach(file = audio.list, .combine = rbind,
+                     .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
+                       
+                       # filename <- basename(file)  # Get file name without path
+                       
+                       # Try to read the sound file, handle errors gracefully
+                       sound <- tryCatch({
+                         readWave(file, 
+                                  from = start,
+                                  to = end,
+                                  units = units)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         return(NULL) 
+                       })
+                       
+                       # Skip processing if the sound is NULL (i.e., readWave failed)
+                       if (is.null(sound)) {
+                         return(NULL)
+                       }
+                       
+                       # Initialize an empty tibble for the results
+                       # result_list <- list()
+                       
+                       fci_result <- quiet(do.call(fci, c(list(sound), args_list)))
+                       
+                       
+                       
+                       
+                       # result_list <- list(
+                       tibble(file_name = file)|> 
+                         bind_cols(fci_result)
+                       # )
+                       # 
+                       # return(fci_results)
+                       # return(do.call(rbind, result_list))
+                     }
   
+
   # Combine all the results into a single tibble
-  combined_results <- do.call(rbind, results)
+  # resultsWithMetadata <- do.call(rbind, results)
   
-  combined_results <- addMetadata(combined_results)
+  resultsWithMetadata <- addMetadata(results)
+  stopCluster(cl)
   
-  sensor <- unique(combined_results$sensor_id)
+  sensor <- unique(resultsWithMetadata$sensor_id)
   
   # Export results to CSV
-  combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
-  write.csv(combined_results, file = paste0(sensor,"_",output.csv), row.names = FALSE)
+  resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+  write.csv(resultsWithMetadata, file = paste0(sensor,"_",output.csv), row.names = FALSE)
   
   # Stop parallel cluster
   stopCluster(cl)
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(combined_results)
+  return(resultsWithMetadata)
 }
 

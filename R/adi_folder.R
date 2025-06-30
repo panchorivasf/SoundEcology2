@@ -198,24 +198,19 @@ adi_folder <- function(folder = NULL,
   }
   
   resultsWithMetadata <- addMetadata(results)
-  sensor_id <- unique(resultsWithMetadata$sensor_id)
-  
+
   if(save.csv) {
+    
+    sensor <- unique(resultsWithMetadata$sensor_id)
+    
     resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
-    
-    csv_path <- if(recursive) {
-      file.path(dirname(folder), paste0(sensor_id, "_", csv.name))
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
     } else {
-      file.path(folder, paste0(sensor_id, "_", csv.name))
+      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
     }
-    
-    # Ensure directory exists
-    if(!dir.exists(dirname(csv_path))) {
-      dir.create(dirname(csv_path), recursive = TRUE)
-    }
-    
-    write.csv(resultsWithMetadata, file = csv_path, row.names = FALSE)
-    cat("Results saved to:", normalizePath(csv_path), "\n")
+
   }
   
   cat(paste(

@@ -13,7 +13,7 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param output.csv character vector. When 'save.csv' is TRUE, optionally provide a file name. 
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name. 
 #' Default name is "ndsi_results.csv"
 #' @param w.len numeric. Window length for the FFT (sampling rate / frequency resolution).
 #' @param anthro.min minimum value of the range of frequencies of the anthrophony.
@@ -42,19 +42,21 @@
 #' }
 
 ndsi_folder <- function (folder = NULL,
-                         recursive = recursive,
+                         recursive = FALSE,
                          list = NULL,
                          start = 0,
                          end = 1,
                          unit = "minutes",
+                         save.csv = TRUE,
+                         csv.name = "ndsi_results.csv",
                          w.len = 512,
                          anthro.min = 1000,
                          anthro.max = 2000,
                          bio.min = 2000,
                          bio.max = 11000,
                          rm.offset = TRUE,
-                         output.csv = "ndsi_results.csv",
                          n.cores = -1){
+  
   cat("Working on it...\n")
   
   args_list <- list(w.len = w.len,
@@ -139,7 +141,7 @@ ndsi_folder <- function (folder = NULL,
   # Start loop
   results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
-
+                       
                        sound <- tryCatch({
                          readWave(file,
                                   from = start,
@@ -152,26 +154,32 @@ ndsi_folder <- function (folder = NULL,
                        if (is.null(sound)) {
                          return(NULL)
                        }
-
+                       
                        ndsi_result <- quiet(do.call(ndsi, c(list(sound), args_list)))
                        
-                       tibble(file_name = file) %>%
+                       tibble(file_name = file) |>
                          bind_cols(ndsi_result)
                      }
-  
+  stopCluster(cl)
   
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
   
-  
-  stopCluster(cl)
-  
+  if(save.csv == TRUE){
+    sensor <- unique(resultsWithMetadata$sensor_id)
+    
     resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
-    write.csv(resultsWithMetadata, output.csv, row.names = FALSE)
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+    } else {
+      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+    }
+    
+  }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
   return(resultsWithMetadata)
-  
   
 }

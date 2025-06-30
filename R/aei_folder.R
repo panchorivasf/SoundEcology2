@@ -154,9 +154,9 @@ aei_folder <- function (folder = NULL,
                                        file, "Skipping to the next file."))
                          return(NULL)
                        })
-                       if (is.null(sound)) {
-                         return(NULL)
-                       }
+                       
+                       if (is.null(sound)) return(NULL)
+                       
                        
                        # Calculate AEI and keep its default output columns
                        aei_result <- quiet(do.call(aei, c(list(sound), args_list)))
@@ -166,16 +166,27 @@ aei_folder <- function (folder = NULL,
                          bind_cols(aei_result)
                        
                      }
+  stopCluster(cl)
   
   
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
   
   
-  stopCluster(cl)
+
   
   if(save.csv == TRUE){
-    write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
+
+    sensor <- unique(resultsWithMetadata$sensor_id)
+    
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+    } else {
+      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+    }
+    
   }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))

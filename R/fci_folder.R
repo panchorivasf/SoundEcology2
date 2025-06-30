@@ -11,7 +11,8 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param output.csv The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
+#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param csv.name The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
 #' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'each'.
 #' @param hpf High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.
 #' @param cutoff The amplitude threshold (in dB) below which frequencies will be considered inactive. Default is -60.
@@ -41,7 +42,7 @@
 #' @examples
 #' \dontrun{
 #' # Run frequency cover analysis on all WAV files in the folder "sound_files"
-#' fci_folder("sound_files", output.csv = "results.csv", channel = "left", n.cores = 4)
+#' fci_folder("sound_files", csv.name = "results.csv", channel = "left", n.cores = 4)
 #' }
 
 fci_folder <- function(folder = NULL,
@@ -50,7 +51,8 @@ fci_folder <- function(folder = NULL,
                        start = 0,
                        end = 1,
                        unit = "minutes",
-                       output.csv = "fci_results.csv",
+                       save.csv = TRUE,
+                       csv.name = "fci_results.csv",
                        channel = 'each',
                        hpf = 0,
                        cutoff = -60,
@@ -160,8 +162,6 @@ fci_folder <- function(folder = NULL,
   results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
-                       clean_file <- basename(file)  # Store just filename without path
-                       full_path <- file
                        # Try to read the sound file, handle errors gracefully
                        sound <- tryCatch({
                          readWave(file, 
@@ -180,22 +180,27 @@ fci_folder <- function(folder = NULL,
                        
                        fci_result <- quiet(do.call(fci, c(list(sound), args_list)))
                        
-                       tibble(file_name = clean_file)|> 
+                       tibble(file_name = file)|> 
                          bind_cols(fci_result)
                        
                      }
-  
-
+  stopCluster(cl)
   
   resultsWithMetadata <- addMetadata(results)
-  stopCluster(cl)
-  sensor <- unique(resultsWithMetadata$sensor_id)
   
-  # Export results to CSV
-  resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
-  write.csv(resultsWithMetadata, file = paste0(sensor,"_",output.csv), row.names = FALSE)
-  
-
+  if (save.csv){
+    
+    sensor <- unique(resultsWithMetadata$sensor_id)
+    
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+    } else {
+      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+    }
+    
+  }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   

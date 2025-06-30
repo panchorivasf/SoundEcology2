@@ -49,7 +49,7 @@
 #'
 #' @examples
 #' bi_folder(path/to/folder)
-
+#' 
 bi_folder <- function (folder = NULL,
                        recursive = FALSE,
                        start = 0,
@@ -169,16 +169,23 @@ bi_folder <- function (folder = NULL,
                        
                      }
 
-
+  stopCluster(cl)
+  
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
-
-
-  stopCluster(cl)
-
+  
   if(save.csv == TRUE){
+
+    sensor <- unique(resultsWithMetadata$sensor_id)
+    
     resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
-    write.csv(resultsWithMetadata, csv.name, row.names = FALSE)
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+    } else {
+      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+    }
+    
   }
 
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))

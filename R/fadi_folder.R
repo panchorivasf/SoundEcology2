@@ -11,17 +11,17 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param save_csv logical. Whether to save a csv in the working directory.
-#' @param csv_name character vector. When 'save_csv' is TRUE, optionally provide a file name.
-#' @param noise_file An R object of class Wave containing noise-only information if needed. Default = NULL.
+#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
+#' @param noise.file An R object of class Wave containing noise-only information if needed. Default = NULL.
 #' @param NEM Numeric. Options are 1 or 2.
-#' When NEM = 1, floating thresholds are estimated based on noise_file.
+#' When NEM = 1, floating thresholds are estimated based on noise.file.
 #' When NEM = 2, floating thresholds are calculated based on sound file using an
 #' automatic noise level estimation method (median of each row in the spectrogram). Default = 2.
-#' @param min_freq Minimum frequency in Hertz when calculating the global threshold. Default = 200.
-#' @param max_freq Maximum frequency in Hertz when calculating the FADI value. Default = 10000.
-#' @param threshold_fixed A negative number in dB for calculating the global threshold. Default = −50.
-#' @param freq_step Bandwidth of each frequency band, in Hertz. Default = 1000.
+#' @param min.freq Minimum frequency in Hertz when calculating the global threshold. Default = 200.
+#' @param max.freq Maximum frequency in Hertz when calculating the FADI value. Default = 10000.
+#' @param threshold.fixed A negative number in dB for calculating the global threshold. Default = −50.
+#' @param freq.step Bandwidth of each frequency band, in Hertz. Default = 1000.
 #' @param gamma A positive number in dB for calculating the floating thresholds. Default = 13.
 #' @param props Logical; if TRUE, the energy proportion values for each frequency band
 #' and channel are added to the output tibble. Default = TRUE.
@@ -49,35 +49,42 @@
 #' fadi_folder(folder=pathB, "fadi_hydro_b.csv")
 
 fadi_folder <- function (folder = NULL,
-                         recursive = recursive,
+                         recursive = FALSE,
                          list = NULL,
                          start = 0,
                          end = 1,
                          unit = "minutes",
-                         save_csv = TRUE,
-                         csv_name = "fadi_results.csv",
-                         noise_file = NULL,
+                         save.csv = TRUE,
+                         csv.name = "fadi_results.csv",
+                         noise.file = NULL,
                          NEM = 2,
-                         min_freq = 200,
-                         max_freq = 10000,
-                         threshold_fixed = -50,
-                         freq_step = 1000,
+                         min.freq = 200,
+                         max.freq = 10000,
+                         threshold.fixed = -50,
+                         freq.step = 1000,
                          gamma = 13,
                          props = FALSE,
                          n.cores = -1){
   cat("Working on it...\n")
   
-  args_list <- list(noise_file=noise_file,NEM=NEM,min_freq=min_freq,
-                    max_freq = max_freq, threshold_fixed = threshold_fixed,
-                    freq_step = freq_step, gamma = gamma, props=props)
-  
+  args_list <- list(noise.file=noise.file,
+                    NEM=NEM,
+                    min.freq=min.freq,
+                    max.freq = max.freq, 
+                    threshold.fixed = threshold.fixed,
+                    freq.step = freq.step, 
+                    gamma = gamma, 
+                    props=props)
+
 
   if(is.null(folder)){
     folder <- getwd()
   }
+  
   setwd(folder)
   
   if(is.null(list)){
+    
     audio.list <- list_waves(recursive = recursive)
     
   } else {
@@ -102,32 +109,30 @@ fadi_folder <- function (folder = NULL,
   
   if(nFiles>10){
     cat("Evaluating the job...\n")
-    
+
     startTime <- Sys.time()
-    
+
     sound1 <- readWave(audio.list[1],
                        from = start,
                        to = end,
                        units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
-    fadi1 <- quiet(fadi(sound1, args_list$noise_file, args_list$NEM,
-                        args_list$min_freq, args_list$max_freq, args_list$threshold_fixed,
-                        args_list$freq_step, args_list$gamma, args_list$props))
-    
+    fadi1 <- quiet(fadi(sound1,args_list))
+
     tibble(file_name = "filename") |> bind_cols(fadi1)
-    
+
     rm(sound1)
     rm(fadi1)
-    
+
     # Assess how long it takes to parse 1 file
     timePerFile <-  Sys.time() - startTime
     timePerFile <- timePerFile + 3 # Add overhead
-    
+
     # Estimate total time accounting for parallel processing
     estimatedTotalTime <- (timePerFile * nFiles) / as.numeric(num_cores)
     # Calculate the end time
     expectedCompletionTime <- Sys.time() + estimatedTotalTime
-    
+
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
     cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
   } else {
@@ -150,36 +155,32 @@ fadi_folder <- function (folder = NULL,
                          message(paste("Error reading file:", file, "Skipping to the next file."))
                          return(NULL) 
                        })
-                       if (is.null(sound)) {
-                         return(NULL)
-                       }
-
-                       # Calculate FADI and keep its default output columns
-                       fadi_result <- fadi(soundfile=sound,
-                                         args_list$noise_file,
-                                         args_list$NEM,
-                                         args_list$min_freq,
-                                         args_list$max_freq,
-                                         args_list$threshold_fixed,
-                                         args_list$freq_step,
-                                         args_list$gamma,
-                                         args_list$props)
-
-                       # Combine the results for each file into a single row
-                       tibble(file_name = file) |>
+                       
+                       if (is.null(sound)) return(NULL)
+                       
+                       fadi_result <- quiet(do.call(fadi, c(list(sound), args_list)))
+                       
+                       tibble(file_name = file)  |> 
                          bind_cols(fadi_result)
+
                      }
+  stopCluster(cl)
 
   # Combine results with metadata and return
   resultsWithMetadata <- addMetadata(results)
 
-
-  stopCluster(cl)
-
-
-  if(save_csv == TRUE){
+  
+  if(save.csv == TRUE){
+    sensor <- unique(resultsWithMetadata$sensor_id)
+    
     resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
-    write.csv(resultsWithMetadata, csv_name, row.names = FALSE)
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+    } else {
+      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+    }
+    
   }
 
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))

@@ -1,3 +1,48 @@
+#' Frequency-dependent Acoustic Diversity Index
+#' @description
+#' The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains 
+#' a floating noise profile before calculating the Acoustic Diversity Index and 
+#' it doesn't use normalized spectrogram. Alternatively, it can take a noise 
+#' sample to reduce noise from the analyzed files. This is the original version
+#' of the function by the authors.
+#' @param soundfile A wave object imported with readWave().
+#' @param noise_file An R object of class Wave containing noise-only information 
+#' if needed. Default = NULL.
+#' @param NEM Numeric. Options are 1 or 2.
+#' When NEM = 1, floating thresholds are estimated based on noise_file.
+#' When NEM = 2, floating thresholds are calculated based on sound file using an
+#' automatic noise level estimation method (median of each row in the 
+#' spectrogram). Default = 2.
+#' @param min_freq Minimum frequency in Hertz when calculating the global 
+#' threshold. Default = 200.
+#' @param max_freq Maximum frequency in Hertz when calculating the FADI value. 
+#' Default = 10000.
+#' @param threshold_fixed A negative number in dB for calculating the global 
+#' threshold. Default = −50.
+#' @param freq_step Bandwidth of each frequency band, in Hertz. Default = 1000.
+#' @param gamma A positive number in dB for calculating the floating thresholds. 
+#' Default = 13.
+#' @param props Logical; if TRUE, the energy proportion values for each 
+#' frequency ban and channel are added to the output tibble. Default = TRUE.
+#'
+#' @return A tibble with the FADI value per channel, energy proportions, 
+#' metadata, and parameters used.
+#' @export
+#'
+#' @importFrom tuneR readWave
+#' @import seewave
+#' @import tidyverse
+#'
+#' @examples fadi(tropicalsound)
+#'
+#' @details
+#' Modified version of the Frequency-dependent Acoustic Diversity Index by Xu 
+#' et al. (2023).FADI was introduced in: 
+#' https://www.sciencedirect.com/science/article/pii/S1470160X23010828.
+#' This version returns a wide format (one row per audio file) tibble as output 
+#' instead of a nested list.
+#' To see the original version as in the paper, use the 
+#' \emph{frequency_dependent_acoustic_diversity()} function.
 frequency_dependent_acoustic_diversity <- function(soundfile,noisefile=NULL,NEM=2,min_freq=200, max_freq = 10000, threshold_fixed = -50, freq_step = 1000, gamma = 13)
 {
   #start input parameters validation

@@ -17,6 +17,8 @@
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either 
 #' "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". 
 #' If NULL (default), results are returned for each channel.
+#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param csv.name Character. Name for the csv file. Default is "bbai_results.csv".
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless 
 #' signals of interest are below that threshold.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency 
@@ -35,7 +37,6 @@
 #' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. 
 #' Default is NULL (single-core processing).
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
-#' @param output.csv Character. Name for the csv file. Default is "bbai_results.csv".
 #' @param n.cores Numeric. Number of cores to be used in parallel. Use -1 (Default) to use all but one. 
 #' 
 #' @return A tibble.
@@ -61,6 +62,8 @@ bbai_folder <- function(folder = NULL,
                         end = 1,
                         unit = "minutes",
                         channel = 'each',
+                        save.csv = TRUE,
+                        csv.name = "bbai_results.csv",
                         hpf = 0,
                         freq.res = 50,
                         cutoff = -60,
@@ -71,7 +74,6 @@ bbai_folder <- function(folder = NULL,
                         dark.plot = FALSE,
                         plot.title = "",
                         verbose = FALSE,
-                        output.csv = "bbai_results.csv",
                         n.cores = -1) { 
   
   cat("Working on it...\n")
@@ -153,44 +155,51 @@ bbai_folder <- function(folder = NULL,
   cat("Analyzing", nFiles, type, "files using", num_cores, "cores... \n")
   
   # Define parallel computation
-  results <- foreach(file = audio.list,
-                     .packages = c("tuneR", "seewave", "tibble")) %dopar% {
-                       filename <- basename(file)
-                       sound <- readWave(file,
-                                         from = start,
-                                         to = end,
-                                         units = unit
-                                         )
-                       result_list <- list()
+  results <- foreach(file = audio.list, .combine = rbind,
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
+
+                       sound <- tryCatch({
+                         readWave(file,
+                                  from = start,
+                                  to = end,
+                                  units = unit)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", 
+                                       file, "Skipping to the next file."))
+                         return(NULL)
+                       }) 
                        
-                       results <- quiet(do.call(bbai, c(list(sound), args_list)))
+                       if (is.null(sound)) {
+                         return(NULL)
+                       }
                        
-                       result_list <- list(tibble(file_name = filename, results))
+                       bbai_result <- quiet(do.call(bbai, c(list(sound), args_list)))
                        
-                       return(do.call(rbind, result_list))
+                       tibble(file_name = file) |>
+                         bind_cols(bbai_result)
                        
                      }
   
-  # Combine all the results into a single tibble
-  combined_results <- do.call(rbind, results)
+  stopCluster(cl)
   
-  combined_results <- addMetadata(combined_results)
+  resultsWithMetadata <- addMetadata(results)
   
   # Export results to CSV
-  write.csv(combined_results, file = output.csv, row.names = FALSE)
-  
-  # Stop parallel cluster
-  stopCluster(cl)
+  if(save.csv == TRUE){
+    
+    sensor <- unique(resultsWithMetadata$sensor_id)
+    
+    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    
+    if (length(sensor) == 1){
+      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+    } else {
+      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+    }
+    
+  }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  
-  return(combined_results)
+  return(resultsWithMetadata)
 }
-
-
-
-
-
-
-

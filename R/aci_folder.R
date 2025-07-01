@@ -46,6 +46,7 @@
 
 aci_folder <- function (folder = NULL,
                         list = NULL,
+                        recursive = FALSE,
                         start = 0,
                         end = 1,
                         unit = "minutes",
@@ -75,7 +76,7 @@ aci_folder <- function (folder = NULL,
   setwd(folder)
   
   if(is.null(list)){
-    audio.list <- list_waves()
+    audio.list <- list_waves(recursive = recursive)
     
   } else {
     audio.list <- list

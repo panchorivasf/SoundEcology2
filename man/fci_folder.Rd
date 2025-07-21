@@ -11,7 +11,8 @@ fci_folder(
   start = 0,
   end = 1,
   unit = "minutes",
-  output.csv = "fci_results.csv",
+  save.csv = TRUE,
+  csv.name = "fci_results.csv",
   channel = "each",
   hpf = 0,
   cutoff = -60,
@@ -46,7 +47,9 @@ files outside the list will be excluded.}
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{output.csv}{The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".}
+\item{save.csv}{logical. Whether to save a csv in the working directory.}
+
+\item{csv.name}{The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".}
 
 \item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'each'.}
 
@@ -92,6 +95,6 @@ It processes each sound file in parallel (if specified) and saves the results in
 \examples{
 \dontrun{
 # Run frequency cover analysis on all WAV files in the folder "sound_files"
-fci_folder("sound_files", output.csv = "results.csv", channel = "left", n.cores = 4)
+fci_folder("sound_files", csv.name = "results.csv", channel = "left", n.cores = 4)
 }
 }

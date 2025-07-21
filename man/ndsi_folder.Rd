@@ -6,18 +6,19 @@
 \usage{
 ndsi_folder(
   folder = NULL,
-  recursive = recursive,
+  recursive = FALSE,
   list = NULL,
   start = 0,
   end = 1,
   unit = "minutes",
+  save.csv = TRUE,
+  csv.name = "ndsi_results.csv",
   w.len = 512,
   anthro.min = 1000,
   anthro.max = 2000,
   bio.min = 2000,
   bio.max = 11000,
   rm.offset = TRUE,
-  output.csv = "ndsi_results.csv",
   n.cores = -1
 )
 }
@@ -35,6 +36,9 @@ ndsi_folder(
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.
+Default name is "ndsi_results.csv"}
+
 \item{w.len}{numeric. Window length for the FFT (sampling rate / frequency resolution).}
 
 \item{anthro.min}{minimum value of the range of frequencies of the anthrophony.}
@@ -46,9 +50,6 @@ ndsi_folder(
 \item{bio.max}{maximum value of the range of frequencies of the biophony.}
 
 \item{rm.offset}{logical. Whether to remove the DC offset.}
-
-\item{output.csv}{character vector. When 'save.csv' is TRUE, optionally provide a file name.
-Default name is "ndsi_results.csv"}
 
 \item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all
 but one core. Default is NULL (single-core processing).}

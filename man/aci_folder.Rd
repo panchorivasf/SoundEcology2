@@ -7,6 +7,7 @@
 aci_folder(
   folder = NULL,
   list = NULL,
+  recursive = FALSE,
   start = 0,
   end = 1,
   unit = "minutes",
@@ -27,6 +28,8 @@ aci_folder(
 
 \item{list}{An optional list (subset) of files in the folder to analyze. If provided,
 files outside the list will be excluded.}
+
+\item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 
 \item{start}{numerical. Where to start reading the Wave.}
 
@@ -60,8 +63,6 @@ Default = TRUE.}
 
 \item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
 Default is NULL (single-core processing).}
-
-\item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 }
 \value{
 A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and

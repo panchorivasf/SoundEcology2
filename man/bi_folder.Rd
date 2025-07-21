@@ -82,4 +82,5 @@ Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) Ap
 }
 \examples{
 bi_folder(path/to/folder)
+
 }

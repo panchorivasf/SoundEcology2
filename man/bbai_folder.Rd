@@ -12,6 +12,8 @@ bbai_folder(
   end = 1,
   unit = "minutes",
   channel = "each",
+  save.csv = TRUE,
+  csv.name = "bbai_results.csv",
   hpf = 0,
   freq.res = 50,
   cutoff = -60,
@@ -22,7 +24,6 @@ bbai_folder(
   dark.plot = FALSE,
   plot.title = "",
   verbose = FALSE,
-  output.csv = "bbai_results.csv",
   n.cores = -1
 )
 }
@@ -44,6 +45,10 @@ files outside the list will be excluded.}
 \item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either
 "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix".
 If NULL (default), results are returned for each channel.}
+
+\item{save.csv}{logical. Whether to save a csv in the working directory.}
+
+\item{csv.name}{Character. Name for the csv file. Default is "bbai_results.csv".}
 
 \item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless
 signals of interest are below that threshold.}
@@ -67,8 +72,6 @@ Default is \code{2}. Gaps larger than this value will split clicks.}
 \item{plot.title}{Character. The title for the plot, if \code{plot} is \code{TRUE}. Default is \code{NULL}.}
 
 \item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
-
-\item{output.csv}{Character. Name for the csv file. Default is "bbai_results.csv".}
 
 \item{n.cores}{Numeric. Number of cores to be used in parallel. Use -1 (Default) to use all but one.}
 

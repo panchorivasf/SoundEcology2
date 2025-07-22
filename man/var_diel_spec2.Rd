@@ -9,7 +9,7 @@ var_diel_spec2(
   recursive = TRUE,
   list = NULL,
   title = "",
-  freq_res = 100,
+  freq_res = 50,
   n.cores = -1,
   cutoff = -100,
   max_amp = -10,
@@ -19,8 +19,8 @@ var_diel_spec2(
   dc_on = NULL,
   dc_off = NULL,
   target_dates = NULL,
-  seasonal_spectro = TRUE,
-  n_freq_bands = 10,
+  seasonal_spectro = FALSE,
+  freq_bands = 10,
   band_stat = "mean"
 )
 }
@@ -63,6 +63,14 @@ expected number of files per day.}
 \item{target_dates}{Either a single date or multiple dates in the format
 "YYYY-MM-DD" to be analyzed. If NULL (default), all the dates in the folder
 will be parsed. To provide a range, see Details.}
+
+\item{seasonal_spectro}{Logical. Whether to produce a seasonal spectrogram.}
+
+\item{freq_bands}{Numeric. Number of frequency bands for the seasonal
+spectrogram. Default is 10.}
+
+\item{band_stat}{Character. Summary statistic used for the frequency bands.
+Default is "mean".}
 }
 \value{
 A list containing:
@@ -79,7 +87,9 @@ Creates a spectrogram visualization of daily acoustic patterns using
 multiple recordings, with options for noise floor clipping and parallel
 processing. Specifically, it takes the variance of acoustic energy in each
 frequency bin for each recording and merges the resulting vectors into a
-summary spectrogram.
+summary spectrogram. Optionally, it also creates a seasonal variance plot
+with multiple days displayed as ribbons, which are summaries of the diel
+variance ribbons to reduce spectral resolution.
 }
 \details{
 This function parses files in a folder or list and groups them by date,

@@ -4,7 +4,9 @@
 #' multiple recordings, with options for noise floor clipping and parallel 
 #' processing. Specifically, it takes the variance of acoustic energy in each
 #' frequency bin for each recording and merges the resulting vectors into a 
-#' summary spectrogram. 
+#' summary spectrogram. Optionally, it also creates a seasonal variance plot
+#' with multiple days displayed as ribbons, which are summaries of the diel
+#' variance ribbons to reduce spectral resolution.
 #'
 #' @param folder Path to the folder containing WAV files (default: current 
 #' working directory).
@@ -31,6 +33,11 @@
 #' @param target_dates Either a single date or multiple dates in the format 
 #' "YYYY-MM-DD" to be analyzed. If NULL (default), all the dates in the folder
 #' will be parsed. To provide a range, see Details. 
+#' @param seasonal_spectro Logical. Whether to produce a seasonal spectrogram.
+#' @param freq_bands Numeric. Number of frequency bands for the seasonal 
+#' spectrogram. Default is 10. 
+#' @param band_stat Character. Summary statistic used for the frequency bands.
+#' Default is "mean".
 #'
 #' @return A list containing:
 #' \itemize{
@@ -58,22 +65,22 @@
 #' creating a single diel spectrogram for each. To parse a subset range of dates 
 #' contained in a folder, use seq().
 var_diel_spec2 <- function(folder = NULL,
-                           recursive = TRUE,
-                           list = NULL,
-                           title = "",
-                           freq_res = 100,
-                           n.cores = -1,
-                           cutoff = -100,
-                           max_amp = -10,
-                           plot = TRUE,
-                           save_plot = TRUE,
-                           save_to = "./diel_plots",
-                           dc_on = NULL,
-                           dc_off = NULL,
-                           target_dates = NULL,
-                           seasonal_spectro = TRUE,
-                           n_freq_bands = 10,
-                           band_stat = "mean") {
+                          recursive = TRUE,
+                          list = NULL,
+                          title = "",
+                          freq_res = 50,
+                          n.cores = -1,
+                          cutoff = -100,
+                          max_amp = -10,
+                          plot = TRUE,
+                          save_plot = TRUE,
+                          save_to = "./diel_plots",
+                          dc_on = NULL,
+                          dc_off = NULL,
+                          target_dates = NULL,
+                          seasonal_spectro = FALSE,
+                          freq_bands = 10,
+                          band_stat = "mean") {
   
   # Validate input parameters
   if (!is.null(folder) && !is.null(list)) {
@@ -102,12 +109,12 @@ var_diel_spec2 <- function(folder = NULL,
   }
   
   # Validate seasonal spectrogram parameters
-  if (!is.numeric(n_freq_bands) || n_freq_bands < 1) {
-    stop("'n_freq_bands' must be a positive integer")
+  if (!is.numeric(freq_bands) || freq_bands < 2) {
+    stop("'freq_bands' must be a numeric value >= 2")
   }
   
-  if (!band_stat %in% c("mean", "median", "max", "min", "var", "sd")) {
-    stop("'band_stat' must be one of: 'mean', 'median', 'max', 'min', 'var', 'sd'")
+  if (!band_stat %in% c("mean", "median", "max", "min", "sd")) {
+    stop("'band_stat' must be one of: 'mean', 'median', 'max', 'min', 'sd'")
   }
   
   # Create file dataframe based on input type
@@ -196,7 +203,7 @@ var_diel_spec2 <- function(folder = NULL,
     dplyr::group_split(date)
   
   # Initialize storage for seasonal spectrogram data
-  seasonal_data <- list()
+  seasonal_ribbons <- list()
   
   # Process each date separately
   results <- lapply(file_dfs, function(date_files) {
@@ -299,48 +306,53 @@ var_diel_spec2 <- function(folder = NULL,
       spec_df[[col_name]] <- spec_results[[i]]$amp
     }
     
-    # Create spectral ribbon for seasonal spectrogram if requested
+    # Create spectral ribbon if seasonal_spectro is TRUE
     ribbon_df <- NULL
     if (seasonal_spectro) {
       # Create frequency bands
       freq_range <- range(freq_bins)
-      band_breaks <- seq(freq_range[1], freq_range[2], length.out = n_freq_bands + 1)
-      band_labels <- paste0("Band_", sprintf("%02d", 1:n_freq_bands))
+      freq_breaks <- seq(freq_range[1], freq_range[2], length.out = freq_bands + 1)
+      freq_band_labels <- paste0("Band_", 1:freq_bands)
       
-      # Create matrix for ribbon processing (exclude frequency column)
+      # Create matrix for ribbon calculation (excluding frequency column)
       spec_matrix <- as.matrix(spec_df[, -1])
       
       # Initialize ribbon matrix
-      ribbon_matrix <- matrix(NA, nrow = n_freq_bands, ncol = ncol(spec_matrix))
+      ribbon_matrix <- matrix(NA, nrow = freq_bands, ncol = ncol(spec_matrix))
       colnames(ribbon_matrix) <- colnames(spec_matrix)
-      rownames(ribbon_matrix) <- band_labels
+      rownames(ribbon_matrix) <- freq_band_labels
       
       # Calculate statistic for each frequency band
-      for (i in 1:n_freq_bands) {
-        band_indices <- which(freq_bins >= band_breaks[i] & freq_bins < band_breaks[i + 1])
-        if (i == n_freq_bands) {  # Include upper bound for last band
-          band_indices <- which(freq_bins >= band_breaks[i] & freq_bins <= band_breaks[i + 1])
+      stat_func <- switch(band_stat,
+                          "mean" = function(x) mean(x, na.rm = TRUE),
+                          "median" = function(x) median(x, na.rm = TRUE),
+                          "max" = function(x) max(x, na.rm = TRUE),
+                          "min" = function(x) min(x, na.rm = TRUE),
+                          "sd" = function(x) sd(x, na.rm = TRUE))
+      
+      for (band in 1:freq_bands) {
+        # Find frequency indices for this band
+        if (band == freq_bands) {
+          # Include upper bound for last band
+          band_indices <- which(freq_bins >= freq_breaks[band] & freq_bins <= freq_breaks[band + 1])
+        } else {
+          band_indices <- which(freq_bins >= freq_breaks[band] & freq_bins < freq_breaks[band + 1])
         }
         
         if (length(band_indices) > 0) {
-          band_data <- spec_matrix[band_indices, , drop = FALSE]
-          
-          # Apply the specified statistic
-          ribbon_matrix[i, ] <- switch(band_stat,
-                                       "mean" = apply(band_data, 2, mean, na.rm = TRUE),
-                                       "median" = apply(band_data, 2, median, na.rm = TRUE),
-                                       "max" = apply(band_data, 2, max, na.rm = TRUE),
-                                       "min" = apply(band_data, 2, min, na.rm = TRUE),
-                                       "var" = apply(band_data, 2, var, na.rm = TRUE),
-                                       "sd" = apply(band_data, 2, sd, na.rm = TRUE)
-          )
+          # Calculate statistic across frequencies in this band for each time point
+          for (col in 1:ncol(spec_matrix)) {
+            ribbon_matrix[band, col] <- stat_func(spec_matrix[band_indices, col])
+          }
         }
       }
       
-      # Convert ribbon to dataframe with metadata
+      # Create ribbon dataframe
       ribbon_df <- tibble::tibble(
-        FreqBand = band_labels,
-        BandCenter = (band_breaks[-length(band_breaks)] + band_breaks[-1]) / 2
+        FreqBand = 1:freq_bands,
+        FreqBand_Label = freq_band_labels,
+        FreqBand_Min = freq_breaks[1:freq_bands],
+        FreqBand_Max = freq_breaks[2:(freq_bands + 1)]
       )
       
       # Add time columns
@@ -349,9 +361,9 @@ var_diel_spec2 <- function(folder = NULL,
       }
       
       # Store for seasonal spectrogram
-      seasonal_data[[as.character(current_date)]] <<- list(
+      seasonal_ribbons[[as.character(current_date)]] <- list(
         date = current_date,
-        ribbon_df = ribbon_df,
+        ribbon_data = ribbon_df,
         datetime_cols = colnames(ribbon_matrix)
       )
     }
@@ -490,19 +502,40 @@ var_diel_spec2 <- function(folder = NULL,
   
   # Remove NULL results (dates with no valid files)
   results <- purrr::compact(results)
+  seasonal_ribbons <- seasonal_ribbons[!sapply(seasonal_ribbons, is.null)]
   
   # Create seasonal spectrogram if requested and we have data
   seasonal_plot <- NULL
-  if (seasonal_spectro && length(seasonal_data) > 0) {
+  seasonal_data <- NULL
+  
+  if (seasonal_spectro && length(seasonal_ribbons) > 0) {
     message("\nCreating seasonal spectrogram...")
     
-    # Combine all ribbon data
-    all_ribbons <- list()
-    for (date_key in names(seasonal_data)) {
-      date_info <- seasonal_data[[date_key]]
-      ribbon_long <- date_info$ribbon_df |>
+    # Combine all ribbons into a single dataframe
+    all_dates <- names(seasonal_ribbons)
+    date_range <- as.Date(range(all_dates))
+    n_days <- as.numeric(diff(date_range)) + 1
+    
+    # Determine date label frequency
+    if (n_days < 90) {  # Less than 3 months - weekly labels
+      date_breaks <- seq(date_range[1], date_range[2], by = "week")
+      date_format <- "%Y-%m-%d"
+    } else {  # 3+ months - monthly labels
+      date_breaks <- seq(date_range[1], date_range[2], by = "month")
+      date_format <- "%Y-%m"
+    }
+    
+    # Create master seasonal dataframe
+    seasonal_list <- list()
+    
+    for (date_key in names(seasonal_ribbons)) {
+      ribbon_info <- seasonal_ribbons[[date_key]]
+      ribbon_data <- ribbon_info$ribbon_data
+      
+      # Transform ribbon data for plotting
+      ribbon_long <- ribbon_data |>
         tidyr::pivot_longer(
-          cols = -c(FreqBand, BandCenter),
+          cols = -c(FreqBand, FreqBand_Label, FreqBand_Min, FreqBand_Max),
           names_to = "datetime_str",
           values_to = "Amplitude"
         ) |>
@@ -510,38 +543,19 @@ var_diel_spec2 <- function(folder = NULL,
           datetime = as.POSIXct(datetime_str, format = "%Y%m%d_%H%M%S"),
           date = as.Date(datetime),
           hour = as.numeric(format(datetime, "%H")) + 
-            as.numeric(format(datetime, "%M")) / 60
+            as.numeric(format(datetime, "%M"))/60 + 
+            as.numeric(format(datetime, "%S"))/3600
         )
       
-      all_ribbons[[date_key]] <- ribbon_long
+      seasonal_list[[date_key]] <- ribbon_long
     }
     
-    # Combine all data
-    seasonal_df <- dplyr::bind_rows(all_ribbons)
-    
-    # Determine date axis strategy
-    date_range <- range(seasonal_df$date)
-    n_days <- as.numeric(diff(date_range)) + 1
-    
-    if (n_days >= 90) {  # 3 months or more - use monthly labels
-      date_breaks <- seq(
-        from = as.Date(format(date_range[1], "%Y-%m-01")),
-        to = as.Date(format(date_range[2], "%Y-%m-01")) + 32,
-        by = "month"
-      )
-      date_labels <- format(date_breaks, "%b %Y")
-    } else {  # Less than 3 months - use weekly labels
-      date_breaks <- seq(
-        from = date_range[1] - as.numeric(format(date_range[1], "%w")),
-        to = date_range[2] + 7,
-        by = "week"
-      )
-      date_labels <- format(date_breaks, "%m/%d")
-    }
+    # Combine all dates
+    seasonal_df <- dplyr::bind_rows(seasonal_list)
     
     # Create seasonal plot
     seasonal_plot <- ggplot2::ggplot(seasonal_df, 
-                                     ggplot2::aes(x = date, y = hour, fill = Amplitude)) +
+                                     ggplot2::aes(x = hour, y = date, fill = Amplitude)) +
       ggplot2::geom_tile() +
       ggplot2::scale_fill_gradientn(
         colors = c("black", "blue", "yellow", "red"),
@@ -549,74 +563,78 @@ var_diel_spec2 <- function(folder = NULL,
         limits = c(cutoff, max_amp),
         na.value = "gray70"
       ) +
-      ggplot2::scale_x_date(
-        expand = c(0, 0),
-        breaks = date_breaks,
-        labels = date_labels
-      ) +
-      ggplot2::scale_y_continuous(
+      ggplot2::scale_x_continuous(
         expand = c(0, 0),
         breaks = seq(0, 23, 2),
         labels = sprintf("%02d", seq(0, 23, 2)),
         limits = c(0, 24)
       ) +
+      ggplot2::scale_y_date(
+        expand = c(0, 0),
+        breaks = date_breaks,
+        labels = function(x) format(x, date_format)
+      ) +
       ggplot2::labs(
-        x = "Date",
-        y = "Hour of Day",
-        title = paste0("Seasonal Spectrogram - ", title),
-        subtitle = paste0("Frequency bands: ", n_freq_bands, 
-                          " | Statistic: ", band_stat)
+        x = "Time (HH)",
+        y = "Date",
+        title = paste0(title, " - Seasonal Spectrogram"),
+        subtitle = paste0("Frequency bands: ", freq_bands, " | Statistic: ", band_stat)
       ) +
       ggplot2::theme_classic() +
       ggplot2::theme(
-        axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+        axis.text.y = ggplot2::element_text(size = 8)
+      )
+    
+    # Add facets for frequency bands
+    seasonal_plot <- seasonal_plot + 
+      ggplot2::facet_wrap(~FreqBand_Label, nrow = freq_bands, strip.position = "right") +
+      ggplot2::theme(
+        strip.text = ggplot2::element_text(size = 8),
+        panel.spacing = ggplot2::unit(0.1, "lines")
       )
     
     if (plot) {
       print(seasonal_plot)
     }
     
-    if (save_plot && !is.null(save_to)) {
-      if (!dir.exists(save_to)) {
-        dir.create(save_to, recursive = TRUE)
+    if (save_plot && !is.null(seasonal_plot)) {
+      destination <- if (is.null(save_to)) getwd() else save_to
+      
+      if (!dir.exists(destination)) {
+        dir.create(destination, recursive = TRUE)
+        message("Created directory: ", destination)
       }
       
       sensor <- unique(file_df$sensor_id)[1]
-      date_range_str <- paste0(gsub("-", "", date_range[1]), "_", 
-                               gsub("-", "", date_range[2]))
+      date_suffix <- paste0(gsub("-", "", min(as.Date(all_dates))), "_", 
+                            gsub("-", "", max(as.Date(all_dates))))
       
       ggplot2::ggsave(
-        filename = paste0("seasonal_", sensor, "_", date_range_str, ".png"),
-        path = save_to,
+        filename = paste0("seasonal_spectro_", sensor, "_", date_suffix, ".png"),
+        path = destination,
         plot = seasonal_plot,
         width = 12,
-        height = 6,
+        height = 8,
         dpi = 300,
         units = "in"
       )
     }
+    
+    seasonal_data <- seasonal_df
   }
   
-  # If only one date, return that directly, otherwise return list of results
-  final_results <- if (length(results) == 1) {
-    results[[1]]
+  # Prepare final output
+  final_output <- list(
+    daily_results = results,
+    seasonal_plot = seasonal_plot,
+    seasonal_data = seasonal_data,
+    seasonal_ribbons = seasonal_ribbons
+  )
+  
+  # If only one date and no seasonal spectrogram, return daily result directly for backward compatibility
+  if (length(results) == 1 && !seasonal_spectro) {
+    invisible(results[[1]])
   } else {
-    results
+    invisible(final_output)
   }
-  
-  # Add seasonal plot to results if created
-  if (seasonal_spectro) {
-    if (length(results) == 1) {
-      final_results$seasonal_plot <- seasonal_plot
-      final_results$seasonal_data <- seasonal_df
-    } else {
-      final_results <- list(
-        daily_results = results,
-        seasonal_plot = seasonal_plot,
-        seasonal_data = seasonal_df
-      )
-    }
-  }
-  
-  invisible(final_results)
 }

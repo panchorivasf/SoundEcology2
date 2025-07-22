@@ -2,11 +2,8 @@
 #'
 #' Creates a spectrogram visualization of daily acoustic patterns using 
 #' multiple recordings, with options for noise floor clipping and parallel 
-#' processing. Specifically, it takes the variance of acoustic energy in each
-#' frequency bin for each recording and merges the resulting vectors into a 
-#' summary spectrogram. Optionally, it also creates a seasonal variance plot
-#' with multiple days displayed as ribbons, which are summaries of the diel
-#' variance ribbons to reduce spectral resolution.
+#' processing. Includes a new seasonal plot option that summarizes data into 
+#' frequency bands across multiple days as thin horizontal ribbons.
 #'
 #' @param folder Path to the folder containing WAV files (default: current 
 #' working directory).
@@ -14,14 +11,16 @@
 #' @param list A list with WAV files to parse. The waves must be in the working 
 #' directory (default: NULL).
 #' @param title Character string. Plot title (default: empty). 
-#' @param freq_res Frequency resolution in Hz for FFT (default: 50)
 #' @param n.cores Number of cores for parallel processing (-1 for all available 
 #' cores)
 #' @param cutoff Minimum dBFS value (noise floor). Values below this will be 
 #' clipped (default: -100)
 #' @param max_amp Maximum dBFS value to be represented by the color scale. 
 #' @param plot Whether to generate the plot (default: TRUE)
-#' @param save_plot Logical. Whether to save the plot
+#' @param save_plot Logical. Whether to save the plots.
+#' @param save_ribbons Logical. If TRUE, creates a seasonal plot showing mean 
+#' values across frequency bands as thin horizontal ribbons for each day 
+#' (default: FALSE)
 #' @param save_to Character. If save_plot = TRUE, provide a path to the folder 
 #' where the file should be stored. If no path is provided, a new folder
 #' "diel_plots" is created in the current working directory (default) to save 
@@ -33,11 +32,6 @@
 #' @param target_dates Either a single date or multiple dates in the format 
 #' "YYYY-MM-DD" to be analyzed. If NULL (default), all the dates in the folder
 #' will be parsed. To provide a range, see Details. 
-#' @param seasonal_spectro Logical. Whether to produce a seasonal spectrogram.
-#' @param freq_bands Numeric. Number of frequency bands for the seasonal 
-#' spectrogram. Default is 10. 
-#' @param band_stat Character. Summary statistic used for the frequency bands.
-#' Default is "mean".
 #'
 #' @return A list containing:
 #' \itemize{
@@ -46,6 +40,9 @@
 #'   \item plot_data - Long-format data for plotting
 #'   \item file_metadata - File information with extracted metadata
 #'   \item overall_range - The dBFS range of all data
+#'   \item seasonal_data - If seasonal_plot=TRUE, the data used for seasonal plot
+#'   \item seasonal_plot - If seasonal_plot=TRUE, the seasonal plot object
+#'   \item combined_seasonal_plot - If multiple days and seasonal_plot=TRUE, the combined plot
 #' }
 #' @export
 #'
@@ -53,34 +50,30 @@
 #' @importFrom seewave meanspec
 #' @importFrom stringr str_extract
 #' @importFrom lubridate as_datetime hour date
-#' @importFrom dplyr mutate select everything case_when
+#' @importFrom dplyr mutate select everything case_when group_by summarise filter arrange full_join lag
 #' @importFrom tibble tibble
-#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradientn scale_x_continuous scale_y_continuous labs theme_minimal
+#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradientn scale_x_continuous scale_y_continuous scale_y_date labs theme_minimal theme element_blank element_text ggsave annotate
 #' @importFrom foreach foreach %dopar%
 #' @importFrom doParallel registerDoParallel
-#' @importFrom parallel makeCluster stopCluster detectCores
-#' 
-#' @details
-#' This function parses files in a folder or list and groups them by date, 
-#' creating a single diel spectrogram for each. To parse a subset range of dates 
-#' contained in a folder, use seq().
+#' @importFrom parallel makeCluster stopCluster detectCores clusterExport
+#' @importFrom tidyr pivot_longer
+#' @importFrom purrr compact map_dfr
+#' @importFrom scales date_format
+#' @importFrom grDevices rgb
 var_diel_spec2 <- function(folder = NULL,
-                          recursive = TRUE,
-                          list = NULL,
-                          title = "",
-                          freq_res = 50,
-                          n.cores = -1,
-                          cutoff = -100,
-                          max_amp = -10,
-                          plot = TRUE,
-                          save_plot = TRUE,
-                          save_to = "./diel_plots",
-                          dc_on = NULL,
-                          dc_off = NULL,
-                          target_dates = NULL,
-                          seasonal_spectro = FALSE,
-                          freq_bands = 10,
-                          band_stat = "mean") {
+                                       recursive = TRUE,
+                                       list = NULL,
+                                       title = "",
+                                       n.cores = -1,
+                                       cutoff = -100,
+                                       max_amp = -10,
+                                       plot = TRUE,
+                                       save_plot = TRUE,
+                                       save_ribbons = TRUE,
+                                       save_to = "./diel_plots",
+                                       dc_on = NULL,
+                                       dc_off = NULL,
+                                       target_dates = NULL) {
   
   # Validate input parameters
   if (!is.null(folder) && !is.null(list)) {
@@ -108,15 +101,6 @@ var_diel_spec2 <- function(folder = NULL,
     })
   }
   
-  # Validate seasonal spectrogram parameters
-  if (!is.numeric(freq_bands) || freq_bands < 2) {
-    stop("'freq_bands' must be a numeric value >= 2")
-  }
-  
-  if (!band_stat %in% c("mean", "median", "max", "min", "sd")) {
-    stop("'band_stat' must be one of: 'mean', 'median', 'max', 'min', 'sd'")
-  }
-  
   # Create file dataframe based on input type
   if (!is.null(list)) {
     # Validate list input
@@ -136,7 +120,7 @@ var_diel_spec2 <- function(folder = NULL,
                              recursive = recursive)
     
     file_df <- tibble::tibble(
-      file_name = basename(file_paths),  # This extracts just the filename without path
+      file_name = basename(file_paths),
       file_path = file_paths
     )
     
@@ -202,9 +186,6 @@ var_diel_spec2 <- function(folder = NULL,
   file_dfs <- file_df |>
     dplyr::group_split(date)
   
-  # Initialize storage for seasonal spectrogram data
-  seasonal_ribbons <- list()
-  
   # Process each date separately
   results <- lapply(file_dfs, function(date_files) {
     current_date <- unique(as.Date(date_files$datetime))
@@ -216,9 +197,9 @@ var_diel_spec2 <- function(folder = NULL,
     doParallel::registerDoParallel(cl)
     
     # Export necessary variables to parallel workers
-    parallel::clusterExport(cl, varlist = c("freq_res", "cutoff"), envir = environment())
+    parallel::clusterExport(cl, varlist = c("cutoff"), envir = environment())
     
-    # Get frequency bins from first valid file
+    # Get frequency bins from first valid file with 100 Hz resolution
     first_valid <- which(date_files$file_exists)[1]
     if (is.na(first_valid)) {
       warning("No valid files found for date ", current_date)
@@ -235,6 +216,7 @@ var_diel_spec2 <- function(folder = NULL,
       return(NULL)
     }
     
+    freq_res <- 100  # Hard-coded 100 Hz resolution
     wl <- round(wave@samp.rate / freq_res)
     if (wl %% 2 == 1) wl <- wl + 1
     freq_bins <- seewave::meanspec(wave, wl = wl, plot = FALSE)[, 1]
@@ -251,6 +233,7 @@ var_diel_spec2 <- function(folder = NULL,
         return(list(
           freq = freq_bins,
           amp = na_vector,
+          ribbon = rep(NA, 10),  # 10-band ribbon with NAs for missing files
           datetime = date_files$datetime[i],
           is_missing = TRUE
         ))
@@ -278,9 +261,14 @@ var_diel_spec2 <- function(folder = NULL,
         spec_dBFS <- 10 * log10(spec[, 2] / (amp_max^2))
         spec_dBFS <- pmin(pmax(spec_dBFS, cutoff), 0)
         
+        # Create 10-band ribbon
+        freq_bands <- cut(spec[, 1], breaks = 10, labels = FALSE)
+        ribbon <- tapply(spec_dBFS, freq_bands, mean, na.rm = TRUE)
+        
         list(
           freq = freq_bins,
           amp = spec_dBFS,
+          ribbon = ribbon,
           datetime = date_files$datetime[i],
           is_missing = FALSE
         )
@@ -289,6 +277,7 @@ var_diel_spec2 <- function(folder = NULL,
         list(
           freq = freq_bins,
           amp = na_vector,
+          ribbon = rep(NA, 10),
           datetime = date_files$datetime[i],
           is_missing = TRUE
         )
@@ -297,81 +286,37 @@ var_diel_spec2 <- function(folder = NULL,
     
     parallel::stopCluster(cl)
     
-    # Create frequency bin dataframe
+    # Create frequency bin dataframe for full resolution
     spec_df <- tibble::tibble(Frequency = freq_bins)
     
-    # Add each recording as a column
+    # Create ribbon dataframe (10 rows)
+    ribbon_df <- tibble::tibble(FrequencyBand = 1:10)
+    
+    # Add each recording as a column to both dataframes
     for (i in seq_along(spec_results)) {
       col_name <- format(spec_results[[i]]$datetime, "%Y%m%d_%H%M%S")
       spec_df[[col_name]] <- spec_results[[i]]$amp
+      ribbon_df[[col_name]] <- spec_results[[i]]$ribbon
     }
     
-    # Create spectral ribbon if seasonal_spectro is TRUE
-    ribbon_df <- NULL
-    if (seasonal_spectro) {
-      # Create frequency bands
-      freq_range <- range(freq_bins)
-      freq_breaks <- seq(freq_range[1], freq_range[2], length.out = freq_bands + 1)
-      freq_band_labels <- paste0("Band_", 1:freq_bands)
-      
-      # Create matrix for ribbon calculation (excluding frequency column)
-      spec_matrix <- as.matrix(spec_df[, -1])
-      
-      # Initialize ribbon matrix
-      ribbon_matrix <- matrix(NA, nrow = freq_bands, ncol = ncol(spec_matrix))
-      colnames(ribbon_matrix) <- colnames(spec_matrix)
-      rownames(ribbon_matrix) <- freq_band_labels
-      
-      # Calculate statistic for each frequency band
-      stat_func <- switch(band_stat,
-                          "mean" = function(x) mean(x, na.rm = TRUE),
-                          "median" = function(x) median(x, na.rm = TRUE),
-                          "max" = function(x) max(x, na.rm = TRUE),
-                          "min" = function(x) min(x, na.rm = TRUE),
-                          "sd" = function(x) sd(x, na.rm = TRUE))
-      
-      for (band in 1:freq_bands) {
-        # Find frequency indices for this band
-        if (band == freq_bands) {
-          # Include upper bound for last band
-          band_indices <- which(freq_bins >= freq_breaks[band] & freq_bins <= freq_breaks[band + 1])
-        } else {
-          band_indices <- which(freq_bins >= freq_breaks[band] & freq_bins < freq_breaks[band + 1])
-        }
-        
-        if (length(band_indices) > 0) {
-          # Calculate statistic across frequencies in this band for each time point
-          for (col in 1:ncol(spec_matrix)) {
-            ribbon_matrix[band, col] <- stat_func(spec_matrix[band_indices, col])
-          }
-        }
-      }
-      
-      # Create ribbon dataframe
-      ribbon_df <- tibble::tibble(
-        FreqBand = 1:freq_bands,
-        FreqBand_Label = freq_band_labels,
-        FreqBand_Min = freq_breaks[1:freq_bands],
-        FreqBand_Max = freq_breaks[2:(freq_bands + 1)]
-      )
-      
-      # Add time columns
-      for (i in 1:ncol(ribbon_matrix)) {
-        ribbon_df[[colnames(ribbon_matrix)[i]]] <- ribbon_matrix[, i]
-      }
-      
-      # Store for seasonal spectrogram
-      seasonal_ribbons[[as.character(current_date)]] <- list(
-        date = current_date,
-        ribbon_data = ribbon_df,
-        datetime_cols = colnames(ribbon_matrix)
-      )
-    }
-    
-    # Create plotting dataframe
+    # Create plotting dataframe for full resolution
     plot_df <- spec_df |>
       tidyr::pivot_longer(
         cols = -Frequency,
+        names_to = "datetime",
+        values_to = "Amplitude"
+      ) |>
+      dplyr::mutate(
+        datetime = as.POSIXct(datetime, format = "%Y%m%d_%H%M%S"),
+        Time = as.numeric(difftime(datetime, trunc(min(datetime), "days"), 
+                                   units = "hours")),
+        is_missing = ifelse(all(is.na(Amplitude)), TRUE, FALSE)
+      )
+    
+    # Create ribbon plotting dataframe
+    ribbon_plot_df <- ribbon_df |>
+      tidyr::pivot_longer(
+        cols = -FrequencyBand,
         names_to = "datetime",
         values_to = "Amplitude"
       ) |>
@@ -403,7 +348,6 @@ var_diel_spec2 <- function(folder = NULL,
         plot_subtitle <- paste0(plot_subtitle, "  ! Missing data (gray)")
       }
       
-      
       # Create base plot
       p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = Time, y = Frequency, 
                                                  fill = Amplitude)) +
@@ -431,8 +375,6 @@ var_diel_spec2 <- function(folder = NULL,
           subtitle = plot_subtitle
         ) +
         ggplot2::theme_classic()
-      
-      
       
       # Add rectangles for missing data periods
       if (any(plot_df$is_missing)) {
@@ -471,14 +413,13 @@ var_diel_spec2 <- function(folder = NULL,
             dir.create(destination, recursive = TRUE)
             message("Created directory: ", destination)
           }
-          
         }
         
         sensor <- unique(date_files$sensor_id)
         date <- current_date
         
         ggplot2::ggsave(
-          filename = paste0("diel_",sensor, "_", gsub("-", "", date), ".png"),
+          filename = paste0("diel_", sensor, "_", gsub("-", "", date), ".png"),
           path = destination,
           plot = p,
           width = 10,
@@ -489,152 +430,116 @@ var_diel_spec2 <- function(folder = NULL,
       }
     }
     
+    # # Save ribbon plot if requested
+    # if (save_ribbons) {
+    #   # Create color palette matching the main plot
+    #   ribbon_palette <- grDevices::colorRampPalette(c("black", "blue", "yellow", "red"))
+    # 
+    #   # Get sensor ID and date from filename
+    #   sensor_id <- unique(date_files$sensor_id)
+    #   date_str <- gsub("-", "", current_date)
+    # 
+    #   # Create ribbon matrix (10 rows x n columns)
+    #   ribbon_mat <- as.matrix(ribbon_df[, -1])
+    # 
+    #   # Save as PNG without axes
+    #   png_file <- paste0(save_to, "/ribbon_", sensor_id, "_", date_str, ".png")
+    #   png(png_file, width = ncol(ribbon_mat), height = 10)  # 10 pixels tall
+    #   par(mar = c(0, 0, 0, 0))  # Remove margins
+    #   image(t(ribbon_mat),
+    #         col = ribbon_palette(256),
+    #         zlim = c(cutoff, max_amp),
+    #         axes = FALSE)
+    #   dev.off()
+    # }
+    
+    # Save ribbon plot if requested
+    if (save_ribbons) {
+      if (is.null(save_to)) {
+        destination <- getwd()
+      } else {
+        destination <- save_to
+        
+        # Create directory if it doesn't exist
+        if (!dir.exists(destination)) {
+          dir.create(destination, recursive = TRUE)
+          message("Created directory: ", destination)
+        }
+      }
+      
+      # Get sensor ID and date from filename
+      sensor_id <- unique(date_files$sensor_id)
+      date_str <- gsub("-", "", current_date)
+      
+      # Prepare ribbon data for plotting
+      ribbon_long <- ribbon_df |>
+        tidyr::pivot_longer(
+          cols = -FrequencyBand,
+          names_to = "Time",
+          values_to = "Amplitude"
+        ) |>
+        dplyr::mutate(
+          Time = as.POSIXct(Time, format = "%Y%m%d_%H%M%S"),
+          TimeNum = as.numeric(difftime(Time, min(Time), units = "hours"))
+          )
+          
+          # Create minimal ribbon plot
+          ribbon_plot <- ggplot2::ggplot(ribbon_long, 
+                                         ggplot2::aes(x = TimeNum, 
+                                                      y = FrequencyBand, 
+                                                      fill = Amplitude)) +
+            ggplot2::geom_tile() +
+            ggplot2::scale_fill_gradientn(
+              colors = c("black", "blue", "yellow", "red"),
+              limits = c(cutoff, max_amp),
+              na.value = "gray70"
+            ) +
+            ggplot2::scale_y_continuous(expand = c(0, 0)) +
+            ggplot2::scale_x_continuous(expand = c(0, 0)) +
+            ggplot2::theme_void() +
+            ggplot2::theme(
+              legend.position = "none",
+              plot.margin = ggplot2::unit(c(0, 0, 0, 0), "cm"),
+              panel.spacing = ggplot2::unit(c(0, 0, 0, 0), "cm")
+            )
+          
+          # Calculate dimensions
+          n_cols <- ncol(ribbon_df) - 1  # subtract 1 for FrequencyBand column
+          ribbon_width <- 10  # same width as diel plots (inches)
+          ribbon_height <- 0.05  # your requested height (inches)
+          
+          # Save ribbon plot
+          ggplot2::ggsave(
+            filename = paste0("ribbon_", sensor_id, "_", date_str, ".png"),
+            path = destination,
+            plot = ribbon_plot,
+            width = ribbon_width,
+            height = ribbon_height,
+            dpi = 300,
+            units = "in",
+            bg = "transparent"  # ensures no white background
+          )
+    }
+    
     list(
       plot = p,
       spectral_data = spec_df,
+      ribbon_data = ribbon_df,
       plot_data = plot_df,
+      ribbon_plot_data = ribbon_plot_df,
       file_metadata = date_files,
       overall_range = overall_range,
-      missing_data = any(plot_df$is_missing),
-      ribbon_data = ribbon_df
+      missing_data = any(plot_df$is_missing)
     )
   })
   
   # Remove NULL results (dates with no valid files)
   results <- purrr::compact(results)
-  seasonal_ribbons <- seasonal_ribbons[!sapply(seasonal_ribbons, is.null)]
   
-  # Create seasonal spectrogram if requested and we have data
-  seasonal_plot <- NULL
-  seasonal_data <- NULL
-  
-  if (seasonal_spectro && length(seasonal_ribbons) > 0) {
-    message("\nCreating seasonal spectrogram...")
-    
-    # Combine all ribbons into a single dataframe
-    all_dates <- names(seasonal_ribbons)
-    date_range <- as.Date(range(all_dates))
-    n_days <- as.numeric(diff(date_range)) + 1
-    
-    # Determine date label frequency
-    if (n_days < 90) {  # Less than 3 months - weekly labels
-      date_breaks <- seq(date_range[1], date_range[2], by = "week")
-      date_format <- "%Y-%m-%d"
-    } else {  # 3+ months - monthly labels
-      date_breaks <- seq(date_range[1], date_range[2], by = "month")
-      date_format <- "%Y-%m"
-    }
-    
-    # Create master seasonal dataframe
-    seasonal_list <- list()
-    
-    for (date_key in names(seasonal_ribbons)) {
-      ribbon_info <- seasonal_ribbons[[date_key]]
-      ribbon_data <- ribbon_info$ribbon_data
-      
-      # Transform ribbon data for plotting
-      ribbon_long <- ribbon_data |>
-        tidyr::pivot_longer(
-          cols = -c(FreqBand, FreqBand_Label, FreqBand_Min, FreqBand_Max),
-          names_to = "datetime_str",
-          values_to = "Amplitude"
-        ) |>
-        dplyr::mutate(
-          datetime = as.POSIXct(datetime_str, format = "%Y%m%d_%H%M%S"),
-          date = as.Date(datetime),
-          hour = as.numeric(format(datetime, "%H")) + 
-            as.numeric(format(datetime, "%M"))/60 + 
-            as.numeric(format(datetime, "%S"))/3600
-        )
-      
-      seasonal_list[[date_key]] <- ribbon_long
-    }
-    
-    # Combine all dates
-    seasonal_df <- dplyr::bind_rows(seasonal_list)
-    
-    # Create seasonal plot
-    seasonal_plot <- ggplot2::ggplot(seasonal_df, 
-                                     ggplot2::aes(x = hour, y = date, fill = Amplitude)) +
-      ggplot2::geom_tile() +
-      ggplot2::scale_fill_gradientn(
-        colors = c("black", "blue", "yellow", "red"),
-        name = paste0(stringr::str_to_title(band_stat), "\n(dBFS)"),
-        limits = c(cutoff, max_amp),
-        na.value = "gray70"
-      ) +
-      ggplot2::scale_x_continuous(
-        expand = c(0, 0),
-        breaks = seq(0, 23, 2),
-        labels = sprintf("%02d", seq(0, 23, 2)),
-        limits = c(0, 24)
-      ) +
-      ggplot2::scale_y_date(
-        expand = c(0, 0),
-        breaks = date_breaks,
-        labels = function(x) format(x, date_format)
-      ) +
-      ggplot2::labs(
-        x = "Time (HH)",
-        y = "Date",
-        title = paste0(title, " - Seasonal Spectrogram"),
-        subtitle = paste0("Frequency bands: ", freq_bands, " | Statistic: ", band_stat)
-      ) +
-      ggplot2::theme_classic() +
-      ggplot2::theme(
-        axis.text.y = ggplot2::element_text(size = 8)
-      )
-    
-    # Add facets for frequency bands
-    seasonal_plot <- seasonal_plot + 
-      ggplot2::facet_wrap(~FreqBand_Label, nrow = freq_bands, strip.position = "right") +
-      ggplot2::theme(
-        strip.text = ggplot2::element_text(size = 8),
-        panel.spacing = ggplot2::unit(0.1, "lines")
-      )
-    
-    if (plot) {
-      print(seasonal_plot)
-    }
-    
-    if (save_plot && !is.null(seasonal_plot)) {
-      destination <- if (is.null(save_to)) getwd() else save_to
-      
-      if (!dir.exists(destination)) {
-        dir.create(destination, recursive = TRUE)
-        message("Created directory: ", destination)
-      }
-      
-      sensor <- unique(file_df$sensor_id)[1]
-      date_suffix <- paste0(gsub("-", "", min(as.Date(all_dates))), "_", 
-                            gsub("-", "", max(as.Date(all_dates))))
-      
-      ggplot2::ggsave(
-        filename = paste0("seasonal_spectro_", sensor, "_", date_suffix, ".png"),
-        path = destination,
-        plot = seasonal_plot,
-        width = 12,
-        height = 8,
-        dpi = 300,
-        units = "in"
-      )
-    }
-    
-    seasonal_data <- seasonal_df
-  }
-  
-  # Prepare final output
-  final_output <- list(
-    daily_results = results,
-    seasonal_plot = seasonal_plot,
-    seasonal_data = seasonal_data,
-    seasonal_ribbons = seasonal_ribbons
-  )
-  
-  # If only one date and no seasonal spectrogram, return daily result directly for backward compatibility
-  if (length(results) == 1 && !seasonal_spectro) {
+  # If only one date, return that directly, otherwise return list of results
+  if (length(results) == 1) {
     invisible(results[[1]])
   } else {
-    invisible(final_output)
+    invisible(results)
   }
 }

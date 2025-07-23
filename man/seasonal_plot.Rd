@@ -5,25 +5,25 @@
 \title{Stack multiple diel ribbon plots vertically in chronological order}
 \usage{
 seasonal_plot(
-  ribbon_folder = "./diel_plots",
-  output_file = "./diel_plots/seasonal.png",
+  ribbon_folder = "./ribbons",
+  output_file = "./seasonal.png",
   output_width = 10,
-  ribbon_height = 0.3,
-  time_axis_breaks = seq(0, 23, by = 2),
+  ribbon_height = 0.05,
+  time_axis_breaks = seq(0, 24, by = 1),
   bg_color = "white",
-  label_size = 12
+  label_size = 10
 )
 }
 \arguments{
-\item{ribbon_folder}{Path to folder containing ribbon PNG files (default: "./diel_plots")}
+\item{ribbon_folder}{Path to folder containing ribbon PNG files (default: "./ribbons")}
 
-\item{output_file}{Output filename (default: "stacked_ribbons.png")}
+\item{output_file}{Output filename (default: "./seasonal.png")}
 
 \item{output_width}{Width of output image in inches (default: 10)}
 
 \item{ribbon_height}{Height of each ribbon in inches (default: 0.3)}
 
-\item{time_axis_breaks}{Positions of time axis ticks (default: seq(0, 23, by = 2))}
+\item{time_axis_breaks}{Positions of time axis ticks (default: seq(0, 24, by = 1))}
 
 \item{bg_color}{Background color (default: "white")}
 
@@ -34,5 +34,6 @@ Invisibly returns the ggplot object
 }
 \description{
 This function takes individual diel ribbon PNG files and combines them into
-a single vertical stack with properly positioned date and time axis labels.
+a single vertical stack with properly positioned date and time axis labels,
+including small ticks on both axes.
 }

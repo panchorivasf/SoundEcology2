@@ -1,29 +1,24 @@
-#' Generate a Variance Diel Spectrogram from multiple Audio Recordings
+#' Generate Acoustic Ribbon Plots from Audio Recordings
 #'
-#' Creates a spectrogram visualization of daily acoustic patterns using 
-#' multiple recordings, with options for noise floor clipping and parallel 
-#' processing. Includes a new seasonal plot option that summarizes data into 
-#' frequency bands across multiple days as thin horizontal ribbons.
+#' Creates ribbon visualizations of daily acoustic patterns using 
+#' multiple recordings, summarizing spectral data into frequency bands 
+#' across multiple days as thin horizontal ribbons. Includes options for 
+#' noise floor clipping and parallel processing.
 #'
 #' @param folder Path to the folder containing WAV files (default: current 
 #' working directory).
 #' @param recursive Logical. Whether to search files in subfolders. Default: TRUE.
 #' @param list A list with WAV files to parse. The waves must be in the working 
 #' directory (default: NULL).
-#' @param title Character string. Plot title (default: empty). 
 #' @param n.cores Number of cores for parallel processing (-1 for all available 
 #' cores)
 #' @param cutoff Minimum dBFS value (noise floor). Values below this will be 
 #' clipped (default: -100)
 #' @param max_amp Maximum dBFS value to be represented by the color scale. 
-#' @param plot Whether to generate the plot (default: TRUE)
-#' @param save_plot Logical. Whether to save the plots.
-#' @param save_ribbons Logical. If TRUE, creates a seasonal plot showing mean 
-#' values across frequency bands as thin horizontal ribbons for each day 
-#' (default: FALSE)
-#' @param save_to Character. If save_plot = TRUE, provide a path to the folder 
+#' @param save_ribbons Logical. Whether to save the ribbon plots (default: TRUE)
+#' @param save_to Character. If save_ribbons = TRUE, provide a path to the folder 
 #' where the file should be stored. If no path is provided, a new folder
-#' "diel_plots" is created in the current working directory (default) to save 
+#' "ribbon_plots" is created in the current working directory (default) to save 
 #' the exported files.
 #' @param dc_on Number of minutes where the recorded was "on". Used to identify
 #' expected number of files per day.
@@ -31,18 +26,18 @@
 #' expected number of files per day.
 #' @param target_dates Either a single date or multiple dates in the format 
 #' "YYYY-MM-DD" to be analyzed. If NULL (default), all the dates in the folder
-#' will be parsed. To provide a range, see Details. 
+#' will be parsed. To provide a range, see Details.
+#' @param ribbon_height Height of the ribbon plot in inches (default: 0.05)
+#' @param ribbon_width Width of the ribbon plot in inches (default: 10)
+#' @param freq_bands Number of frequency bands for the ribbon (default: 24)
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item plot - The ggplot2 spectrogram object
-#'   \item spectral_data - Wide-format spectral data (freq bins × recordings)
-#'   \item plot_data - Long-format data for plotting
+#'   \item ribbon_data - Wide-format ribbon data (freq bands × recordings)
+#'   \item ribbon_plot_data - Long-format data for plotting ribbons
 #'   \item file_metadata - File information with extracted metadata
 #'   \item overall_range - The dBFS range of all data
-#'   \item seasonal_data - If seasonal_plot=TRUE, the data used for seasonal plot
-#'   \item seasonal_plot - If seasonal_plot=TRUE, the seasonal plot object
-#'   \item combined_seasonal_plot - If multiple days and seasonal_plot=TRUE, the combined plot
+#'   \item ribbon_plots - List of ribbon plot objects (if multiple dates)
 #' }
 #' @export
 #'
@@ -52,28 +47,27 @@
 #' @importFrom lubridate as_datetime hour date
 #' @importFrom dplyr mutate select everything case_when group_by summarise filter arrange full_join lag
 #' @importFrom tibble tibble
-#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradientn scale_x_continuous scale_y_continuous scale_y_date labs theme_minimal theme element_blank element_text ggsave annotate
+#' @importFrom ggplot2 ggplot aes geom_raster scale_fill_gradientn scale_x_continuous scale_y_continuous labs theme_void theme element_blank element_text ggsave unit
 #' @importFrom foreach foreach %dopar%
 #' @importFrom doParallel registerDoParallel
 #' @importFrom parallel makeCluster stopCluster detectCores clusterExport
 #' @importFrom tidyr pivot_longer
 #' @importFrom purrr compact map_dfr
-#' @importFrom scales date_format
 #' @importFrom grDevices rgb
-var_diel_spec2 <- function(folder = NULL,
-                           recursive = TRUE,
-                           list = NULL,
-                           title = "",
-                           n.cores = -1,
-                           cutoff = -100,
-                           max_amp = -10,
-                           # plot = TRUE,
-                           # save_plot = TRUE,
-                           save_ribbons = TRUE,
-                           save_to = "./diel_plots",
-                           dc_on = NULL,
-                           dc_off = NULL,
-                           target_dates = NULL) {
+ribbons <- function(folder = NULL,
+                    recursive = TRUE,
+                    list = NULL,
+                    n.cores = -1,
+                    cutoff = -100,
+                    max_amp = -10,
+                    save_ribbons = TRUE,
+                    save_to = "./ribbons",
+                    dc_on = NULL,
+                    dc_off = NULL,
+                    target_dates = NULL,
+                    ribbon_height = 0.1,
+                    ribbon_width = 10,
+                    freq_bands = 24) {
   
   # Validate input parameters
   if (!is.null(folder) && !is.null(list)) {
@@ -99,6 +93,17 @@ var_diel_spec2 <- function(folder = NULL,
     }, error = function(e) {
       stop("'target_dates' must be in format 'YYYY-MM-DD' or a vector of such dates")
     })
+  }
+  
+  # Validate ribbon parameters
+  if (!is.numeric(ribbon_height) || ribbon_height <= 0) {
+    stop("'ribbon_height' must be a positive number")
+  }
+  if (!is.numeric(ribbon_width) || ribbon_width <= 0) {
+    stop("'ribbon_width' must be a positive number")
+  }
+  if (!is.numeric(freq_bands) || freq_bands <= 0) {
+    stop("'freq_bands' must be a positive integer")
   }
   
   # Create file dataframe based on input type
@@ -189,7 +194,7 @@ var_diel_spec2 <- function(folder = NULL,
   # Process each date separately
   results <- lapply(file_dfs, function(date_files) {
     current_date <- unique(as.Date(date_files$datetime))
-    message("\nProcessing date ", current_date, "...")
+    message("\nProcessing date ", current_date, " for ribbon generation...")
     
     # Set up parallel processing
     if (n.cores == -1) n.cores <- parallel::detectCores() - 1
@@ -197,7 +202,7 @@ var_diel_spec2 <- function(folder = NULL,
     doParallel::registerDoParallel(cl)
     
     # Export necessary variables to parallel workers
-    parallel::clusterExport(cl, varlist = c("cutoff"), envir = environment())
+    parallel::clusterExport(cl, varlist = c("cutoff", "freq_bands"), envir = environment())
     
     # Get frequency bins from first valid file with 50 Hz resolution
     first_valid <- which(date_files$file_exists)[1]
@@ -220,20 +225,17 @@ var_diel_spec2 <- function(folder = NULL,
     wl <- round(wave@samp.rate / freq_res)
     if (wl %% 2 == 1) wl <- wl + 1
     freq_bins <- seewave::meanspec(wave, wl = wl, plot = FALSE)[, 1]
-    na_vector <- rep(NA, length(freq_bins))
     
     message("Found ", sum(date_files$file_exists), " valid files out of ", nrow(date_files), " expected")
     if (any(date_files$gap_detected, na.rm = TRUE)) {
       message("Gaps detected in the recording sequence")
     }
     
-    # Process files in parallel (including NA placeholders for missing files)
-    spec_results <- foreach::foreach(i = 1:nrow(date_files), .packages = c("tuneR", "seewave")) %dopar% {
+    # Process files in parallel (focusing only on ribbon generation)
+    ribbon_results <- foreach::foreach(i = 1:nrow(date_files), .packages = c("tuneR", "seewave")) %dopar% {
       if (!date_files$file_exists[i]) {
         return(list(
-          freq = freq_bins,
-          amp = na_vector,
-          ribbon = rep(NA, 10),  # 10-band ribbon with NAs for missing files
+          ribbon = rep(NA, freq_bands),
           datetime = date_files$datetime[i],
           is_missing = TRUE
         ))
@@ -261,13 +263,11 @@ var_diel_spec2 <- function(folder = NULL,
         spec_dBFS <- 10 * log10(spec[, 2] / (amp_max^2))
         spec_dBFS <- pmin(pmax(spec_dBFS, cutoff), 0)
         
-        # Create 10-band ribbon
-        freq_bands <- cut(spec[, 1], breaks = 10, labels = FALSE)
-        ribbon <- tapply(spec_dBFS, freq_bands, mean, na.rm = TRUE)
+        # Create frequency bands ribbon
+        freq_band_indices <- cut(spec[, 1], breaks = freq_bands, labels = FALSE)
+        ribbon <- tapply(spec_dBFS, freq_band_indices, mean, na.rm = TRUE)
         
         list(
-          freq = freq_bins,
-          amp = spec_dBFS,
           ribbon = ribbon,
           datetime = date_files$datetime[i],
           is_missing = FALSE
@@ -275,9 +275,7 @@ var_diel_spec2 <- function(folder = NULL,
       }, error = function(e) {
         warning("Error processing file ", date_files$file_path[i], ": ", e$message)
         list(
-          freq = freq_bins,
-          amp = na_vector,
-          ribbon = rep(NA, 10),
+          ribbon = rep(NA, freq_bands),
           datetime = date_files$datetime[i],
           is_missing = TRUE
         )
@@ -286,32 +284,14 @@ var_diel_spec2 <- function(folder = NULL,
     
     parallel::stopCluster(cl)
     
-    # Create frequency bin dataframe for full resolution
-    spec_df <- tibble::tibble(Frequency = freq_bins)
+    # Create ribbon dataframe
+    ribbon_df <- tibble::tibble(FrequencyBand = 1:freq_bands)
     
-    # Create ribbon dataframe (10 rows)
-    ribbon_df <- tibble::tibble(FrequencyBand = 1:10)
-    
-    # Add each recording as a column to both dataframes
-    for (i in seq_along(spec_results)) {
-      col_name <- format(spec_results[[i]]$datetime, "%Y%m%d_%H%M%S")
-      spec_df[[col_name]] <- spec_results[[i]]$amp
-      ribbon_df[[col_name]] <- spec_results[[i]]$ribbon
+    # Add each recording as a column to ribbon dataframe
+    for (i in seq_along(ribbon_results)) {
+      col_name <- format(ribbon_results[[i]]$datetime, "%Y%m%d_%H%M%S")
+      ribbon_df[[col_name]] <- ribbon_results[[i]]$ribbon
     }
-    
-    # Create plotting dataframe for full resolution
-    plot_df <- spec_df |>
-      tidyr::pivot_longer(
-        cols = -Frequency,
-        names_to = "datetime",
-        values_to = "Amplitude"
-      ) |>
-      dplyr::mutate(
-        datetime = as.POSIXct(datetime, format = "%Y%m%d_%H%M%S"),
-        Time = as.numeric(difftime(datetime, trunc(min(datetime), "days"), 
-                                   units = "hours")),
-        is_missing = ifelse(all(is.na(Amplitude)), TRUE, FALSE)
-      )
     
     # Create ribbon plotting dataframe
     ribbon_plot_df <- ribbon_df |>
@@ -324,114 +304,19 @@ var_diel_spec2 <- function(folder = NULL,
         datetime = as.POSIXct(datetime, format = "%Y%m%d_%H%M%S"),
         Time = as.numeric(difftime(datetime, trunc(min(datetime), "days"), 
                                    units = "hours")),
-        is_missing = ifelse(all(is.na(Amplitude)), TRUE, FALSE)
+        is_missing = is.na(Amplitude)
       )
     
     # Calculate and report range (excluding missing data)
-    valid_amps <- plot_df$Amplitude[!plot_df$is_missing]
+    valid_amps <- ribbon_plot_df$Amplitude[!ribbon_plot_df$is_missing]
     overall_range <- if (length(valid_amps) > 0) range(valid_amps, 
                                                        na.rm = TRUE) else c(NA, NA)
-    message("Overall dBFS range for date ", current_date, ": [", 
+    message("Overall dBFS range for ribbon data on ", current_date, ": [", 
             round(overall_range[1], 2), ", ", 
             round(overall_range[2], 2), "]")
     
-    # Generate plot if requested
-    p <- NULL
-    if (plot) {
-      
-      # Create base subtitle without missing data note
-      plot_subtitle <- paste("Sensor:", unique(date_files$sensor_id),
-                             "\nDate:", current_date)
-      
-      # Add missing data note if needed
-      if (any(plot_df$is_missing)) {
-        plot_subtitle <- paste0(plot_subtitle, "  ! Missing data (gray)")
-      }
-      
-      # Create base plot
-      p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = Time, y = Frequency, 
-                                                 fill = Amplitude)) +
-        ggplot2::geom_tile() +
-        ggplot2::scale_fill_gradientn(
-          colors = c("black", "blue", "yellow", "red"),
-          name = "Variance\n(dBFS)",
-          limits = c(cutoff, max_amp),
-          na.value = "gray70"  
-        ) +
-        ggplot2::scale_x_continuous(
-          expand = c(0, 0),
-          breaks = seq(0, 24, 2),
-          labels = seq(0, 24, 2),
-          limits = c(0, 24)
-        ) +
-        ggplot2::scale_y_continuous(
-          labels = function(x) x,
-          expand = c(0, 0)
-        ) +
-        ggplot2::labs(
-          x = "Time (hours)",
-          y = "Frequency (kHz)",
-          title = title,
-          subtitle = plot_subtitle
-        ) +
-        ggplot2::theme_classic()
-      
-      # Add rectangles for missing data periods
-      if (any(plot_df$is_missing)) {
-        missing_ranges <- plot_df |>
-          dplyr::filter(is_missing) |>
-          dplyr::group_by(grp = cumsum(c(1, diff(Time) > 1))) |>
-          dplyr::summarize(
-            xmin = min(Time),
-            xmax = max(Time),
-            .groups = "drop"
-          )
-        
-        for (i in 1:nrow(missing_ranges)) {
-          p <- p + ggplot2::annotate(
-            "rect",
-            xmin = missing_ranges$xmin[i],
-            xmax = missing_ranges$xmax[i],
-            ymin = min(freq_bins),
-            ymax = max(freq_bins),
-            fill = "gray70"
-            # alpha = 0.7
-          )
-        }
-      }
-      
-      print(p)
-      
-      if (save_plot) {
-        if (is.null(save_to)) {
-          destination <- getwd()
-        } else {
-          destination <- save_to
-          
-          # Create directory if it doesn't exist
-          if (!dir.exists(destination)) {
-            dir.create(destination, recursive = TRUE)
-            message("Created directory: ", destination)
-          }
-        }
-        
-        sensor <- unique(date_files$sensor_id)
-        date <- current_date
-        
-        ggplot2::ggsave(
-          filename = paste0("diel_", sensor, "_", gsub("-", "", date), ".png"),
-          path = destination,
-          plot = p,
-          width = 10,
-          height = 5.6,
-          dpi = 300,
-          units = "in"
-        )
-      }
-    }
-    
-    
-    # Save ribbon plot if requested
+    # Create and save ribbon plot
+    ribbon_plot <- NULL
     if (save_ribbons) {
       if (is.null(save_to)) {
         destination <- getwd()
@@ -449,21 +334,9 @@ var_diel_spec2 <- function(folder = NULL,
       sensor_id <- unique(date_files$sensor_id)
       date_str <- gsub("-", "", current_date)
       
-      # Prepare ribbon data for plotting
-      ribbon_long <- ribbon_df |>
-        tidyr::pivot_longer(
-          cols = -FrequencyBand,
-          names_to = "Time",
-          values_to = "Amplitude"
-        ) |>
-        dplyr::mutate(
-          Time = as.POSIXct(Time, format = "%Y%m%d_%H%M%S"),
-          TimeNum = as.numeric(difftime(Time, min(Time), units = "hours"))
-        )
-      
       # Create minimal ribbon plot
-      ribbon_plot <- ggplot2::ggplot(ribbon_long, 
-                                     ggplot2::aes(x = TimeNum, 
+      ribbon_plot <- ggplot2::ggplot(ribbon_plot_df, 
+                                     ggplot2::aes(x = Time, 
                                                   y = FrequencyBand, 
                                                   fill = Amplitude)) +
         ggplot2::geom_raster() +
@@ -481,11 +354,6 @@ var_diel_spec2 <- function(folder = NULL,
           panel.spacing = ggplot2::unit(c(0, 0, 0, 0), "cm")
         )
       
-      # Calculate dimensions
-      n_cols <- ncol(ribbon_df) - 1  # subtract 1 for FrequencyBand column
-      ribbon_width <- 10  # same width as diel plots (inches)
-      ribbon_height <- 0.05  # your requested height (inches)
-      
       # Save ribbon plot
       ggplot2::ggsave(
         filename = paste0("ribbon_", sensor_id, "_", date_str, ".png"),
@@ -497,22 +365,22 @@ var_diel_spec2 <- function(folder = NULL,
         units = "in",
         bg = "transparent"  # ensures no white background
       )
+      
+      message("Saved ribbon plot: ribbon_", sensor_id, "_", date_str, ".png")
     }
     
     list(
-      plot = p,
-      spectral_data = spec_df,
       ribbon_data = ribbon_df,
-      plot_data = plot_df,
       ribbon_plot_data = ribbon_plot_df,
+      ribbon_plot = ribbon_plot,
       file_metadata = date_files,
       overall_range = overall_range,
-      missing_data = any(plot_df$is_missing)
+      missing_data = any(ribbon_plot_df$is_missing)
     )
   })
   
   # Remove NULL results (dates with no valid files)
-  # results <- purrr::compact(results)
+  results <- purrr::compact(results)
   
   # If only one date, return that directly, otherwise return list of results
   if (length(results) == 1) {

@@ -13,7 +13,9 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
 #' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
@@ -28,7 +30,8 @@
 #' @param prop.den numeric. Indicates how the energy proportion is calculated.
 #' @param db.fs logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.
 #' @param use.vegan logical; if TRUE, the diversity() function from the vegan package is called to compute Shannon's entropy. Default = FALSE.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
+#' @param n.cores The number of cores to use for parallel processing. Default is
+#' 1 to use all but one core. 
 #'
 #' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
 #' @export
@@ -56,7 +59,8 @@ adi_folder <- function(folder = NULL,
                        end = 1,
                        unit = "minutes",
                        save.csv = TRUE,
-                       csv.name = "adi_results.csv",
+                       save.to = NULL,
+                       csv.name = "adi_results",
                        freq.res = 50,
                        win.fun = "hanning",
                        min.freq = 0,
@@ -89,10 +93,20 @@ adi_folder <- function(folder = NULL,
                     prop.den = prop.den,
                     db.fs = db.fs)
   
+  original_wd <- getwd()
+  
   if(is.null(folder)) {
     folder <- getwd()
   }
-  original_wd <- getwd()
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)) {
@@ -183,7 +197,7 @@ adi_folder <- function(folder = NULL,
                      }
   
   stopCluster(cl)
-  setwd(original_wd)  # Restore original working directory
+  setwd(original_wd)  
   
   # Report skipped files
   if(length(skipped_files) > 0) {
@@ -197,20 +211,24 @@ adi_folder <- function(folder = NULL,
     stop("No files could be processed successfully")
   }
   
-  resultsWithMetadata <- addMetadata(results)
+  results <- addMetadata(results)
 
-  if(save.csv) {
+  if(save.csv == TRUE){
     
-    sensor <- unique(resultsWithMetadata$sensor_id)
+    sensor <- unique(results$sensor_id)
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    results$datetime <- format(results$datetime, 
+                                           "%Y-%m-%d %H:%M:%S")
+    
     # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
-
+    
   }
   
   cat(paste(
@@ -221,6 +239,6 @@ adi_folder <- function(folder = NULL,
     "\n"
   ))
   
-  return(resultsWithMetadata)
+  return(results)
 }
 

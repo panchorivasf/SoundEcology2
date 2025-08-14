@@ -11,25 +11,35 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param save.csv logical. Whether to save a csv in the working directory.
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param noise.file An R object of class Wave containing noise-only information if needed. Default = NULL.
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
+#' a file name.
+#' @param noise.file An R object of class Wave containing noise-only information 
+#' if needed. Default = NULL.
 #' @param NEM Numeric. Options are 1 or 2.
 #' When NEM = 1, floating thresholds are estimated based on noise.file.
 #' When NEM = 2, floating thresholds are calculated based on sound file using an
-#' automatic noise level estimation method (median of each row in the spectrogram). Default = 2.
-#' @param min.freq Minimum frequency in Hertz when calculating the global threshold. Default = 200.
-#' @param max.freq Maximum frequency in Hertz when calculating the FADI value. Default = 10000.
-#' @param threshold.fixed A negative number in dB for calculating the global threshold. Default = −50.
+#' automatic noise level estimation method (median of each row in the 
+#' spectrogram). Default = 2.
+#' @param min.freq Minimum frequency in Hertz when calculating the global 
+#' threshold. Default = 200.
+#' @param max.freq Maximum frequency in Hertz when calculating the FADI value. 
+#' Default = 10000.
+#' @param threshold.fixed A negative number in dB for calculating the global 
+#' threshold. Default = −50.
 #' @param freq.step Bandwidth of each frequency band, in Hertz. Default = 1000.
-#' @param gamma A positive number in dB for calculating the floating thresholds. Default = 13.
-#' @param props Logical; if TRUE, the energy proportion values for each frequency band
-#' and channel are added to the output tibble. Default = TRUE.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. 
-#' Default is NULL (single-core processing).
-
+#' @param gamma A positive number in dB for calculating the floating thresholds. 
+#' Default = 13.
+#' @param props Logical; if TRUE, the energy proportion values for each 
+#' frequency band and channel are added to the output tibble. Default = TRUE.
+#' @param n.cores The number of cores to use for parallel processing. Default is 
+#' `n.cores = -1` to use all but one core. 
 #'
-#' @return A tibble with the FADI value per channel, energy proportions, metadata, and parameters used.
+#' @return A tibble with the FADI value per channel, energy proportions, 
+#' metadata, and parameters used.
+#' 
 #' @export
 #' @import doParallel
 #' @import foreach
@@ -55,7 +65,8 @@ fadi_folder <- function (folder = NULL,
                          end = 1,
                          unit = "minutes",
                          save.csv = TRUE,
-                         csv.name = "fadi_results.csv",
+                         save.to = NULL,
+                         csv.name = "fadi_results",
                          noise.file = NULL,
                          NEM = 2,
                          min.freq = 200,
@@ -77,8 +88,18 @@ fadi_folder <- function (folder = NULL,
                     props=props)
 
 
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
+  }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
   }
   
   setwd(folder)
@@ -165,27 +186,33 @@ fadi_folder <- function (folder = NULL,
 
                      }
   stopCluster(cl)
+  setwd(original_wd)
 
   # Combine results with metadata and return
-  resultsWithMetadata <- addMetadata(results)
+  results <- addMetadata(results)
 
   
   if(save.csv == TRUE){
-    sensor <- unique(resultsWithMetadata$sensor_id)
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    sensor <- unique(results$sensor_id)
+    
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
+    
     # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
   }
 
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
 
-  return(resultsWithMetadata)
+  return(results)
 
 }
 

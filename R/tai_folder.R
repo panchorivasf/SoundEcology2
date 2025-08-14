@@ -6,18 +6,23 @@
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param list An optional list (subset) of files in the folder to analyze. If provided, 
 #' files outside the list will be excluded. 
-#' @param start numerical. Where to start reading the Wave. 
-#' @param end numerical. Where to end reading the Wave.
+#' @param start Numeric. Where to start reading the Wave. 
+#' @param end Numeric. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
+#' @param hpf Numeric. Whether to use a high-pass filter. Default is 0.
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
-#' @param wave A wave object to be analyzed.
-#' @param channel Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param cutoff Numeric. The cutoff in decibels for the spectrogram generation.
 #' @param n.windows Numeric. Number of time windows to divide the signal into for analysis. Default is 60.
 #' @param freq.res Numeric. Frequency resolution (Hz per bin) for the spectrogram analysis. Default is 100.
 #' @param plot Logical. If TRUE, generates a plot of the trill index over time. Default is TRUE.
 #' @param plot.title Character. The title to be used for the plot. Default is NULL.
+#' @param n.cores The number of cores to use for parallel processing. Default is
+#' 1 to use all but one core. 
 #' @param verbose Logical. If TRUE, provides detailed output during the function's execution. Default is FALSE.
 #' @return A tibble summarizing TAI statistics, including values for low and mid-frequency noise.
 
@@ -40,15 +45,17 @@ tai_folder <- function(folder = NULL,
                        end = 1,
                        unit = "minutes",
                        channel = 'each',
+                       save.csv = TRUE,
+                       save.to = NULL,
+                       csv.name = "tai_results.csv",
                        hpf = 0,
                        cutoff = -60,
                        n.windows = 120,
                        freq.res = 100,
                        plot = FALSE,
                        plot.title = NULL,
-                       verbose = TRUE,
-                       output.csv = "tai_results.csv",
-                       n.cores = -1) {
+                       n.cores = -1,
+                       verbose = TRUE) {
   cat("Working on it...\n")
   
   args_list <- list(channel = channel,
@@ -60,9 +67,20 @@ tai_folder <- function(folder = NULL,
                     plot.title = plot.title,
                     verbose = verbose)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -134,49 +152,63 @@ tai_folder <- function(folder = NULL,
   cat("Analyzing", n.files, type, "files using", num_cores, "cores... \n")
   
   # Define parallel computation
-  results <- foreach(file = audio.list, .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
+  results <- foreach(file = audio.list, .combine = rbind,
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
+                       
+                       sound <- tryCatch({
+                         readWave(file,
+                                  from = start,
+                                  to = end,
+                                  units = unit)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", file, 
+                                       "Skipping to the next file."))
+                         return(NULL) 
+                       })
+                       if (is.null(sound)) {
+                         return(NULL)
+                       }
+                       
+                       tai_result <- quiet(do.call(tai, c(list(sound), args_list)))
+                       
+                       tibble(file_name = file) |>
+                         bind_cols(tai_result)
+                     }
+  
+  stopCluster(cl)
+  setwd(original_wd)
+  
+  results <- addMetadata(results)
+  
+  if(save.csv == TRUE){
     
-    filename <- basename(file)  
+    sensor <- unique(results$sensor_id)
     
-    sound <- tryCatch({
-      readWave(file,
-               from = start,
-               to = end,
-               units = unit)
-    }, error = function(e) {
-      message(paste("Error reading file:", file, "Skipping to the next file."))
-      return(NULL) 
-    })
-    if (is.null(sound)) {
-      return(NULL)
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
+    
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
+    } else {
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
-    # Initialize an empty tibble for the results
-    result_list <- list()
-    
-    tai_result <- quiet(do.call(tai, c(list(sound), args_list))$summary)
-    
-    result_list <- list(
-      tibble(file_name = filename, tai_result)
-    )
-    
-    
-    return(do.call(rbind, result_list))
   }
   
-  # Combine all the results into a single tibble
-  combined_results <- do.call(rbind, results)
-  
-  combined_results <- addMetadata(combined_results)
-  combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
-  
-  # Export results to CSV
-  write.csv(combined_results, file = output.csv, row.names = FALSE)
-  
-  # Stop parallel cluster
-  stopCluster(cl)
-  
+  # # Combine all the results into a single tibble
+  # combined_results <- do.call(rbind, results)
+  # 
+  # combined_results <- addMetadata(combined_results)
+  # combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
+  # 
+  # # Export results to CSV
+  # write.csv(combined_results, file = csv.name, row.names = FALSE)
+  # 
+
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(combined_results)
+  return(results)
 }

@@ -11,7 +11,9 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
 #' @param csv.name The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
 #' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'each'.
 #' @param hpf High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.
@@ -29,9 +31,11 @@
 #' @param hf.max The maximum frequency (in Hz) for the high-frequency band. Default is 18000.
 #' @param uf.min The minimum frequency (in Hz) for the ultra-high-frequency band. Default is 18000.
 #' @param uf.max The maximum frequency (in Hz) for the ultra-high-frequency band. Default is 24000.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
-#'
+#' @param n.cores The number of cores to use for parallel processing. Default is
+#' 1 to use all but one core. 
+#' 
 #' @return A tibble containing the frequency cover analysis results for each file.
+#' 
 #' @export
 #' @import foreach
 #' @import seewave
@@ -52,6 +56,7 @@ fci_folder <- function(folder = NULL,
                        end = 1,
                        unit = "minutes",
                        save.csv = TRUE,
+                       save.to = NULL,
                        csv.name = "fci_results.csv",
                        channel = 'each',
                        hpf = 0,
@@ -90,9 +95,20 @@ fci_folder <- function(folder = NULL,
                     uf.max = uf.max,
                     verbose = FALSE)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -185,25 +201,30 @@ fci_folder <- function(folder = NULL,
                        
                      }
   stopCluster(cl)
+  setwd(original_wd)
   
-  resultsWithMetadata <- addMetadata(results)
+  results <- addMetadata(results)
   
-  if (save.csv){
+  if(save.csv == TRUE){
     
-    sensor <- unique(resultsWithMetadata$sensor_id)
+    sensor <- unique(results$sensor_id)
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
+    
     # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
   }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(resultsWithMetadata)
+  return(results)
 }
 

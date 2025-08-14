@@ -8,26 +8,33 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param save.csv logical. Whether to save a csv in the working directory.
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which will determine 
-#' the window length for the FFT (sampling rate / frequency resolution).
-#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", 
-#' "flattop", "hamming", "hanning", or "rectangle".
-#' @param min.freq minimum frequency to use when calculating the value, in Hertz. Default = 0.
-#' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
-#' @param j the cluster size, in seconds. Default = NA (Duration of the audio file).
-#' @param noise.red numeric; controls the application of noise reduction. If set to 1, 
-#' noise reduction is applied to each row by subtracting the median from the amplitude values. 
-#' If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.
-#' @param rm.offset logical; if set to TRUE, the function will remove DC offset before computing ADI. 
-#' Default = TRUE.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. 
-#' Default is NULL (single-core processing).
-
-
-#' @return A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and 
-#' the parameters used for the calculation.
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
+#' a file name.
+#' @param freq.res numeric. The frequency resolution to use (Hz per bin) which 
+#' will determine the window length for the FFT (sampling rate / frequency 
+#' resolution).
+#' @param win.fun window function (filter to handle spectral leakage); 
+#' "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param min.freq minimum frequency to use when calculating the value, in 
+#' Hertz. Default = 0.
+#' @param max.freq maximum frequency to use when calculating the value, in 
+#' Hertz. Default = NA (Nyquist).
+#' @param j the cluster size, in seconds. Default = NA (Duration of the audio 
+#' file).
+#' @param noise.red numeric; controls the application of noise reduction. If set 
+#' to 1, noise reduction is applied to each row by subtracting the median from 
+#' the amplitude values. If set to 2, noise reduction is applied to each column 
+#' similarly. If set to 0, noise reduction is not applied.
+#' @param rm.offset logical; if set to TRUE, the function will remove DC offset 
+#' before computing ADI. Default = TRUE.
+#' @param n.cores The number of cores to use for parallel processing. Default is 
+#' -1 to use all but one core. 
+#' 
+#' @return A tibble (data frame) with the ACI values for each channel (if 
+#' stereo), metadata, and the parameters used for the calculation.
 #' @export
 #'
 #' @import doParallel 
@@ -51,7 +58,8 @@ aci_folder <- function (folder = NULL,
                         end = 1,
                         unit = "minutes",
                         save.csv = TRUE,
-                        csv.name = "aci_results.csv",
+                        save.to = NULL,
+                        csv.name = "aci_results",
                         freq.res = 50,
                         win.fun = "hanning",
                         min.freq = NA,
@@ -70,9 +78,20 @@ aci_folder <- function (folder = NULL,
                     noise.red = noise.red,
                     rm.offset = rm.offset)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -130,7 +149,8 @@ aci_folder <- function (folder = NULL,
     expectedCompletionTime <- Sys.time() + adjustedTotalTime
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, 
+                                               "%H:%M"),"\n\n")
     
   } else {
     sound1 <- readWave(audio.list[1], 
@@ -153,7 +173,8 @@ aci_folder <- function (folder = NULL,
                                   to = end,
                                   units = unit)
                        }, error = function(e) {
-                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         message(paste("Error reading file:", file, 
+                                       "Skipping to the next file."))
                          return(NULL) 
                        })
                        if (is.null(sound)) {
@@ -161,33 +182,39 @@ aci_folder <- function (folder = NULL,
                        }
                        
                        # Calculate ACI and keep its default output columns
-                       aci_result <- quiet(do.call(aci, c(list(sound), args_list)))
+                       aci_result <- quiet(do.call(aci, c(list(sound), 
+                                                          args_list)))
                        
                        tibble(file_name = file)  |> 
                          bind_cols(aci_result)
                        
                      }
   stopCluster(cl)
+  setwd(original_wd)
   
   # Combine results with metadata and return
-  resultsWithMetadata <- addMetadata(results)
+  results <- addMetadata(results)
   
-  if (save.csv) {
-    sensor <- unique(resultsWithMetadata$sensor_id)
+  if(save.csv == TRUE){
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    sensor <- unique(results$sensor_id)
+    
+    results$datetime <- format(results$datetime, 
+                                           "%Y-%m-%d %H:%M:%S")
+    
     # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
-    
   }
-  
+
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(resultsWithMetadata)
+  return(results)
   
 }

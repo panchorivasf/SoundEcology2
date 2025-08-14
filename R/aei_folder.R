@@ -12,22 +12,36 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param save.csv logical. Whether to save a csv in the working directory.
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param frew.res the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).
-#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
+#' a file name.
+#' @param frew.res the frequency resolution  (Hz per bin) to use. From this value 
+#' the window length for the FFT will be calculated (sampling rate / frequency resolution).
+#' @param win.fun window function (filter to handle spectral leakage); "bartlett", 
+#' "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram
 #' @param max.freq maximum frequency to compute the spectrogram
 #' @param n.bands number of bands to split the spectrogram
-#' @param cutoff dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above)
-#' @param norm.spec logical. Whether to normalize the spectrogram (not recommended) or not (normalized spectrograms with different SNR are not comparable).
-#' @param noise.red numeric. noise reduction (subtract median from the amplitude values); 1=rows, 2=columns, 3=none.
-#' @param rm.offset logical. Whether to remove DC offset before computing aei (recommended) or not.
-#' @param props logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.
-#' @param prop.den numeric. Indicates how the energy proportion is calculated by manipulating the denominator.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. Default is NULL (single-core processing).
+#' @param cutoff dB threshold to calculate energy proportions (if norm.spec = 
+#' FALSE, set to 5 or above)
+#' @param norm.spec logical. Whether to normalize the spectrogram (not 
+#' recommended) or not (normalized spectrograms with different SNR are not 
+#' comparable).
+#' @param noise.red numeric. noise reduction (subtract median from the amplitude 
+#' values); 1=rows, 2=columns, 3=none.
+#' @param rm.offset logical. Whether to remove DC offset before computing aei 
+#' (recommended) or not.
+#' @param props logical. Whether to store the energy proportion values for each 
+#' frequency band and channel (default) or not.
+#' @param prop.den numeric. Indicates how the energy proportion is calculated by 
+#' manipulating the denominator.
+#' @param n.cores The number of cores to use for parallel processing. Default is 
+#' -1 to use all but one core. 
 #'
-#' @return a tibble (data frame) with the aei values for each channel (if stereo), metadata, and the parameters used for the calculation.
+#' @return a tibble (data frame) with the aei values for each channel (if stereo), 
+#' metadata, and the parameters used for the calculation.
 #' @export
 #' @details
 #' Options for prop.den:
@@ -54,7 +68,8 @@ aei_folder <- function (folder = NULL,
                         end = 1,
                         unit = "minutes",
                         save.csv = TRUE,
-                        csv.name = "aei_results.csv",
+                        save.to = NULL,
+                        csv.name = "aei_results",
                         freq.res = 50,
                         win.fun = "hanning",
                         min.freq = 0,
@@ -75,9 +90,20 @@ aei_folder <- function (folder = NULL,
                     norm.spec = norm.spec, noise.red = noise.red, rm.offset = rm.offset,
                     props = props, prop.den = prop.den,  db.fs = db.fs)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -167,30 +193,31 @@ aei_folder <- function (folder = NULL,
                        
                      }
   stopCluster(cl)
-  
+  setwd(original_wd)
   
   # Combine results with metadata and return
-  resultsWithMetadata <- addMetadata(results)
-  
-  
-
+  results <- addMetadata(results)
   
   if(save.csv == TRUE){
-
-    sensor <- unique(resultsWithMetadata$sensor_id)
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    sensor <- unique(results$sensor_id)
+    
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
+    
     # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
   }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(resultsWithMetadata)
+  return(results)
   
 }

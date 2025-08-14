@@ -14,6 +14,10 @@
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right"
 #'  to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), 
 #'  results are returned for each channel.
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals 
 #' of interest are below that threshold.
 #' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, 
@@ -21,8 +25,8 @@
 #' @param cutoff Numeric. Cutoff threshold defining the sounds that will be analyzed, in dBFS.
 #' @param activity.cutoff Numeric. Cutoff percent activity. Only the frequency bands active equal or above this 
 #' percentage will be considered as "active" in the active band statistics.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core.
-#' Default is NULL (single-core processing).
+#' @param n.cores The number of cores to use for parallel processing. Default is
+#' 1 to use all but one core. 
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
 #'
 #' @return A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI) 
@@ -49,11 +53,13 @@ nbai_folder <- function(folder = NULL,
                         end = 1,
                         unit = "minutes",
                         channel = "each",
+                        save.csv = TRUE,
+                        save.to = NULL,
+                        csv.name = "nbai_results",
                         hpf = 0,
                         freq.res = 50,
                         cutoff = -60,
                         activity.cutoff = 10, 
-                        output.csv = "nbai_results.csv",
                         n.cores = -1,
                         verbose = TRUE) {
   cat("Working on it...\n")
@@ -65,9 +71,20 @@ nbai_folder <- function(folder = NULL,
                     activity.cutoff = activity.cutoff, 
                     verbose = verbose)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -136,35 +153,79 @@ nbai_folder <- function(folder = NULL,
   
   cat("Analyzing", n.files, type, "files using", num_cores, "cores... \n")
 
-  results <- foreach(file = audio.list,
-                     .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
-                       filename <- basename(file)  
-                       sound <- readWave(file,
-                                         from = start,
-                                         to = end,
-                                         units = unit)
-                       result_list <- list()
+  # results <- foreach(file = audio.list,
+  #                    .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
+  #                      filename <- basename(file)  
+  #                      sound <- readWave(file,
+  #                                        from = start,
+  #                                        to = end,
+  #                                        units = unit)
+  #                      result_list <- list()
+  #                      
+  #                      nbai_result <- quiet(do.call(nbai, c(list(sound), args_list)))$summary
+  #                      
+  #                      result_list <- list(tibble(file_name = filename, nbai_result))
+  #                      
+  #                      return(do.call(rbind, result_list))
+  #                    }
+  results <- foreach(file = audio.list, .combine = rbind,
+                     .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
-                       nbai_result <- quiet(do.call(nbai, c(list(sound), args_list)))$summary
+                       sound <- tryCatch({
+                         readWave(file,
+                                  from = start,
+                                  to = end,
+                                  units = unit)
+                       }, error = function(e) {
+                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         return(NULL) 
+                       })
                        
-                       result_list <- list(tibble(file_name = filename, nbai_result))
+                       if (is.null(sound)) return(NULL)
                        
-                       return(do.call(rbind, result_list))
+                       nbai_result <- quiet(do.call(nbai, c(list(sound), args_list)))
+                       
+                       tibble(file_name = file)  |> 
+                         bind_cols(nbai_result)
+                       
                      }
-  
-
-  combined_results <- do.call(rbind, results)
-  combined_results <- addMetadata(combined_results)
-  
-  # Export results to CSV
-  write.csv(combined_results, file = output.csv, row.names = FALSE)
   
   # Stop parallel cluster
   stopCluster(cl)
+  setwd(original_wd)
+  
+
+  # combined_results <- do.call(rbind, results)
+  # combined_results <- addMetadata(combined_results)
+  # 
+  # # Export results to CSV
+  # write.csv(combined_results, file = csv.name, row.names = FALSE)
+
+  # Combine results with metadata and return
+  results <- addMetadata(results)
+  
+  
+  if(save.csv == TRUE){
+    
+    sensor <- unique(results$sensor_id)
+    
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
+    
+    # Export results to CSV
+    if (length(sensor) == 1){
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
+    } else {
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
+    }
+    
+  }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(combined_results)
+  return(results)
 }
 
 

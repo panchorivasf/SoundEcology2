@@ -13,16 +13,18 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name. 
-#' Default name is "ndsi_results.csv"
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
 #' @param w.len numeric. Window length for the FFT (sampling rate / frequency resolution).
 #' @param anthro.min minimum value of the range of frequencies of the anthrophony.
 #' @param anthro.max maximum value of the range of frequencies of the anthrophony.
 #' @param bio.min minimum value of the range of frequencies of the biophony.
 #' @param bio.max maximum value of the range of frequencies of the biophony.
 #' @param rm.offset logical. Whether to remove the DC offset.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all 
-#' but one core. Default is NULL (single-core processing).
+#' @param n.cores The number of cores to use for parallel processing. Default is
+#' 1 to use all but one core. 
 #'
 #' @return a wide format tibble with NDSI values per channel (if stereo), parameters used and audio 
 #' metadata
@@ -48,7 +50,8 @@ ndsi_folder <- function (folder = NULL,
                          end = 1,
                          unit = "minutes",
                          save.csv = TRUE,
-                         csv.name = "ndsi_results.csv",
+                         save.to = NULL,
+                         csv.name = "ndsi_results",
                          w.len = 512,
                          anthro.min = 1000,
                          anthro.max = 2000,
@@ -66,9 +69,20 @@ ndsi_folder <- function (folder = NULL,
                     bio.max = bio.max,
                     rm.offset = rm.offset)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -161,25 +175,31 @@ ndsi_folder <- function (folder = NULL,
                          bind_cols(ndsi_result)
                      }
   stopCluster(cl)
+  setwd(original_wd)
   
   # Combine results with metadata and return
-  resultsWithMetadata <- addMetadata(results)
+  results <- addMetadata(results)
   
   if(save.csv == TRUE){
-    sensor <- unique(resultsWithMetadata$sensor_id)
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    sensor <- unique(results$sensor_id)
+    
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
+    
     # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
   }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(resultsWithMetadata)
+  return(results)
   
 }

@@ -17,7 +17,9 @@
 #' @param channel Character. If Wave is stereo and you want to use only one channel, pass either 
 #' "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". 
 #' If NULL (default), results are returned for each channel.
-#' @param save.csv logical. Whether to save a csv in the working directory.
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
 #' @param csv.name Character. Name for the csv file. Default is "bbai_results.csv".
 #' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless 
 #' signals of interest are below that threshold.
@@ -37,10 +39,11 @@
 #' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. 
 #' Default is NULL (single-core processing).
 #' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
-#' @param n.cores Numeric. Number of cores to be used in parallel. Use -1 (Default) to use all but one. 
+#' @param n.cores Numeric. Number of cores to be used in parallel. Default is
+#'  -1 to use all but one. 
 #' 
 #' @return A tibble.
-
+#' 
 #' @export
 #'
 #' @import doParallel
@@ -63,7 +66,8 @@ bbai_folder <- function(folder = NULL,
                         unit = "minutes",
                         channel = 'each',
                         save.csv = TRUE,
-                        csv.name = "bbai_results.csv",
+                        save.to = NULL,
+                        csv.name = "bbai_results",
                         hpf = 0,
                         freq.res = 50,
                         cutoff = -60,
@@ -90,9 +94,20 @@ bbai_folder <- function(folder = NULL,
                     plot.title = plot.title,
                     verbose = verbose)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -181,25 +196,30 @@ bbai_folder <- function(folder = NULL,
                      }
   
   stopCluster(cl)
+  setwd(original_wd)
   
-  resultsWithMetadata <- addMetadata(results)
+  results <- addMetadata(results)
   
   # Export results to CSV
   if(save.csv == TRUE){
     
-    sensor <- unique(resultsWithMetadata$sensor_id)
+    sensor <- unique(results$sensor_id)
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
     
+    # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
   }
   
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
   
-  return(resultsWithMetadata)
+  return(results)
 }

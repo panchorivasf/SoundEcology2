@@ -15,10 +15,12 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param save.csv logical. Whether to save a csv in the working directory.
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param w.len the window length to compute the spectrogram (i.e., FFT window size).
-#' @param w.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", 
+#' @param save.csv logical. Whether to save a CSV output.
+#' @param save.to character. Path to where the output CSV will be saved. Default
+#' is NULL (save in working directory).
+#' @param csv.name character. When 'save.csv' is TRUE, optionally provide a file name.
+#' @param w.len numeric. The window length to compute the spectrogram (i.e., FFT window size).
+#' @param w.fun character. The window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", 
 #' "hamming", "hanning", or "rectangle".
 #' @param min.freq miminum frequency to use when calculating the value, in Hertz. Default = NA.
 #' @param max.freq maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).
@@ -28,9 +30,9 @@
 #' to each row by subtracting the median from the amplitude values. If set to 2, noise reduction is applied to each 
 #' column similarly. If set to 0 (Default), noise reduction is not applied.
 #' @param rm.offset logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. 
-#' Default is NULL (single-core processing).
-
+#' @param n.cores The number of cores to use for parallel processing. Default is
+#' -1 to use all but one core.
+#' 
 #' @return A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used 
 #' for the calculation.
 #' @export
@@ -57,6 +59,7 @@ bi_folder <- function (folder = NULL,
                        unit = "minutes",
                        list = NULL,
                        save.csv = TRUE,
+                       save.to = NULL,
                        csv.name = "bi_results.csv",
                        w.len = 512,
                        w.fun = "hanning",
@@ -76,9 +79,20 @@ bi_folder <- function (folder = NULL,
                     noise.red = noise.red,
                     rm.offset = rm.offset)
   
-  if(is.null(folder)){
+  original_wd <- getwd()
+  
+  if(is.null(folder)) {
     folder <- getwd()
   }
+  
+  if(is.null(save.to)){
+    save.to <- folder
+  }
+  
+  if(!dir.exists(save.to)){
+    dir.create(save.to)
+  }
+  
   setwd(folder)
   
   if(is.null(list)){
@@ -164,32 +178,37 @@ bi_folder <- function (folder = NULL,
                        
                        bi_result <- quiet(do.call(bi, c(list(sound), args_list)))
                        
-                       tibble(file_name = file) %>%
+                       tibble(file_name = file)  |> 
                          bind_cols(bi_result)
                        
                      }
 
   stopCluster(cl)
+  setwd(original_wd)
   
   # Combine results with metadata and return
-  resultsWithMetadata <- addMetadata(results)
+  results <- addMetadata(results)
   
   if(save.csv == TRUE){
-
-    sensor <- unique(resultsWithMetadata$sensor_id)
     
-    resultsWithMetadata$datetime <- format(resultsWithMetadata$datetime, "%Y-%m-%d %H:%M:%S")
+    sensor <- unique(results$sensor_id)
+    
+    results$datetime <- format(results$datetime, 
+                               "%Y-%m-%d %H:%M:%S")
+    
     # Export results to CSV
     if (length(sensor) == 1){
-      write.csv(resultsWithMetadata, file = paste0(sensor,"_",csv.name), row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", sensor,"_", 
+                                       csv.name, ".csv"), row.names = FALSE)
     } else {
-      write.csv(resultsWithMetadata, file = csv.name, row.names = FALSE)
+      write.csv(results, file = paste0(save.to, "/", csv.name, ".csv"), 
+                row.names = FALSE)
     }
     
   }
 
   cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
 
-  return(resultsWithMetadata)
+  return(results)
 
 }

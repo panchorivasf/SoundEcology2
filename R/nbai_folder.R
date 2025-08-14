@@ -1,37 +1,47 @@
-#' Narrow-Band Activity Index for Files in a Folder
+#' Narrow-Band Activity Index - Batch process
 #' @description
-#' NBAI describes the relative amount of narrow-band persistent sound activity, like that of Cicadas and Orthopterans. 
-#' This index can be used to evaluate insect activity and their influence on other soundscape metrics (e.g., summary
-#' acoustic indices).
+#' NBAI describes the relative amount of narrow-band persistent sound activity, 
+#' like that of Cicadas and Orthopterans. This index can be used to evaluate 
+#' insect activity and their influence on other soundscape metrics (e.g., 
+#' summary acoustic indices).
 #'
-#' @param folder Character. The path to the folder containing the wave files to analyze.
+#' @param folder Character. The path to the folder containing the wave files to 
+#' analyze.
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param list An optional list (subset) of files in the folder to analyze. 
 #' @param start numerical. Where to start reading the Wave. 
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right"
-#'  to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), 
-#'  results are returned for each channel.
+#' @param channel Character. If Wave is stereo and you want to use only one 
+#' channel, pass either `left` or `right`  to this argument. If you want to 
+#' analyze a mix of both channels, select `mix`. If NULL (default), results are 
+#' returned for each channel.
 #' @param save.csv logical. Whether to save a CSV output.
 #' @param save.to character. Path to where the output CSV will be saved. Default
 #' is NULL (save in working directory).
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals 
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
+#' a file name.
+#' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used 
+#' always for consistency unless signals 
 #' of interest are below that threshold.
-#' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, 
-#' therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param cutoff Numeric. Cutoff threshold defining the sounds that will be analyzed, in dBFS.
-#' @param activity.cutoff Numeric. Cutoff percent activity. Only the frequency bands active equal or above this 
-#' percentage will be considered as "active" in the active band statistics.
+#' @param freq.res Numeric. Frequency resolution in Hz. This value determines 
+#' the "height" of each frequency bin and, 
+#' therefore, the window length to be used (sampling rate / frequency 
+#' resolution).
+#' @param cutoff Numeric. Cutoff threshold defining the sounds that will be 
+#' analyzed, in dBFS.
+#' @param activity.cutoff Numeric. Cutoff percent activity. Only the frequency 
+#' bands active equal or above this percentage will be considered as "active" in 
+#' the active band statistics.
 #' @param n.cores The number of cores to use for parallel processing. Default is
 #' 1 to use all but one core. 
-#' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
+#' @param verbose Logical. If TRUE, details of dynamic range will be printed on 
+#' the console.
 #'
-#' @return A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI) 
-#' summary statistics, and 3) a tibble with NBI spectral, which number of rows equals the number of frequency bins 
-#' in the analysis.
+#' @return A list containing: 1) A binary spectrogram (if mono), 2) tibble with 
+#' the NBAI summary statistics, and 3) a tibble with NBI spectral, which number 
+#' of rows equals the number of frequency bins in the analysis.
 #' @export
 #'
 #' @import doParallel 
@@ -100,12 +110,12 @@ nbai_folder <- function(folder = NULL,
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
-    num_cores <- parallel::detectCores() - 1 # Leave one core free 
+    num_cores <- parallel::detectCores() - 1 
   }else{
     num_cores <- n.cores
   } 
   if (num_cores > n.files){
-    num_cores <- n.files  # Limit the number of cores to the number of files
+    num_cores <- n.files  
   }
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
@@ -143,7 +153,8 @@ nbai_folder <- function(folder = NULL,
     expectedCompletionTime <- Sys.time() + adjustedTotalTime
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),
+        "\n\n")
     
   } else {
     sound1 <- readWave(audio.list[1], from = start, to = end , units = unit)
@@ -153,21 +164,6 @@ nbai_folder <- function(folder = NULL,
   
   cat("Analyzing", n.files, type, "files using", num_cores, "cores... \n")
 
-  # results <- foreach(file = audio.list,
-  #                    .packages = c("tuneR", "seewave", "dplyr")) %dopar% {
-  #                      filename <- basename(file)  
-  #                      sound <- readWave(file,
-  #                                        from = start,
-  #                                        to = end,
-  #                                        units = unit)
-  #                      result_list <- list()
-  #                      
-  #                      nbai_result <- quiet(do.call(nbai, c(list(sound), args_list)))$summary
-  #                      
-  #                      result_list <- list(tibble(file_name = filename, nbai_result))
-  #                      
-  #                      return(do.call(rbind, result_list))
-  #                    }
   results <- foreach(file = audio.list, .combine = rbind,
                      .packages = c("tuneR", "dplyr", "seewave")) %dopar% {
                        
@@ -177,16 +173,23 @@ nbai_folder <- function(folder = NULL,
                                   to = end,
                                   units = unit)
                        }, error = function(e) {
-                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         message(paste("Error reading file:", file, 
+                                       "Skipping to the next file."))
                          return(NULL) 
                        })
                        
                        if (is.null(sound)) return(NULL)
                        
-                       nbai_result <- quiet(do.call(nbai, c(list(sound), args_list)))
+                       nbai_result <- quiet(do.call(nbai, c(list(sound), 
+                                                            args_list)))
                        
-                       tibble(file_name = file)  |> 
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(nbai_result)
+                       
+                       rm(sound, nbai_result)
+                       gc()
+                       
+                       return(result)
                        
                      }
   
@@ -194,13 +197,6 @@ nbai_folder <- function(folder = NULL,
   stopCluster(cl)
   setwd(original_wd)
   
-
-  # combined_results <- do.call(rbind, results)
-  # combined_results <- addMetadata(combined_results)
-  # 
-  # # Export results to CSV
-  # write.csv(combined_results, file = csv.name, row.names = FALSE)
-
   # Combine results with metadata and return
   results <- addMetadata(results)
   
@@ -223,7 +219,8 @@ nbai_folder <- function(folder = NULL,
     
   }
   
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), 
+            "\n\n"))
   
   return(results)
 }

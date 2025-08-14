@@ -1,10 +1,11 @@
-#' Calculate BBAI for all the Files in a Folder
+#' Broad Band Activity Index - Batch process
 #'
-#' This function processes an sound signal to detect broadband activity by identifying 'clicks' based on 
-#' time-frame-wise (i.e., column-wise) amplitude changes in the spectrogram. It computes statistics related 
-#' to click height, variance, and centroid frequency, and can plot a spectrogram with detected clicks highlighted. 
-#' The function also classifies whether the signal contains noise or insect based on the variance and centroid 
-#' frequencies of the clicks.
+#' This function processes an sound signal to detect broadband activity by 
+#' identifying 'clicks' based on time-frame-wise (i.e., column-wise) amplitude 
+#' changes in the spectrogram. It computes statistics related to click height, 
+#' variance, and centroid frequency, and can plot a spectrogram with detected 
+#' clicks highlighted. The function also classifies whether the signal contains 
+#' noise or insect based on the variance and centroid frequencies of the clicks.
 #'
 #' @param folder Character. The path to a folder with the wave files to analyze.
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
@@ -12,33 +13,41 @@
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
-#' @param channel Character. If Wave is stereo and you want to use only one channel, pass either 
-#' "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". 
-#' If NULL (default), results are returned for each channel.
+#' @param list An optional list (subset) of files in the folder to analyze. If 
+#' provided, files outside the list will be excluded. 
+#' @param channel Character. If Wave is stereo and you want to use only one 
+#' channel, pass either "left" or "right" to this argument. If you want to 
+#' analyze a mix of both channels, select "mix". If NULL (default), results are 
+#' returned for each channel.
 #' @param save.csv logical. Whether to save a CSV output.
 #' @param save.to character. Path to where the output CSV will be saved. Default
 #' is NULL (save in working directory).
-#' @param csv.name Character. Name for the csv file. Default is "bbai_results.csv".
-#' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless 
-#' signals of interest are below that threshold.
-#' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency 
-#' bin and, therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param cutoff Numeric. The amplitude threshold (in dBFS) for removing low-amplitude values in the spectrogram. 
-#' Default is `-50`.
-#' @param click.height Numeric. The minimum height (in frequency bins) for a detected click to be kept. 
-#' Default is `10`.
-#' @param difference Numeric. The maximum difference in amplitude between adjacent frequency bins to be 
-#' considered part of a single 'click'. Default is `20`.
-#' @param gap.allowance Numeric. The size of gaps (in frequency bins) allowed between contiguous parts of a click.
-#'  Default is `2`. Gaps larger than this value will split clicks.
-#' @param spectrogram Logical. Should a spectrogram with highlighted clicks be plotted? Default is `TRUE`.
-#' @param dark.plot Logical. Should the plot use a dark theme (black background)? Default is `FALSE`.
-#' @param plot.title Character. The title for the plot, if `plot` is `TRUE`. Default is `NULL`.
-#' @param n.cores The number of cores to use for parallel processing. Use `n.cores = -1` to use all but one core. 
-#' Default is NULL (single-core processing).
-#' @param verbose Logical. If TRUE, details of dynamic range will be printed on the console.
+#' @param csv.name Character. Name for the csv file. Default is "bbai_results".
+#' @param hpf Numeric. High-pass filter. The default (500 Hz) should be used
+#' always for consistency unless signals of interest are below that threshold.
+#' @param freq.res Numeric. Frequency resolution in Hz. This value determines 
+#' the "height" of each frequency bin and, therefore, the window length to be 
+#' used (sampling rate / frequency resolution).
+#' @param cutoff Numeric. The amplitude threshold (in dBFS) for removing 
+#' low-amplitude values in the spectrogram. Default is -60.
+#' @param click.height Numeric. The minimum height (in frequency bins) for a 
+#' detected click to be kept. Default is 10.
+#' @param difference Numeric. The maximum difference in amplitude between 
+#' adjacent frequency bins to be considered part of a single 'click'. Default is 
+#' 20.
+#' @param gap.allowance Numeric. The size of gaps (in frequency bins) allowed 
+#' between contiguous parts of a click. Gaps larger than this value will split 
+#' clicks. Default is 2. 
+#' @param spectrogram Logical. Should a spectrogram with highlighted clicks be 
+#' plotted? Default is `TRUE`.
+#' @param dark.plot Logical. Whether to use a dark theme (black background) when
+#' `spectrogram = TRUE`. Default is `FALSE`.
+#' @param plot.title Character. The title for the plot, `spectrogram = TRUE`. 
+#' Default is `NULL`.
+#' @param n.cores The number of cores to use for parallel processing. Default is
+#' -1 to use all but one core. 
+#' @param verbose Logical. If TRUE, details of dynamic range will be printed on 
+#' the console.
 #' @param n.cores Numeric. Number of cores to be used in parallel. Default is
 #'  -1 to use all but one. 
 #' 
@@ -160,7 +169,8 @@ bbai_folder <- function(folder = NULL,
     # Set up parallel processing
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),
+        "\n\n")
     
   } else {
     sound1 <- readWave(audio.list[1], from = 0, to = 2 , units ='seconds')
@@ -188,10 +198,16 @@ bbai_folder <- function(folder = NULL,
                          return(NULL)
                        }
                        
-                       bbai_result <- quiet(do.call(bbai, c(list(sound), args_list)))
+                       bbai_result <- quiet(do.call(bbai, c(list(sound), 
+                                                            args_list)))
                        
-                       tibble(file_name = file) |>
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(bbai_result)
+                       
+                       rm(sound, bbai_result)
+                       gc()
+                       
+                       return(result)
                        
                      }
   
@@ -219,7 +235,8 @@ bbai_folder <- function(folder = NULL,
     
   }
   
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), 
+            "\n\n"))
   
   return(results)
 }

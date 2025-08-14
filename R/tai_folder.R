@@ -1,30 +1,45 @@
-#' Calculate Trill Activity Index for all the Files in a Folder
+#' Trill Activity Index - Batch process
+#' 
+#' This function calculates the trill index of an sound wave object by analyzing 
+#' the frequency modulation pattern over time. It can operate in either binary 
+#' or continuous modes and provides options for generating visual plots of the 
+#' trill activity. The function also identifies potential noise issues in the 
+#' low- and mid-frequency ranges.
 #'
-#' This function calculates the trill index of an sound wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
-#'
-#' @param folder Character. The path to the folder containing the WAV files to analyze.
+#' @param folder Character. The path to the folder containing the WAV files to 
+#' analyze.
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
+#' @param list An optional list (subset) of files in the folder to analyze. If 
+#' provided, files outside the list will be excluded. 
 #' @param start Numeric. Where to start reading the Wave. 
 #' @param end Numeric. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
 #' 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.
 #' @param hpf Numeric. Whether to use a high-pass filter. Default is 0.
-#' @param channel Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right" to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default), results are returned for each channel.
+#' @param channel Character. If Wave is stereo and you want to use only one 
+#' channel, pass either "left" or "right" to this argument. If you want to 
+#' analyze a mix of both channels, select "mix". If NULL (default), results are 
+#' returned for each channel.
 #' @param save.csv logical. Whether to save a CSV output.
 #' @param save.to character. Path to where the output CSV will be saved. Default
 #' is NULL (save in working directory).
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
+#' a file name.
 #' @param cutoff Numeric. The cutoff in decibels for the spectrogram generation.
-#' @param n.windows Numeric. Number of time windows to divide the signal into for analysis. Default is 60.
-#' @param freq.res Numeric. Frequency resolution (Hz per bin) for the spectrogram analysis. Default is 100.
-#' @param plot Logical. If TRUE, generates a plot of the trill index over time. Default is TRUE.
-#' @param plot.title Character. The title to be used for the plot. Default is NULL.
+#' @param n.windows Numeric. Number of time windows to divide the signal into 
+#' for analysis. Default is 60.
+#' @param freq.res Numeric. Frequency resolution (Hz per bin) for the 
+#' spectrogram analysis. Default is 100.
+#' @param plot Logical. If TRUE, generates a plot of the trill index over time. 
+#' Default is TRUE.
+#' @param plot.title Character. The title to be used for the plot. Default is 
+#' NULL.
 #' @param n.cores The number of cores to use for parallel processing. Default is
 #' 1 to use all but one core. 
-#' @param verbose Logical. If TRUE, provides detailed output during the function's execution. Default is FALSE.
-#' @return A tibble summarizing TAI statistics, including values for low and mid-frequency noise.
+#' @param verbose Logical. If TRUE, provides detailed output during the 
+#' function's execution. Default is FALSE.
+#' @return A tibble summarizing TAI statistics, including values for low and 
+#' mid-frequency noise.
 
 #' @export
 #'
@@ -47,7 +62,7 @@ tai_folder <- function(folder = NULL,
                        channel = 'each',
                        save.csv = TRUE,
                        save.to = NULL,
-                       csv.name = "tai_results.csv",
+                       csv.name = "tai_results",
                        hpf = 0,
                        cutoff = -60,
                        n.windows = 120,
@@ -138,7 +153,8 @@ tai_folder <- function(folder = NULL,
     expectedCompletionTime <- Sys.time() + adjustedTotalTime
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", 
+        format(expectedCompletionTime, "%H:%M"),"\n\n")
     
   } else {
     sound1 <- readWave(audio.list[1], 
@@ -169,10 +185,16 @@ tai_folder <- function(folder = NULL,
                          return(NULL)
                        }
                        
-                       tai_result <- quiet(do.call(tai, c(list(sound), args_list)))
+                       tai_result <- quiet(do.call(tai, c(list(sound), 
+                                                          args_list)))
                        
-                       tibble(file_name = file) |>
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(tai_result)
+                       
+                       rm(sound, tai_result)
+                       gc()
+                       
+                       return(result)
                      }
   
   stopCluster(cl)
@@ -197,18 +219,9 @@ tai_folder <- function(folder = NULL,
     }
     
   }
-  
-  # # Combine all the results into a single tibble
-  # combined_results <- do.call(rbind, results)
-  # 
-  # combined_results <- addMetadata(combined_results)
-  # combined_results$datetime <- format(combined_results$datetime, "%Y-%m-%d %H:%M:%S")
-  # 
-  # # Export results to CSV
-  # write.csv(combined_results, file = csv.name, row.names = FALSE)
-  # 
 
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), 
+                                                 "%H:%M:%S"), "\n\n"))
   
   return(results)
 }

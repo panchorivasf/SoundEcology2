@@ -1,11 +1,13 @@
-#' Frequency Cover Indices on Multiple WAV Files in a Folder
+#' Frequency Cover Indices - Batch process
 #'
-#' This function performs a frequency cover indices (FCI) on all WAV files within a specified folder.
-#' It processes each sound file in parallel (if specified) and saves the results in a CSV file.
+#' This function performs a frequency cover indices (FCI) on all WAV files 
+#' within a specified folder. It processes each sound file in parallel (if 
+#' specified) and saves the results in a CSV file.
 #'
 #' @param folder The folder containing the WAV files to analyze.
 #' @param recursive Logical. Whether to search in subfolders. Default is FALSE.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
+#' @param list An optional list (subset) of files in the folder to analyze. If 
+#' provided, 
 #' files outside the list will be excluded. 
 #' @param start numerical. Where to start reading the Wave. 
 #' @param end numerical. Where to end reading the Wave.
@@ -14,27 +16,45 @@
 #' @param save.csv logical. Whether to save a CSV output.
 #' @param save.to character. Path to where the output CSV will be saved. Default
 #' is NULL (save in working directory).
-#' @param csv.name The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".
-#' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'each'.
-#' @param hpf High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.
-#' @param cutoff The amplitude threshold (in dB) below which frequencies will be considered inactive. Default is -60.
-#' @param freq.res Frequency resolution of the spectrogram in Hz. Default is 100.
-#' @param plot Logical. Whether to generate plots for each file. Default is FALSE.
-#' @param ggplot Logical. Whether to use ggplot2 for plotting (if plot is TRUE). Default is FALSE.
-#' @param plot.title Title for the plot if plotting is enabled. Default is "Frequency Cover Analysis".
-#' @param sound.color The color to use for active frequencies in the plot. Default is "#045E10" (a dark green shade).
-#' @param lf.min The minimum frequency (in Hz) for the low-frequency band. Default is 0.
-#' @param lf.max The maximum frequency (in Hz) for the low-frequency band. Default is 1500.
-#' @param mf.min The minimum frequency (in Hz) for the mid-frequency band. Default is 1500.
-#' @param mf.max The maximum frequency (in Hz) for the mid-frequency band. Default is 8000.
-#' @param hf.min The minimum frequency (in Hz) for the high-frequency band. Default is 8000.
-#' @param hf.max The maximum frequency (in Hz) for the high-frequency band. Default is 18000.
-#' @param uf.min The minimum frequency (in Hz) for the ultra-high-frequency band. Default is 18000.
-#' @param uf.max The maximum frequency (in Hz) for the ultra-high-frequency band. Default is 24000.
+#' @param csv.name The name of the CSV file where results will be saved. Default 
+#' is "frequency_cover_results.csv".
+#' @param channel The channel to analyze: 'left', 'right', 'mix' (combine both), 
+#' or 'each' (process left and right channels separately). Default is 'each'.
+#' @param hpf High-pass filter cutoff frequency in Hz. If 0, no high-pass filter 
+#' is applied. Default is 0.
+#' @param cutoff The amplitude threshold (in dB) below which frequencies will be 
+#' considered inactive. Default is -60.
+#' @param freq.res Frequency resolution of the spectrogram in Hz. Default is 
+#' 100.
+#' @param plot Logical. Whether to generate plots for each file. Default is 
+#' FALSE.
+#' @param ggplot Logical. Whether to use ggplot2 for plotting (if plot is TRUE). 
+#' Default is FALSE.
+#' @param plot.title Title for the plot if plotting is enabled. Default is 
+#' "Frequency Cover Analysis".
+#' @param sound.color The color to use for active frequencies in the plot. 
+#' Default is "#045E10" (a dark green shade).
+#' @param lf.min The minimum frequency (in Hz) for the low-frequency band. 
+#' Default is 0.
+#' @param lf.max The maximum frequency (in Hz) for the low-frequency band. 
+#' Default is 1500.
+#' @param mf.min The minimum frequency (in Hz) for the mid-frequency band. 
+#' Default is 1500.
+#' @param mf.max The maximum frequency (in Hz) for the mid-frequency band. 
+#' Default is 8000.
+#' @param hf.min The minimum frequency (in Hz) for the high-frequency band. 
+#' Default is 8000.
+#' @param hf.max The maximum frequency (in Hz) for the high-frequency band. 
+#' Default is 18000.
+#' @param uf.min The minimum frequency (in Hz) for the ultra-high-frequency 
+#' band. Default is 18000.
+#' @param uf.max The maximum frequency (in Hz) for the ultra-high-frequency 
+#' band. Default is 24000.
 #' @param n.cores The number of cores to use for parallel processing. Default is
 #' 1 to use all but one core. 
 #' 
-#' @return A tibble containing the frequency cover analysis results for each file.
+#' @return A tibble containing the frequency cover analysis results for each 
+#' file.
 #' 
 #' @export
 #' @import foreach
@@ -46,7 +66,8 @@
 #' @examples
 #' \dontrun{
 #' # Run frequency cover analysis on all WAV files in the folder "sound_files"
-#' fci_folder("sound_files", csv.name = "results.csv", channel = "left", n.cores = 4)
+#' fci_folder("sound_files", csv.name = "results.csv", channel = "left", 
+#' n.cores = 4)
 #' }
 
 fci_folder <- function(folder = NULL,
@@ -57,7 +78,7 @@ fci_folder <- function(folder = NULL,
                        unit = "minutes",
                        save.csv = TRUE,
                        save.to = NULL,
-                       csv.name = "fci_results.csv",
+                       csv.name = "fci_results",
                        channel = 'each',
                        hpf = 0,
                        cutoff = -60,
@@ -185,19 +206,26 @@ fci_folder <- function(folder = NULL,
                                   to = end,
                                   units = unit)
                        }, error = function(e) {
-                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         message(paste("Error reading file:", file, 
+                                       "Skipping to the next file."))
                          return(NULL) 
                        })
                        
-                       # Skip processing if the sound is NULL (i.e., readWave failed)
+                       # Skip processing if the sound is NULL 
                        if (is.null(sound)) {
                          return(NULL)
                        }
                        
-                       fci_result <- quiet(do.call(fci, c(list(sound), args_list)))
+                       fci_result <- quiet(do.call(fci, c(list(sound), 
+                                                          args_list)))
                        
-                       tibble(file_name = file)|> 
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(fci_result)
+                       
+                       rm(sound, fci_result)
+                       gc()
+                       
+                       return(result)
                        
                      }
   stopCluster(cl)
@@ -223,7 +251,8 @@ fci_folder <- function(folder = NULL,
     
   }
   
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), 
+            "\n\n"))
   
   return(results)
 }

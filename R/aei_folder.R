@@ -1,12 +1,12 @@
-#' Acoustic Evenness Index - folder input
+#' Acoustic Evenness Index - Batch process
 #' @description
-#' Calculates the Acoustic Evenness Index for all the files in a folder, with extended parameter options.
-#' It uses parallel processing with all but one of the available cores.
-#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
+#' Calculates the Acoustic Evenness Index for all the files in a folder, with 
+#' extended parameter options. It uses parallel processing with all but one of 
+#' the available cores.
 #'
 #' @param folder a path to the folder with audio files to import.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
+#' @param list An optional list (subset) of files in the folder to analyze. If 
+#' provided, files outside the list will be excluded. 
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param start numerical. Where to start reading the Wave. 
 #' @param end numerical. Where to end reading the Wave.
@@ -17,10 +17,11 @@
 #' is NULL (save in working directory).
 #' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
 #' a file name.
-#' @param frew.res the frequency resolution  (Hz per bin) to use. From this value 
-#' the window length for the FFT will be calculated (sampling rate / frequency resolution).
-#' @param win.fun window function (filter to handle spectral leakage); "bartlett", 
-#' "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param frew.res the frequency resolution  (Hz per bin) to use. From this 
+#' value the window length for the FFT will be calculated (sampling rate / 
+#' frequency resolution).
+#' @param win.fun window function (filter to handle spectral leakage); 
+#' "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram
 #' @param max.freq maximum frequency to compute the spectrogram
 #' @param n.bands number of bands to split the spectrogram
@@ -40,17 +41,24 @@
 #' @param n.cores The number of cores to use for parallel processing. Default is 
 #' -1 to use all but one core. 
 #'
-#' @return a tibble (data frame) with the aei values for each channel (if stereo), 
-#' metadata, and the parameters used for the calculation.
+#' @return a tibble (data frame) with the aei values for each channel (if 
+#' stereo), metadata, and the parameters used for the calculation.
 #' @export
 #' @details
 #' Options for prop.den:
-#' 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
-#' 2 = The "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
-#' 3 = The "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
+#' 1 = The original calculation from the "soundecology" package is applied. The 
+#' denominator of the proportion equals to all the cells in the same frequency 
+#' band.
+#' 2 = The "whole population across species" equals the cells above the decibel 
+#' threshold across the spectrogram (up to 'max.freq')
+#' 3 = The "whole population across species" equals the cells above the decibel 
+#' threshold across the whole spectrogram (up to the Nyquist frequency. This 
+#' might return a smaller range of values.
 #' It uses parallel processing with all but one of the available cores.
-#' Optimized to facilitate working with a list of audio files before importing them into R.
-#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
+#' Optimized to facilitate working with a list of audio files before importing 
+#' them into R.
+#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) 
+#' April 2024
 #'
 #' @import doParallel 
 #' @import foreach
@@ -87,8 +95,9 @@ aei_folder <- function (folder = NULL,
   
   args_list <- list(freq.res = freq.res, win.fun = win.fun, min.freq = min.freq,
                     max.freq = max.freq, n.bands = n.bands, cutoff = cutoff,
-                    norm.spec = norm.spec, noise.red = noise.red, rm.offset = rm.offset,
-                    props = props, prop.den = prop.den,  db.fs = db.fs)
+                    norm.spec = norm.spec, noise.red = noise.red, 
+                    rm.offset = rm.offset, props = props, prop.den = prop.den,  
+                    db.fs = db.fs)
   
   original_wd <- getwd()
   
@@ -158,7 +167,8 @@ aei_folder <- function (folder = NULL,
     expectedCompletionTime <- Sys.time() + adjustedTotalTime
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),
+        "\n\n")
     
   } else {
     sound1 <- readWave(audio.list[1], to = 2, units = "seconds")
@@ -185,11 +195,17 @@ aei_folder <- function (folder = NULL,
                        
                        
                        # Calculate AEI and keep its default output columns
-                       aei_result <- quiet(do.call(aei, c(list(sound), args_list)))
+                       aei_result <- quiet(do.call(aei, c(list(sound), 
+                                                          args_list)))
                        
                        # Combine the results for each file into a single row
-                       tibble(file_name = file) |>
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(aei_result)
+                       
+                       rm(sound, aei_result)
+                       gc()
+                       
+                       return(result)
                        
                      }
   stopCluster(cl)
@@ -216,7 +232,8 @@ aei_folder <- function (folder = NULL,
     
   }
   
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), 
+            "\n\n"))
   
   return(results)
   

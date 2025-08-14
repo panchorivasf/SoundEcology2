@@ -17,10 +17,9 @@ addMetadata <- function(df){
     stop("The dataframe must include a 'file_name' column.")
   }
 
-  df$datetime <- sapply(strsplit(df$file_name, "[_]"), function(x) paste(x[2], gsub(".wav", "", x[3]), sep = " "))
-
-  # filter out the '.wav' extension
-  # df$datetime <- gsub("\\.wav$", "", df$datetime)
+  df$datetime <- sapply(strsplit(df$file_name, "[_]"), 
+                        function(x) paste(x[2], gsub(".wav", "", x[3]), 
+                                          sep = " "))
 
   # transform to date time format
   df$datetime <- lubridate::as_datetime(df$datetime, format = "%Y%m%d %H%M%S")

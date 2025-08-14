@@ -1,11 +1,12 @@
-#' Normalized Difference Soundscape Index - folder input
+#' Normalized Difference Soundscape Index - Batch process
 #' @description
 #' Normalized Difference Soundscape Index (NDSI) from Kasten et al.,
 #' et al. 2012. The NDSI seeks to "estimate the level of anthropogenic
 #' disturbance on the soundscape by computing the ratio of human-generated
 #' (anthrophony) to biological (biophony) acoustic components found in field
 #' collected sound samples" (Kasten, et al. 2012).
-#' This version is optimized to work with a path to the folder containing the audio files.
+#' This version is optimized to work with a path to the folder containing the 
+#' audio files.
 #' @param folder a path to the folder containing the audio files.
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param list An optional list (subset) of files in the folder to analyze. 
@@ -16,18 +17,25 @@
 #' @param save.csv logical. Whether to save a CSV output.
 #' @param save.to character. Path to where the output CSV will be saved. Default
 #' is NULL (save in working directory).
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param w.len numeric. Window length for the FFT (sampling rate / frequency resolution).
-#' @param anthro.min minimum value of the range of frequencies of the anthrophony.
-#' @param anthro.max maximum value of the range of frequencies of the anthrophony.
-#' @param bio.min minimum value of the range of frequencies of the biophony.
-#' @param bio.max maximum value of the range of frequencies of the biophony.
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
+#' a file name.
+#' @param w.len numeric. Window length for the FFT (sampling rate / frequency 
+#' resolution).
+#' @param anthro.min minimum value of the range of frequencies of the 
+#' anthrophony.
+#' @param anthro.max maximum value of the range of frequencies of the 
+#' anthrophony.
+#' @param bio.min minimum value of the range of frequencies of the 
+#' biophony.
+#' @param bio.max maximum value of the range of frequencies of the 
+#' biophony.
 #' @param rm.offset logical. Whether to remove the DC offset.
 #' @param n.cores The number of cores to use for parallel processing. Default is
 #' 1 to use all but one core. 
 #'
-#' @return a wide format tibble with NDSI values per channel (if stereo), parameters used and audio 
-#' metadata
+#' @return a wide format tibble with NDSI values per channel (if stereo), 
+#' parameters used and audio metadata, and the parameters used for the 
+#' calculation.
 #' @export
 #'
 #' @import foreach
@@ -39,7 +47,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' path <- readClipboard() #use this to paste the folder path from the clipboard.
+#' path <- readClipboard() # paste the folder path from the clipboard.
 #' ndsi_folder(path)
 #' }
 
@@ -139,7 +147,8 @@ ndsi_folder <- function (folder = NULL,
     expectedCompletionTime <- Sys.time() + adjustedTotalTime
     
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),
+        "\n\n")
     
   } else {
     sound1 <- readWave(audio.list[1], 
@@ -171,8 +180,13 @@ ndsi_folder <- function (folder = NULL,
                        
                        ndsi_result <- quiet(do.call(ndsi, c(list(sound), args_list)))
                        
-                       tibble(file_name = file) |>
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(ndsi_result)
+                       
+                       rm(sound, ndsi_result)
+                       gc()
+                       
+                       return(result)
                      }
   stopCluster(cl)
   setwd(original_wd)
@@ -198,7 +212,8 @@ ndsi_folder <- function (folder = NULL,
     
   }
   
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), 
+                                                 "%H:%M:%S"), "\n\n"))
   
   return(results)
   

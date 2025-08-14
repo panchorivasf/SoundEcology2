@@ -1,12 +1,13 @@
-#' Frequency-dependent Acoustic Diversity Index - folder input
+#' Frequency-dependent Acoustic Diversity Index - Batch process
 #' @description
-#' The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains a floating noise profile
-#' before calculating the Acoustic Diversity Index and it doesn't use normalized spectrogram.
-#' Alternatively it can take a noise sample to reduce noise in the analyzed files.
+#' The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains 
+#' a floating noise profile before calculating the Acoustic Diversity Index and 
+#' it doesn't use normalized spectrogram. Alternatively it can take a noise 
+#' sample to reduce noise in the analyzed files.
 #' @param folder a path to the folder with audio files to import.
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
+#' @param list An optional list (subset) of files in the folder to analyze. If 
+#' provided, files outside the list will be excluded. 
 #' @param start numerical. Where to start reading the Wave. 
 #' @param end numerical. Where to end reading the Wave.
 #' @param unit character. Unit of measurement for 'start' and 'end'. Options are
@@ -50,11 +51,14 @@
 #' @import lubridate
 #'
 #' @details
-#' Modified version of the Frequency-dependent Acoustic Diversity Index by Xu et al. (2023).
-#' FADI was introduced in: https://www.sciencedirect.com/science/article/pii/S1470160X23010828.
-#' This version returns a wide format (one row per audio file) tibble as output instead of a nested list.
-#' To see the original version as in the paper, use the \emph{frequency_dependent_acoustic_diversity()} function.
-
+#' Modified version of the Frequency-dependent Acoustic Diversity Index by Xu et 
+#' al. (2023).FADI was introduced in: 
+#' https://www.sciencedirect.com/science/article/pii/S1470160X23010828. This 
+#' version returns a wide format (one row per audio file) tibble as output 
+#' instead of a nested list.
+#' To see the original version as in the paper, use the 
+#' \emph{frequency_dependent_acoustic_diversity()} function.
+#' 
 #' @examples
 #' fadi_folder(folder=pathB, "fadi_hydro_b.csv")
 
@@ -155,7 +159,8 @@ fadi_folder <- function (folder = NULL,
     expectedCompletionTime <- Sys.time() + estimatedTotalTime
 
     cat("Start time:", format(Sys.time(), "%H:%M"), "\n")
-    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),"\n\n")
+    cat("Expected time of completion:", format(expectedCompletionTime, "%H:%M"),
+        "\n\n")
   } else {
     sound1 <- readWave(audio.list[1], from = start, to = end , units = unit)
     type <- ifelse(sound1@stereo, "stereo", "mono")
@@ -173,16 +178,23 @@ fadi_folder <- function (folder = NULL,
                                   to = end,
                                   units = unit)
                        }, error = function(e) {
-                         message(paste("Error reading file:", file, "Skipping to the next file."))
+                         message(paste("Error reading file:", file, 
+                                       "Skipping to the next file."))
                          return(NULL) 
                        })
                        
                        if (is.null(sound)) return(NULL)
                        
-                       fadi_result <- quiet(do.call(fadi, c(list(sound), args_list)))
+                       fadi_result <- quiet(do.call(fadi, c(list(sound), 
+                                                            args_list)))
                        
-                       tibble(file_name = file)  |> 
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(fadi_result)
+                       
+                       rm(sound, fadi_result)
+                       gc()
+                       
+                       return(result)
 
                      }
   stopCluster(cl)
@@ -210,7 +222,8 @@ fadi_folder <- function (folder = NULL,
     
   }
 
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), 
+            "\n\n"))
 
   return(results)
 

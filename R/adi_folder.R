@@ -1,12 +1,11 @@
-#' Calculate the Acoustic Diversity Index on the Files in a Folder
+#' Acoustic Diversity Index - Batch process
 #' @description
-#' Calculates the Acoustic Diversity Index for all the files in a folder, with extended parameter options.
-#' It uses parallel processing with all but one of the available cores.
-#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
+#' Calculates the Acoustic Diversity Index for all the files in a folder, with 
+#' extended parameter options. It supports parallel processing.
 #'
 #' @param folder a path to the folder with audio files to import.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
+#' @param list An optional list (subset) of files in the folder to analyze. If 
+#' provided, files outside the list will be excluded. 
 #' @param recursive logical. Whether to search Wave files in subfolders. Default
 #' is TRUE.
 #' @param start numerical. Where to start reading the Wave. 
@@ -16,24 +15,38 @@
 #' @param save.csv logical. Whether to save a CSV output.
 #' @param save.to character. Path to where the output CSV will be saved. Default
 #' is NULL (save in working directory).
-#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide a file name.
-#' @param freq.res Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).
-#' @param win.fun window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
+#' @param csv.name character vector. When 'save.csv' is TRUE, optionally provide 
+#' a file name.
+#' @param freq.res Numeric. Frequency resolution in Hz. This value determines 
+#' the "height" of each frequency bin and, therefore, the window length to be 
+#' used (sampling rate / frequency resolution).
+#' @param win.fun window function (filter to handle spectral leakage); 
+#' "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".
 #' @param min.freq minimum frequency to compute the spectrogram
 #' @param max.freq maximum frequency to compute the spectrogram
 #' @param n.bands number of bands to split the spectrogram
-#' @param cutoff dB threshold to calculate energy proportions (if normspec = FALSE, set to 5 or above)
-#' @param norm.spec logical. Whether to normalize the spectrogram (not recommended) or not (normalized spectrograms with different SNR are not comparable).
-#' @param noise.red numeric. noise reduction (subtract median from the amplitude values); 0=none, 1=rows, 2=columns.
-#' @param rmoff logical. Whether to remove DC offset before computing ADI (recommended) or not.
-#' @param props logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.
+#' @param cutoff numeric. dB threshold to calculate energy proportions.Default 
+#' is -60. 
+#' @param norm.spec logical. Whether to normalize the spectrogram (not 
+#' recommended) or not (normalized spectrograms with different SNR are not 
+#' comparable).
+#' @param noise.red numeric. noise reduction (subtract median from the amplitude 
+#' values); 0=none, 1=rows, 2=columns.
+#' @param rmoff logical. Whether to remove DC offset before computing ADI. 
+#' Default is `TRUE`.
+#' @param props logical. Whether to store the energy proportion values for each 
+#' frequency band and channel (default) or not.
 #' @param prop.den numeric. Indicates how the energy proportion is calculated.
-#' @param db.fs logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.
-#' @param use.vegan logical; if TRUE, the diversity() function from the vegan package is called to compute Shannon's entropy. Default = FALSE.
+#' @param db.fs logical; if TRUE, the amplitude scale is expressed as decibels 
+#' Full Scale (dBFS). Only used when norm = FALSE.
+#' @param use.vegan logical; if TRUE, the diversity() function from the vegan 
+#' package is called to compute Shannon's entropy. Default = FALSE.
 #' @param n.cores The number of cores to use for parallel processing. Default is
-#' 1 to use all but one core. 
+#' -1 to use all but one core. 
 #'
-#' @return a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
+#' @return a tibble (data frame) with the ADI values for each channel 
+#' (if stereo), metadata, and the parameters used for the calculation.
+#' 
 #' @export
 #' @import doParallel 
 #' @import foreach
@@ -44,11 +57,17 @@
 #' 
 #' @details
 #' Options for propden:
-#' 1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
-#' 2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
-#' It uses parallel processing with all but one of the available cores.
-#' Optimized to facilitate working with a list of audio files before importing them into R.
-#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
+#' 1 = The original calculation from the "soundecology" package is applied. The 
+#' denominator of the proportion equals to all the cells in the same frequency 
+#' band.
+#' 2 = A "true Shannon" proportion is calculated, where the "whole population 
+#' across species" equals the cells above the decibel threshold across the 
+#' spectrogram (up to 'max.freq' It uses parallel processing with all but one of 
+#' the available cores.
+#' Optimized to facilitate working with a list of audio files before importing 
+#' them into R.
+#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) 
+#' April 2024
 #'
 #' @examples
 #' adi_folder("path/to/folder")
@@ -110,11 +129,7 @@ adi_folder <- function(folder = NULL,
   setwd(folder)
   
   if(is.null(list)) {
-    audio.list <- list.files(pattern = "\\.wav$",
-                             recursive = recursive,
-                             full.names = TRUE)
-    # Normalize paths
-    audio.list <- normalizePath(audio.list, winslash = "/")
+    audio.list <- list_waves(recursive = recursive)
   } else {
     audio.list <- list
   }
@@ -150,7 +165,7 @@ adi_folder <- function(folder = NULL,
                      .packages = c("tuneR", "dplyr", "seewave"),
                      .errorhandling = "pass") %dopar% {
                        
-                       clean_file <- basename(file)  # Store just filename without path
+                       clean_file <- basename(file)  
                        full_path <- file
                        
                        tryCatch({
@@ -161,7 +176,8 @@ adi_folder <- function(folder = NULL,
                                     units = unit
                                     )
                          }, error = function(e) {
-                           message(paste("Error reading file:", clean_file, "-", e$message))
+                           message(paste("Error reading file:", clean_file, "-", 
+                                         e$message))
                            skipped_files <<- c(skipped_files, clean_file)
                            return(NULL)
                          })
@@ -171,26 +187,28 @@ adi_folder <- function(folder = NULL,
                          adi_result <- tryCatch({
                            quiet(do.call(adi, c(list(sound), args_list)))
                          }, error = function(e) {
-                           message(paste("Error processing file:", clean_file, "-", e$message))
+                           message(paste("Error processing file:", clean_file,
+                                         "-", e$message))
                            skipped_files <<- c(skipped_files, clean_file)
                            return(NULL)
                          })
                            
                            if(is.null(adi_result)) return(NULL)
                            
-                           # Update progress (thread-safe)
-                           processed_count <<- processed_count + 1
-                           if (processed_count %% max(1, floor(nFiles/10)) == 0) {
-                             cat(sprintf("..%d/%d (%.0f%%) \n", 
-                                         processed_count, nFiles, 
-                                         processed_count/nFiles*100))
-                           }
                            
-                           tibble(file_name = clean_file) |> 
-                             bind_cols(adi_result)
+                         result <- tibble(file_name = file)  |> 
+                           bind_cols(adi_result)
+                         
+                         rm(sound, adi_result)
+                         gc()
+                         
+                         return(result)
+                           
+                           
                            
                        }, error = function(e) {
-                         message(paste("Unexpected error with file:", clean_file, "-", e$message))
+                         message(paste("Unexpected error with file:", 
+                                       clean_file, "-", e$message))
                          skipped_files <<- c(skipped_files, clean_file)
                          return(NULL)
                        })
@@ -203,7 +221,8 @@ adi_folder <- function(folder = NULL,
   if(length(skipped_files) > 0) {
     cat("\nSkipped", length(skipped_files), "files due to errors:\n")
     cat(paste(head(skipped_files, 10), collapse = "\n"))
-    if(length(skipped_files) > 10) cat("\n... (", length(skipped_files)-10, "more)")
+    if(length(skipped_files) > 10) cat("\n... (", length(skipped_files)-10,
+                                       "more)")
     cat("\n\n")
   }
   

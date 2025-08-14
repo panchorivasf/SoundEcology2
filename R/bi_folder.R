@@ -1,4 +1,4 @@
-#' Bioacoustic Index - folder input
+#' Bioacoustic Index - Batch process
 #' @description
 #' Inspired by the "Bioacoustic Index" from the paper:Boelman NT, Asner GP, Hart PJ, Martin RE. 2007.
 #' Multi-trophic invasion resistance in Hawaii: bioacoustics, field surveys, and airborne
@@ -178,8 +178,13 @@ bi_folder <- function (folder = NULL,
                        
                        bi_result <- quiet(do.call(bi, c(list(sound), args_list)))
                        
-                       tibble(file_name = file)  |> 
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(bi_result)
+                       
+                       rm(sound, bi_result)
+                       gc()
+                       
+                       return(result)
                        
                      }
 

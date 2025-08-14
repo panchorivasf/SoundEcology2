@@ -1,8 +1,8 @@
 #' Acoustic Complexity Index - Batch process
 #'
 #' @param folder a path to the folder with audio files to import.
-#' @param list An optional list (subset) of files in the folder to analyze. If provided, 
-#' files outside the list will be excluded. 
+#' @param list An optional list (subset) of files in the folder to analyze. If 
+#' provided, files outside the list will be excluded. 
 #' @param recursive Logical. Whether to search in subfolders. Default is TRUE.
 #' @param start numerical. Where to start reading the Wave. 
 #' @param end numerical. Where to end reading the Wave.
@@ -45,8 +45,9 @@
 #' @importFrom dplyr bind_cols tibble
 #'
 #' @details
-#' Optimized to facilitate working with a folder of audio files before importing them into R.
-#' Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
+#' Optimized to facilitate working with a folder of audio files before importing 
+#' them into R.Modifications by Francisco Rivas (frivasfu@purdue.edu // 
+#' fcorivasf@gmail.com) April 2024.
 #'
 #' @examples
 #' aci_folder(path/to/folder)
@@ -107,12 +108,12 @@ aci_folder <- function (folder = NULL,
   if(is.null(n.cores)){
     num_cores <- 1
   }else if(n.cores == -1){
-    num_cores <- parallel::detectCores() - 1 # Leave one core free 
+    num_cores <- parallel::detectCores() - 1 
   }else{
     num_cores <- n.cores
   } 
   if (num_cores > n.files){
-    num_cores <- n.files  # Limit the number of cores to the number of files
+    num_cores <- n.files  
   }
   cl <- makeCluster(num_cores[1])
   registerDoParallel(cl)
@@ -185,8 +186,13 @@ aci_folder <- function (folder = NULL,
                        aci_result <- quiet(do.call(aci, c(list(sound), 
                                                           args_list)))
                        
-                       tibble(file_name = file)  |> 
+                       result <- tibble(file_name = file)  |> 
                          bind_cols(aci_result)
+                       
+                       rm(sound, aci_result)
+                       gc()
+                       
+                       return(result)
                        
                      }
   stopCluster(cl)
@@ -213,7 +219,8 @@ aci_folder <- function (folder = NULL,
     
   }
 
-  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), "\n\n"))
+  cat(paste("Done!\nTime of completion:", format(Sys.time(), "%H:%M:%S"), 
+            "\n\n"))
   
   return(results)
   

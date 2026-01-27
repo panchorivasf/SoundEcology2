@@ -2,7 +2,7 @@
 % Please edit documentation in R/aei_folder.R
 \name{aei_folder}
 \alias{aei_folder}
-\title{Acoustic Evenness Index - folder input}
+\title{Acoustic Evenness Index - Batch process}
 \usage{
 aei_folder(
   folder = NULL,
@@ -12,7 +12,8 @@ aei_folder(
   end = 1,
   unit = "minutes",
   save.csv = TRUE,
-  csv.name = "aei_results.csv",
+  save.to = NULL,
+  csv.name = "aei_results",
   freq.res = 50,
   win.fun = "hanning",
   min.freq = 0,
@@ -31,8 +32,8 @@ aei_folder(
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
 
-\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
-files outside the list will be excluded.}
+\item{list}{An optional list (subset) of files in the folder to analyze. If
+provided, files outside the list will be excluded.}
 
 \item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 
@@ -43,11 +44,16 @@ files outside the list will be excluded.}
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{save.csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a CSV output.}
 
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
 
-\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide
+a file name.}
+
+\item{win.fun}{window function (filter to handle spectral leakage);
+"bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to compute the spectrogram}
 
@@ -55,38 +61,56 @@ files outside the list will be excluded.}
 
 \item{n.bands}{number of bands to split the spectrogram}
 
-\item{cutoff}{dB threshold to calculate energy proportions (if norm.spec = FALSE, set to 5 or above)}
+\item{cutoff}{dB threshold to calculate energy proportions (if norm.spec =
+FALSE, set to 5 or above)}
 
-\item{norm.spec}{logical. Whether to normalize the spectrogram (not recommended) or not (normalized spectrograms with different SNR are not comparable).}
+\item{norm.spec}{logical. Whether to normalize the spectrogram (not
+recommended) or not (normalized spectrograms with different SNR are not
+comparable).}
 
-\item{noise.red}{numeric. noise reduction (subtract median from the amplitude values); 1=rows, 2=columns, 3=none.}
+\item{noise.red}{numeric. noise reduction (subtract median from the amplitude
+values); 1=rows, 2=columns, 3=none.}
 
-\item{rm.offset}{logical. Whether to remove DC offset before computing aei (recommended) or not.}
+\item{rm.offset}{logical. Whether to remove DC offset before computing aei
+(recommended) or not.}
 
-\item{props}{logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.}
+\item{props}{logical. Whether to store the energy proportion values for each
+frequency band and channel (default) or not.}
 
-\item{prop.den}{numeric. Indicates how the energy proportion is calculated by manipulating the denominator.}
+\item{prop.den}{numeric. Indicates how the energy proportion is calculated by
+manipulating the denominator.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+-1 to use all but one core.}
 
-\item{frew.res}{the frequency resolution  (Hz per bin) to use. From this value the window length for the FFT will be calculated (sampling rate / frequency resolution).}
+\item{frew.res}{the frequency resolution  (Hz per bin) to use. From this
+value the window length for the FFT will be calculated (sampling rate /
+frequency resolution).}
 }
 \value{
-a tibble (data frame) with the aei values for each channel (if stereo), metadata, and the parameters used for the calculation.
+a tibble (data frame) with the aei values for each channel (if
+stereo), metadata, and the parameters used for the calculation.
 }
 \description{
-Calculates the Acoustic Evenness Index for all the files in a folder, with extended parameter options.
-It uses parallel processing with all but one of the available cores.
-Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
+Calculates the Acoustic Evenness Index for all the files in a folder, with
+extended parameter options. It uses parallel processing with all but one of
+the available cores.
 }
 \details{
 Options for prop.den:
-1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
-2 = The "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
-3 = The "whole population across species" equals the cells above the decibel threshold across the whole spectrogram (up to the Nyquist frequency. This might return a smaller range of values.
+1 = The original calculation from the "soundecology" package is applied. The
+denominator of the proportion equals to all the cells in the same frequency
+band.
+2 = The "whole population across species" equals the cells above the decibel
+threshold across the spectrogram (up to 'max.freq')
+3 = The "whole population across species" equals the cells above the decibel
+threshold across the whole spectrogram (up to the Nyquist frequency. This
+might return a smaller range of values.
 It uses parallel processing with all but one of the available cores.
-Optimized to facilitate working with a list of audio files before importing them into R.
-Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
+Optimized to facilitate working with a list of audio files before importing
+them into R.
+Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)
+April 2024
 }
 \examples{
 aei_folder("path/to/folder")

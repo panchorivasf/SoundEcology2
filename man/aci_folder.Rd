@@ -12,7 +12,8 @@ aci_folder(
   end = 1,
   unit = "minutes",
   save.csv = TRUE,
-  csv.name = "aci_results.csv",
+  save.to = NULL,
+  csv.name = "aci_results",
   freq.res = 50,
   win.fun = "hanning",
   min.freq = NA,
@@ -26,8 +27,8 @@ aci_folder(
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
 
-\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
-files outside the list will be excluded.}
+\item{list}{An optional list (subset) of files in the folder to analyze. If
+provided, files outside the list will be excluded.}
 
 \item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 
@@ -38,42 +39,52 @@ files outside the list will be excluded.}
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{save.csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a CSV output.}
 
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
 
-\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which will determine
-the window length for the FFT (sampling rate / frequency resolution).}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide
+a file name.}
 
-\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman",
-"flattop", "hamming", "hanning", or "rectangle".}
+\item{freq.res}{numeric. The frequency resolution to use (Hz per bin) which
+will determine the window length for the FFT (sampling rate / frequency
+resolution).}
 
-\item{min.freq}{minimum frequency to use when calculating the value, in Hertz. Default = 0.}
+\item{win.fun}{window function (filter to handle spectral leakage);
+"bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
-\item{max.freq}{maximum frequency to use when calculating the value, in Hertz. Default = NA (Nyquist).}
+\item{min.freq}{minimum frequency to use when calculating the value, in
+Hertz. Default = 0.}
 
-\item{j}{the cluster size, in seconds. Default = NA (Duration of the audio file).}
+\item{max.freq}{maximum frequency to use when calculating the value, in
+Hertz. Default = NA (Nyquist).}
 
-\item{noise.red}{numeric; controls the application of noise reduction. If set to 1,
-noise reduction is applied to each row by subtracting the median from the amplitude values.
-If set to 2, noise reduction is applied to each column similarly. If set to 0, noise reduction is not applied.}
+\item{j}{the cluster size, in seconds. Default = NA (Duration of the audio
+file).}
 
-\item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI.
-Default = TRUE.}
+\item{noise.red}{numeric; controls the application of noise reduction. If set
+to 1, noise reduction is applied to each row by subtracting the median from
+the amplitude values. If set to 2, noise reduction is applied to each column
+similarly. If set to 0, noise reduction is not applied.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
-Default is NULL (single-core processing).}
+\item{rm.offset}{logical; if set to TRUE, the function will remove DC offset
+before computing ADI. Default = TRUE.}
+
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+-1 to use all but one core.}
 }
 \value{
-A tibble (data frame) with the ACI values for each channel (if stereo), metadata, and
-the parameters used for the calculation.
+A tibble (data frame) with the ACI values for each channel (if
+stereo), metadata, and the parameters used for the calculation.
 }
 \description{
 Acoustic Complexity Index - Batch process
 }
 \details{
-Optimized to facilitate working with a folder of audio files before importing them into R.
-Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
+Optimized to facilitate working with a folder of audio files before importing
+them into R.Modifications by Francisco Rivas (frivasfu@purdue.edu //
+fcorivasf@gmail.com) April 2024.
 }
 \examples{
 aci_folder(path/to/folder)

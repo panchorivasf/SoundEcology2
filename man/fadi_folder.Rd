@@ -2,7 +2,7 @@
 % Please edit documentation in R/fadi_folder.R
 \name{fadi_folder}
 \alias{fadi_folder}
-\title{Frequency-dependent Acoustic Diversity Index - folder input}
+\title{Frequency-dependent Acoustic Diversity Index - Batch process}
 \usage{
 fadi_folder(
   folder = NULL,
@@ -12,7 +12,8 @@ fadi_folder(
   end = 1,
   unit = "minutes",
   save.csv = TRUE,
-  csv.name = "fadi_results.csv",
+  save.to = NULL,
+  csv.name = "fadi_results",
   noise.file = NULL,
   NEM = 2,
   min.freq = 200,
@@ -29,8 +30,8 @@ fadi_folder(
 
 \item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 
-\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
-files outside the list will be excluded.}
+\item{list}{An optional list (subset) of files in the folder to analyze. If
+provided, files outside the list will be excluded.}
 
 \item{start}{numerical. Where to start reading the Wave.}
 
@@ -39,46 +40,61 @@ files outside the list will be excluded.}
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{save.csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a CSV output.}
 
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
 
-\item{noise.file}{An R object of class Wave containing noise-only information if needed. Default = NULL.}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide
+a file name.}
+
+\item{noise.file}{An R object of class Wave containing noise-only information
+if needed. Default = NULL.}
 
 \item{NEM}{Numeric. Options are 1 or 2.
 When NEM = 1, floating thresholds are estimated based on noise.file.
 When NEM = 2, floating thresholds are calculated based on sound file using an
-automatic noise level estimation method (median of each row in the spectrogram). Default = 2.}
+automatic noise level estimation method (median of each row in the
+spectrogram). Default = 2.}
 
-\item{min.freq}{Minimum frequency in Hertz when calculating the global threshold. Default = 200.}
+\item{min.freq}{Minimum frequency in Hertz when calculating the global
+threshold. Default = 200.}
 
-\item{max.freq}{Maximum frequency in Hertz when calculating the FADI value. Default = 10000.}
+\item{max.freq}{Maximum frequency in Hertz when calculating the FADI value.
+Default = 10000.}
 
-\item{threshold.fixed}{A negative number in dB for calculating the global threshold. Default = −50.}
+\item{threshold.fixed}{A negative number in dB for calculating the global
+threshold. Default = −50.}
 
 \item{freq.step}{Bandwidth of each frequency band, in Hertz. Default = 1000.}
 
-\item{gamma}{A positive number in dB for calculating the floating thresholds. Default = 13.}
+\item{gamma}{A positive number in dB for calculating the floating thresholds.
+Default = 13.}
 
-\item{props}{Logical; if TRUE, the energy proportion values for each frequency band
-and channel are added to the output tibble. Default = TRUE.}
+\item{props}{Logical; if TRUE, the energy proportion values for each
+frequency band and channel are added to the output tibble. Default = TRUE.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
-Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+\code{n.cores = -1} to use all but one core.}
 }
 \value{
-A tibble with the FADI value per channel, energy proportions, metadata, and parameters used.
+A tibble with the FADI value per channel, energy proportions,
+metadata, and parameters used.
 }
 \description{
-The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains a floating noise profile
-before calculating the Acoustic Diversity Index and it doesn't use normalized spectrogram.
-Alternatively it can take a noise sample to reduce noise in the analyzed files.
+The Frequency-dependent Acoustic Diversity Index by Xu et al. (2023) obtains
+a floating noise profile before calculating the Acoustic Diversity Index and
+it doesn't use normalized spectrogram. Alternatively it can take a noise
+sample to reduce noise in the analyzed files.
 }
 \details{
-Modified version of the Frequency-dependent Acoustic Diversity Index by Xu et al. (2023).
-FADI was introduced in: https://www.sciencedirect.com/science/article/pii/S1470160X23010828.
-This version returns a wide format (one row per audio file) tibble as output instead of a nested list.
-To see the original version as in the paper, use the \emph{frequency_dependent_acoustic_diversity()} function.
+Modified version of the Frequency-dependent Acoustic Diversity Index by Xu et
+al. (2023).FADI was introduced in:
+https://www.sciencedirect.com/science/article/pii/S1470160X23010828. This
+version returns a wide format (one row per audio file) tibble as output
+instead of a nested list.
+To see the original version as in the paper, use the
+\emph{frequency_dependent_acoustic_diversity()} function.
 }
 \examples{
 fadi_folder(folder=pathB, "fadi_hydro_b.csv")

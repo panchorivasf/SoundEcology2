@@ -2,7 +2,7 @@
 % Please edit documentation in R/tai_folder.R
 \name{tai_folder}
 \alias{tai_folder}
-\title{Calculate Trill Activity Index for all the Files in a Folder}
+\title{Trill Activity Index - Batch process}
 \usage{
 tai_folder(
   folder = NULL,
@@ -12,53 +12,80 @@ tai_folder(
   end = 1,
   unit = "minutes",
   channel = "each",
+  save.csv = TRUE,
+  save.to = NULL,
+  csv.name = "tai_results",
   hpf = 0,
   cutoff = -60,
   n.windows = 120,
   freq.res = 100,
   plot = FALSE,
   plot.title = NULL,
-  verbose = TRUE,
-  output.csv = "tai_results.csv",
-  n.cores = -1
+  n.cores = -1,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{folder}{Character. The path to the folder containing the WAV files to analyze.}
+\item{folder}{Character. The path to the folder containing the WAV files to
+analyze.}
 
 \item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 
-\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
-files outside the list will be excluded.}
+\item{list}{An optional list (subset) of files in the folder to analyze. If
+provided, files outside the list will be excluded.}
 
-\item{start}{numerical. Where to start reading the Wave.}
+\item{start}{Numeric. Where to start reading the Wave.}
 
-\item{end}{numerical. Where to end reading the Wave.}
+\item{end}{Numeric. Where to end reading the Wave.}
 
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{channel}{Channel or channels to be analyzed. Options are "left", "right", "each", and "mix".}
+\item{channel}{Character. If Wave is stereo and you want to use only one
+channel, pass either "left" or "right" to this argument. If you want to
+analyze a mix of both channels, select "mix". If NULL (default), results are
+returned for each channel.}
+
+\item{save.csv}{logical. Whether to save a CSV output.}
+
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
+
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide
+a file name.}
+
+\item{hpf}{Numeric. Whether to use a high-pass filter. Default is 0.}
 
 \item{cutoff}{Numeric. The cutoff in decibels for the spectrogram generation.}
 
-\item{n.windows}{Numeric. Number of time windows to divide the signal into for analysis. Default is 60.}
+\item{n.windows}{Numeric. Number of time windows to divide the signal into
+for analysis. Default is 60.}
 
-\item{freq.res}{Numeric. Frequency resolution (Hz per bin) for the spectrogram analysis. Default is 100.}
+\item{freq.res}{Numeric. Frequency resolution (Hz per bin) for the
+spectrogram analysis. Default is 100.}
 
-\item{plot}{Logical. If TRUE, generates a plot of the trill index over time. Default is TRUE.}
+\item{plot}{Logical. If TRUE, generates a plot of the trill index over time.
+Default is TRUE.}
 
-\item{plot.title}{Character. The title to be used for the plot. Default is NULL.}
+\item{plot.title}{Character. The title to be used for the plot. Default is
+NULL.}
 
-\item{verbose}{Logical. If TRUE, provides detailed output during the function's execution. Default is FALSE.}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+1 to use all but one core.}
 
-\item{wave}{A wave object to be analyzed.}
+\item{verbose}{Logical. If TRUE, provides detailed output during the
+function's execution. Default is FALSE.}
 }
 \value{
-A tibble summarizing TAI statistics, including values for low and mid-frequency noise.
+A tibble summarizing TAI statistics, including values for low and
+mid-frequency noise.
 }
 \description{
-This function calculates the trill index of an sound wave object by analyzing the frequency modulation pattern over time. It can operate in either binary or continuous modes and provides options for generating visual plots of the trill activity. The function also identifies potential noise issues in the low- and mid-frequency ranges.
+This function calculates the trill index of an sound wave object by analyzing
+the frequency modulation pattern over time. It can operate in either binary
+or continuous modes and provides options for generating visual plots of the
+trill activity. The function also identifies potential noise issues in the
+low- and mid-frequency ranges.
 }
 \examples{
 \dontrun{

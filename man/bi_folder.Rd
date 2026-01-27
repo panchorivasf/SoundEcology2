@@ -2,7 +2,7 @@
 % Please edit documentation in R/bi_folder.R
 \name{bi_folder}
 \alias{bi_folder}
-\title{Bioacoustic Index - folder input}
+\title{Bioacoustic Index - Batch process}
 \usage{
 bi_folder(
   folder = NULL,
@@ -12,7 +12,8 @@ bi_folder(
   unit = "minutes",
   list = NULL,
   save.csv = TRUE,
-  csv.name = "bi_results.csv",
+  save.to = NULL,
+  csv.name = "bi_results",
   w.len = 512,
   w.fun = "hanning",
   min.freq = 2000,
@@ -38,13 +39,16 @@ bi_folder(
 \item{list}{An optional list (subset) of files in the folder to analyze. If provided,
 files outside the list will be excluded.}
 
-\item{save.csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a CSV output.}
 
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
 
-\item{w.len}{the window length to compute the spectrogram (i.e., FFT window size).}
+\item{csv.name}{character. When 'save.csv' is TRUE, optionally provide a file name.}
 
-\item{w.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop",
+\item{w.len}{numeric. The window length to compute the spectrogram (i.e., FFT window size).}
+
+\item{w.fun}{character. The window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop",
 "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{miminum frequency to use when calculating the value, in Hertz. Default = NA.}
@@ -60,8 +64,8 @@ column similarly. If set to 0 (Default), noise reduction is not applied.}
 
 \item{rm.offset}{logical; if set to TRUE, the function will remove DC offset before computing ADI. Default = TRUE.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
-Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+-1 to use all but one core.}
 }
 \value{
 A tibble (data frame) with the BI values for each channel (if stereo), metadata, and the parameters used

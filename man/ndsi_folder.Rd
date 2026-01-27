@@ -2,7 +2,7 @@
 % Please edit documentation in R/ndsi_folder.R
 \name{ndsi_folder}
 \alias{ndsi_folder}
-\title{Normalized Difference Soundscape Index - folder input}
+\title{Normalized Difference Soundscape Index - Batch process}
 \usage{
 ndsi_folder(
   folder = NULL,
@@ -12,7 +12,8 @@ ndsi_folder(
   end = 1,
   unit = "minutes",
   save.csv = TRUE,
-  csv.name = "ndsi_results.csv",
+  save.to = NULL,
+  csv.name = "ndsi_results",
   w.len = 512,
   anthro.min = 1000,
   anthro.max = 2000,
@@ -36,27 +37,38 @@ ndsi_folder(
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.
-Default name is "ndsi_results.csv"}
+\item{save.csv}{logical. Whether to save a CSV output.}
 
-\item{w.len}{numeric. Window length for the FFT (sampling rate / frequency resolution).}
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
 
-\item{anthro.min}{minimum value of the range of frequencies of the anthrophony.}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide
+a file name.}
 
-\item{anthro.max}{maximum value of the range of frequencies of the anthrophony.}
+\item{w.len}{numeric. Window length for the FFT (sampling rate / frequency
+resolution).}
 
-\item{bio.min}{minimum value of the range of frequencies of the biophony.}
+\item{anthro.min}{minimum value of the range of frequencies of the
+anthrophony.}
 
-\item{bio.max}{maximum value of the range of frequencies of the biophony.}
+\item{anthro.max}{maximum value of the range of frequencies of the
+anthrophony.}
+
+\item{bio.min}{minimum value of the range of frequencies of the
+biophony.}
+
+\item{bio.max}{maximum value of the range of frequencies of the
+biophony.}
 
 \item{rm.offset}{logical. Whether to remove the DC offset.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all
-but one core. Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+1 to use all but one core.}
 }
 \value{
-a wide format tibble with NDSI values per channel (if stereo), parameters used and audio
-metadata
+a wide format tibble with NDSI values per channel (if stereo),
+parameters used and audio metadata, and the parameters used for the
+calculation.
 }
 \description{
 Normalized Difference Soundscape Index (NDSI) from Kasten et al.,
@@ -64,11 +76,12 @@ et al. 2012. The NDSI seeks to "estimate the level of anthropogenic
 disturbance on the soundscape by computing the ratio of human-generated
 (anthrophony) to biological (biophony) acoustic components found in field
 collected sound samples" (Kasten, et al. 2012).
-This version is optimized to work with a path to the folder containing the audio files.
+This version is optimized to work with a path to the folder containing the
+audio files.
 }
 \examples{
 \dontrun{
-path <- readClipboard() #use this to paste the folder path from the clipboard.
+path <- readClipboard() # paste the folder path from the clipboard.
 ndsi_folder(path)
 }
 }

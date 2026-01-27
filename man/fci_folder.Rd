@@ -2,7 +2,7 @@
 % Please edit documentation in R/fci_folder.R
 \name{fci_folder}
 \alias{fci_folder}
-\title{Frequency Cover Indices on Multiple WAV Files in a Folder}
+\title{Frequency Cover Indices - Batch process}
 \usage{
 fci_folder(
   folder = NULL,
@@ -12,7 +12,8 @@ fci_folder(
   end = 1,
   unit = "minutes",
   save.csv = TRUE,
-  csv.name = "fci_results.csv",
+  save.to = NULL,
+  csv.name = "fci_results",
   channel = "each",
   hpf = 0,
   cutoff = -60,
@@ -37,7 +38,8 @@ fci_folder(
 
 \item{recursive}{Logical. Whether to search in subfolders. Default is FALSE.}
 
-\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
+\item{list}{An optional list (subset) of files in the folder to analyze. If
+provided,
 files outside the list will be excluded.}
 
 \item{start}{numerical. Where to start reading the Wave.}
@@ -47,54 +49,78 @@ files outside the list will be excluded.}
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{save.csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a CSV output.}
 
-\item{csv.name}{The name of the CSV file where results will be saved. Default is "frequency_cover_results.csv".}
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
 
-\item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both), or 'each' (process left and right channels separately). Default is 'each'.}
+\item{csv.name}{The name of the CSV file where results will be saved. Default
+is "frequency_cover_results.csv".}
 
-\item{hpf}{High-pass filter cutoff frequency in Hz. If 0, no high-pass filter is applied. Default is 0.}
+\item{channel}{The channel to analyze: 'left', 'right', 'mix' (combine both),
+or 'each' (process left and right channels separately). Default is 'each'.}
 
-\item{cutoff}{The amplitude threshold (in dB) below which frequencies will be considered inactive. Default is -60.}
+\item{hpf}{High-pass filter cutoff frequency in Hz. If 0, no high-pass filter
+is applied. Default is 0.}
 
-\item{freq.res}{Frequency resolution of the spectrogram in Hz. Default is 100.}
+\item{cutoff}{The amplitude threshold (in dB) below which frequencies will be
+considered inactive. Default is -60.}
 
-\item{ggplot}{Logical. Whether to use ggplot2 for plotting (if plot is TRUE). Default is FALSE.}
+\item{freq.res}{Frequency resolution of the spectrogram in Hz. Default is
+100.}
 
-\item{plot.title}{Title for the plot if plotting is enabled. Default is "Frequency Cover Analysis".}
+\item{ggplot}{Logical. Whether to use ggplot2 for plotting (if plot is TRUE).
+Default is FALSE.}
 
-\item{sound.color}{The color to use for active frequencies in the plot. Default is "#045E10" (a dark green shade).}
+\item{plot.title}{Title for the plot if plotting is enabled. Default is
+"Frequency Cover Analysis".}
 
-\item{lf.min}{The minimum frequency (in Hz) for the low-frequency band. Default is 0.}
+\item{sound.color}{The color to use for active frequencies in the plot.
+Default is "#045E10" (a dark green shade).}
 
-\item{lf.max}{The maximum frequency (in Hz) for the low-frequency band. Default is 1500.}
+\item{lf.min}{The minimum frequency (in Hz) for the low-frequency band.
+Default is 0.}
 
-\item{mf.min}{The minimum frequency (in Hz) for the mid-frequency band. Default is 1500.}
+\item{lf.max}{The maximum frequency (in Hz) for the low-frequency band.
+Default is 1500.}
 
-\item{mf.max}{The maximum frequency (in Hz) for the mid-frequency band. Default is 8000.}
+\item{mf.min}{The minimum frequency (in Hz) for the mid-frequency band.
+Default is 1500.}
 
-\item{hf.min}{The minimum frequency (in Hz) for the high-frequency band. Default is 8000.}
+\item{mf.max}{The maximum frequency (in Hz) for the mid-frequency band.
+Default is 8000.}
 
-\item{hf.max}{The maximum frequency (in Hz) for the high-frequency band. Default is 18000.}
+\item{hf.min}{The minimum frequency (in Hz) for the high-frequency band.
+Default is 8000.}
 
-\item{uf.min}{The minimum frequency (in Hz) for the ultra-high-frequency band. Default is 18000.}
+\item{hf.max}{The maximum frequency (in Hz) for the high-frequency band.
+Default is 18000.}
 
-\item{uf.max}{The maximum frequency (in Hz) for the ultra-high-frequency band. Default is 24000.}
+\item{uf.min}{The minimum frequency (in Hz) for the ultra-high-frequency
+band. Default is 18000.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+\item{uf.max}{The maximum frequency (in Hz) for the ultra-high-frequency
+band. Default is 24000.}
 
-\item{plot}{Logical. Whether to generate plots for each file. Default is FALSE.}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+1 to use all but one core.}
+
+\item{plot}{Logical. Whether to generate plots for each file. Default is
+FALSE.}
 }
 \value{
-A tibble containing the frequency cover analysis results for each file.
+A tibble containing the frequency cover analysis results for each
+file.
 }
 \description{
-This function performs a frequency cover indices (FCI) on all WAV files within a specified folder.
-It processes each sound file in parallel (if specified) and saves the results in a CSV file.
+This function performs a frequency cover indices (FCI) on all WAV files
+within a specified folder. It processes each sound file in parallel (if
+specified) and saves the results in a CSV file.
 }
 \examples{
 \dontrun{
 # Run frequency cover analysis on all WAV files in the folder "sound_files"
-fci_folder("sound_files", csv.name = "results.csv", channel = "left", n.cores = 4)
+fci_folder("sound_files", csv.name = "results.csv", channel = "left", 
+n.cores = 4)
 }
 }

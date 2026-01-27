@@ -2,7 +2,7 @@
 % Please edit documentation in R/nbai_folder.R
 \name{nbai_folder}
 \alias{nbai_folder}
-\title{Narrow-Band Activity Index for Files in a Folder}
+\title{Narrow-Band Activity Index - Batch process}
 \usage{
 nbai_folder(
   folder = NULL,
@@ -12,17 +12,20 @@ nbai_folder(
   end = 1,
   unit = "minutes",
   channel = "each",
+  save.csv = TRUE,
+  save.to = NULL,
+  csv.name = "nbai_results",
   hpf = 0,
   freq.res = 50,
   cutoff = -60,
   activity.cutoff = 10,
-  output.csv = "nbai_results.csv",
   n.cores = -1,
   verbose = TRUE
 )
 }
 \arguments{
-\item{folder}{Character. The path to the folder containing the wave files to analyze.}
+\item{folder}{Character. The path to the folder containing the wave files to
+analyze.}
 
 \item{recursive}{Logical. Whether to search in subfolders. Default is TRUE.}
 
@@ -35,35 +38,51 @@ nbai_folder(
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{channel}{Character. If Wave is stereo and you want to use only one channel, pass either "left" or "right"
-to this argument. If you want to analyze a mix of both channels, select "mix". If NULL (default),
-results are returned for each channel.}
+\item{channel}{Character. If Wave is stereo and you want to use only one
+channel, pass either \code{left} or \code{right}  to this argument. If you want to
+analyze a mix of both channels, select \code{mix}. If NULL (default), results are
+returned for each channel.}
 
-\item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used always for consistency unless signals
+\item{save.csv}{logical. Whether to save a CSV output.}
+
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
+
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide
+a file name.}
+
+\item{hpf}{Numeric. High-pass filter. The default (500 Hz) should be used
+always for consistency unless signals
 of interest are below that threshold.}
 
-\item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and,
-therefore, the window length to be used (sampling rate / frequency resolution).}
+\item{freq.res}{Numeric. Frequency resolution in Hz. This value determines
+the "height" of each frequency bin and,
+therefore, the window length to be used (sampling rate / frequency
+resolution).}
 
-\item{cutoff}{Numeric. Cutoff threshold defining the sounds that will be analyzed, in dBFS.}
+\item{cutoff}{Numeric. Cutoff threshold defining the sounds that will be
+analyzed, in dBFS.}
 
-\item{activity.cutoff}{Numeric. Cutoff percent activity. Only the frequency bands active equal or above this
-percentage will be considered as "active" in the active band statistics.}
+\item{activity.cutoff}{Numeric. Cutoff percent activity. Only the frequency
+bands active equal or above this percentage will be considered as "active" in
+the active band statistics.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core.
-Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+1 to use all but one core.}
 
-\item{verbose}{Logical. If TRUE, details of dynamic range will be printed on the console.}
+\item{verbose}{Logical. If TRUE, details of dynamic range will be printed on
+the console.}
 }
 \value{
-A list containing: 1) A binary spectrogram (if mono), 2) tibble with the Narrow-Band Activity Index (NBI)
-summary statistics, and 3) a tibble with NBI spectral, which number of rows equals the number of frequency bins
-in the analysis.
+A list containing: 1) A binary spectrogram (if mono), 2) tibble with
+the NBAI summary statistics, and 3) a tibble with NBI spectral, which number
+of rows equals the number of frequency bins in the analysis.
 }
 \description{
-NBAI describes the relative amount of narrow-band persistent sound activity, like that of Cicadas and Orthopterans.
-This index can be used to evaluate insect activity and their influence on other soundscape metrics (e.g., summary
-acoustic indices).
+NBAI describes the relative amount of narrow-band persistent sound activity,
+like that of Cicadas and Orthopterans. This index can be used to evaluate
+insect activity and their influence on other soundscape metrics (e.g.,
+summary acoustic indices).
 }
 \examples{
 \dontrun{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/adi_folder.R
 \name{adi_folder}
 \alias{adi_folder}
-\title{Calculate the Acoustic Diversity Index on the Files in a Folder}
+\title{Acoustic Diversity Index - Batch process}
 \usage{
 adi_folder(
   folder = NULL,
@@ -12,7 +12,8 @@ adi_folder(
   end = 1,
   unit = "minutes",
   save.csv = TRUE,
-  csv.name = "adi_results.csv",
+  save.to = NULL,
+  csv.name = "adi_results",
   freq.res = 50,
   win.fun = "hanning",
   min.freq = 0,
@@ -32,8 +33,8 @@ adi_folder(
 \arguments{
 \item{folder}{a path to the folder with audio files to import.}
 
-\item{list}{An optional list (subset) of files in the folder to analyze. If provided,
-files outside the list will be excluded.}
+\item{list}{An optional list (subset) of files in the folder to analyze. If
+provided, files outside the list will be excluded.}
 
 \item{recursive}{logical. Whether to search Wave files in subfolders. Default
 is TRUE.}
@@ -45,13 +46,20 @@ is TRUE.}
 \item{unit}{character. Unit of measurement for 'start' and 'end'. Options are
 'samples', 'seconds', 'minutes', 'hours'. Default is 'minutes'.}
 
-\item{save.csv}{logical. Whether to save a csv in the working directory.}
+\item{save.csv}{logical. Whether to save a CSV output.}
 
-\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide a file name.}
+\item{save.to}{character. Path to where the output CSV will be saved. Default
+is NULL (save in working directory).}
 
-\item{freq.res}{Numeric. Frequency resolution in Hz. This value determines the "height" of each frequency bin and, therefore, the window length to be used (sampling rate / frequency resolution).}
+\item{csv.name}{character vector. When 'save.csv' is TRUE, optionally provide
+a file name.}
 
-\item{win.fun}{window function (filter to handle spectral leakage); "bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
+\item{freq.res}{Numeric. Frequency resolution in Hz. This value determines
+the "height" of each frequency bin and, therefore, the window length to be
+used (sampling rate / frequency resolution).}
+
+\item{win.fun}{window function (filter to handle spectral leakage);
+"bartlett", "blackman", "flattop", "hamming", "hanning", or "rectangle".}
 
 \item{min.freq}{minimum frequency to compute the spectrogram}
 
@@ -59,39 +67,54 @@ is TRUE.}
 
 \item{n.bands}{number of bands to split the spectrogram}
 
-\item{cutoff}{dB threshold to calculate energy proportions (if normspec = FALSE, set to 5 or above)}
+\item{cutoff}{numeric. dB threshold to calculate energy proportions.Default
+is -60.}
 
-\item{norm.spec}{logical. Whether to normalize the spectrogram (not recommended) or not (normalized spectrograms with different SNR are not comparable).}
+\item{norm.spec}{logical. Whether to normalize the spectrogram (not
+recommended) or not (normalized spectrograms with different SNR are not
+comparable).}
 
-\item{noise.red}{numeric. noise reduction (subtract median from the amplitude values); 0=none, 1=rows, 2=columns.}
+\item{noise.red}{numeric. noise reduction (subtract median from the amplitude
+values); 0=none, 1=rows, 2=columns.}
 
-\item{props}{logical. Whether to store the energy proportion values for each frequency band and channel (default) or not.}
+\item{props}{logical. Whether to store the energy proportion values for each
+frequency band and channel (default) or not.}
 
 \item{prop.den}{numeric. Indicates how the energy proportion is calculated.}
 
-\item{db.fs}{logical; if TRUE, the amplitude scale is expressed as decibels Full Scale (dBFS). Only used when norm = FALSE.}
+\item{db.fs}{logical; if TRUE, the amplitude scale is expressed as decibels
+Full Scale (dBFS). Only used when norm = FALSE.}
 
-\item{use.vegan}{logical; if TRUE, the diversity() function from the vegan package is called to compute Shannon's entropy. Default = FALSE.}
+\item{use.vegan}{logical; if TRUE, the diversity() function from the vegan
+package is called to compute Shannon's entropy. Default = FALSE.}
 
-\item{n.cores}{The number of cores to use for parallel processing. Use \code{n.cores = -1} to use all but one core. Default is NULL (single-core processing).}
+\item{n.cores}{The number of cores to use for parallel processing. Default is
+-1 to use all but one core.}
 
-\item{rmoff}{logical. Whether to remove DC offset before computing ADI (recommended) or not.}
+\item{rmoff}{logical. Whether to remove DC offset before computing ADI.
+Default is \code{TRUE}.}
 }
 \value{
-a tibble (data frame) with the ADI values for each channel (if stereo), metadata, and the parameters used for the calculation.
+a tibble (data frame) with the ADI values for each channel
+(if stereo), metadata, and the parameters used for the calculation.
 }
 \description{
-Calculates the Acoustic Diversity Index for all the files in a folder, with extended parameter options.
-It uses parallel processing with all but one of the available cores.
-Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)  April 2024.
+Calculates the Acoustic Diversity Index for all the files in a folder, with
+extended parameter options. It supports parallel processing.
 }
 \details{
 Options for propden:
-1 = The original calculation from the "soundecology" package is applied. The denominator of the proportion equals to all the cells in the same frequency band.
-2 = A "true Shannon" proportion is calculated, where the "whole population across species" equals the cells above the decibel threshold across the spectrogram (up to 'max.freq')
-It uses parallel processing with all but one of the available cores.
-Optimized to facilitate working with a list of audio files before importing them into R.
-Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com) April 2024
+1 = The original calculation from the "soundecology" package is applied. The
+denominator of the proportion equals to all the cells in the same frequency
+band.
+2 = A "true Shannon" proportion is calculated, where the "whole population
+across species" equals the cells above the decibel threshold across the
+spectrogram (up to 'max.freq' It uses parallel processing with all but one of
+the available cores.
+Optimized to facilitate working with a list of audio files before importing
+them into R.
+Modifications by Francisco Rivas (frivasfu@purdue.edu // fcorivasf@gmail.com)
+April 2024
 }
 \examples{
 adi_folder("path/to/folder")
